@@ -58,6 +58,31 @@
 
   /* テストモードバナー */
   .test-banner{background:linear-gradient(135deg,rgba(253,203,110,.15),rgba(225,112,85,.15));border:1px solid rgba(253,203,110,.3);border-radius:10px;padding:10px 14px;margin-bottom:16px;font-size:.75rem;color:var(--warning);line-height:1.5;text-align:center}
+
+  /* 距離フィルター */
+  .distance-tabs{display:flex;gap:4px;margin-bottom:14px}
+  .dist-tab{flex:1;padding:6px 8px;font-size:.75rem;font-weight:600;color:var(--text2);border:1px solid var(--surface3);border-radius:8px;background:none;cursor:pointer;transition:all .2s;text-align:center}
+  .dist-tab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+  /* リロードボタン */
+  .reload-area{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+  .reload-btn{display:flex;align-items:center;gap:6px;padding:8px 18px;background:var(--surface2);border:1px solid var(--surface3);border-radius:50px;color:var(--text2);font-size:.8rem;font-weight:600;cursor:pointer;transition:all .2s}
+  .reload-btn:hover{border-color:var(--accent);color:var(--text)}
+  .reload-count{font-size:.68rem;color:var(--text2)}
+
+  /* マッチング機能ロック（法的確認中） */
+  .legal-lock{
+    background:linear-gradient(135deg,rgba(108,92,231,.08),rgba(232,67,147,.08));
+    border:1px solid rgba(108,92,231,.25);border-radius:var(--radius);
+    padding:20px;margin-bottom:16px;text-align:center;
+  }
+  .legal-lock-icon{font-size:2rem;margin-bottom:8px}
+  .legal-lock-title{font-size:.92rem;font-weight:700;margin-bottom:6px}
+  .legal-lock-desc{font-size:.75rem;color:var(--text2);line-height:1.6}
+
+  /* 相性スコアバー */
+  .score-bar{height:4px;border-radius:2px;background:var(--surface3);margin-top:4px;overflow:hidden}
+  .score-bar-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--accent),var(--pink));transition:width .6s ease}
 </style>
 </head>
 <body>
@@ -73,14 +98,40 @@
       🧪 テストモード: サンプルユーザーとのマッチング体験です。実際の課金は発生しません。
     </div>
 
+    <!-- マッチング機能ロック（法的確認まで非表示） -->
+    <div class="legal-lock" id="legal-lock">
+      <div class="legal-lock-icon">⚖️</div>
+      <div class="legal-lock-title">マッチング機能 準備中</div>
+      <div class="legal-lock-desc">
+        出会い系サイト規制法に基づく届出・年齢確認システムの整備が完了次第、<br>
+        マッチング機能を正式リリースします。<br>
+        現在は下記でサンプルを閲覧できます。
+      </div>
+    </div>
+
     <!-- モード切替 -->
     <div class="mode-tabs">
       <button class="mode-tab friend active" data-mode="friend">👫 友人を探す</button>
       <button class="mode-tab love" data-mode="love">💕 恋人を探す</button>
     </div>
 
+    <!-- 距離フィルター -->
+    <div class="distance-tabs">
+      <button class="dist-tab active" data-dist="unlimited">無制限</button>
+      <button class="dist-tab" data-dist="1000">1,000km以内</button>
+      <button class="dist-tab" data-dist="300">300km以内</button>
+    </div>
+
+    <!-- 候補タイトル + リロード -->
+    <div class="reload-area">
+      <div class="section-title" id="candidates-title" style="margin-bottom:0">相性の良い候補（上位5名）</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="reload-count" id="reload-count"></span>
+        <button class="reload-btn" id="reload-btn">🔄 更新</button>
+      </div>
+    </div>
+
     <!-- 候補一覧 -->
-    <div class="section-title" id="candidates-title">相性の良い候補</div>
     <div id="candidates-list"></div>
 
     <!-- ローディング -->
@@ -145,11 +196,15 @@
   </div>
 </div>
 
-<!-- ナビゲーションバー -->
+<!-- ナビゲーションバー（モバイル用） -->
 <nav class="nav-bar">
   <a href="board.html" class="nav-item">
     <span class="nav-icon">💬</span>
     <span>掲示板</span>
+  </a>
+  <a href="friends.html" class="nav-item">
+    <span class="nav-icon">👥</span>
+    <span>フレンド</span>
   </a>
   <a href="matching.html" class="nav-item active">
     <span class="nav-icon">💕</span>
@@ -161,28 +216,54 @@
   </a>
 </nav>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="js/supabase-config.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/i18n.js"></script>
 <script src="js/matching.js"></script>
 <script>
 (function() {
   let currentMode = 'friend';
+  let currentDist = 'unlimited';
   let myScores = null;
-  let candidates = [];
+  let allCandidates = [];
+  let displayedCandidates = [];
   let selectedUserId = null;
-  const unlockedUsers = new Set(); // テスト用: マッチ成立したユーザー
+  let reloadCount = 0;        // リロード回数カウンター（3回で広告）
+  const AD_INTERVAL = 3;      // 何回ごとに広告を挟むか
+  const unlockedUsers = new Set();
 
-  // --- 初期化 ---
-  function init() {
-    // localStorageから診断結果を取得（テスト用簡易取得）
-    myScores = loadMyScores();
+  // ============================================================
+  // 初期化
+  // ============================================================
+  async function init() {
+    // Supabaseからスコアを取得（ログイン済みなら）
+    myScores = await loadMyScoresFromDB();
     if (!myScores) {
-      // 診断未完了の場合、デモ用のスコアを使用
+      myScores = loadMyScoresFromLocal();
+    }
+    if (!myScores) {
       myScores = {P1:45,P2:55,P3:60,P4:40,P5:50,P6:65,P7:55,P8:48,P9:42,P10:58,P11:52,P12:45,P13:55,P14:48,P15:50};
     }
+
+    updateReloadCounter();
     loadCandidates();
+    initNavUser();
   }
 
-  // 診断結果をlocalStorageから探す（簡易版）
-  function loadMyScores() {
+  // DBから診断スコアを取得
+  async function loadMyScoresFromDB() {
+    try {
+      if (typeof getMyProfile !== 'function') return null;
+      const profile = await getMyProfile();
+      if (profile && profile.diagnosis_scores) return profile.diagnosis_scores;
+    } catch(e) {}
+    return null;
+  }
+
+  // localStorageから診断スコアを取得
+  function loadMyScoresFromLocal() {
     try {
       const save = localStorage.getItem('doppelganger_save');
       if (save) {
@@ -193,32 +274,168 @@
     return null;
   }
 
-  // --- 候補一覧読み込み ---
+  // ============================================================
+  // 候補一覧読み込み（80%以上・最大5名）
+  // ============================================================
   function loadCandidates() {
     const list = document.getElementById('candidates-list');
     list.innerHTML = '<div class="loading"><div class="spinner"></div><span>候補を探しています...</span></div>';
 
-    // 少し遅延を入れてUX演出
     setTimeout(() => {
-      candidates = Matching.getCandidates(myScores, currentMode);
-      const title = document.getElementById('candidates-title');
-      title.textContent = currentMode === 'love' ? '💕 恋人候補' : '👫 友人候補';
+      // 全候補を取得してスコアでソート
+      allCandidates = Matching.getCandidates(myScores, currentMode);
 
-      list.innerHTML = candidates.map(c =>
-        Matching.renderCandidateCard(c, myScores, currentMode, !unlockedUsers.has(c.id))
-      ).join('');
+      // 80%以上でフィルタ
+      const qualified = allCandidates.filter(c => {
+        const score = currentMode === 'love'
+          ? Matching.calcLoveScore(myScores, c.scores)
+          : Matching.calcFriendScore(myScores, c.scores);
+        c._score = score;
+        return score >= 80;
+      }).sort((a, b) => b._score - a._score);
 
-      // マッチングボタンのイベント
-      list.querySelectorAll('.match-unlock-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          selectedUserId = btn.dataset.userId;
-          showPaymentModal(selectedUserId);
-        });
-      });
+      // 距離フィルター（テストモードではスキップ）
+      // 実際のユーザーでは距離計算を行う
+      displayedCandidates = qualified;
+
+      renderCandidates();
     }, 800);
   }
 
-  // --- モード切替 ---
+  function renderCandidates() {
+    const list = document.getElementById('candidates-list');
+    const title = document.getElementById('candidates-title');
+    title.textContent = currentMode === 'love' ? '💕 恋人候補（相性80%以上）' : '👫 友人候補（相性80%以上）';
+
+    // 上位5名のみ表示
+    const top5 = displayedCandidates.slice(0, 5);
+
+    if (top5.length === 0) {
+      list.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">🔍</div>
+          <div class="empty-text">
+            相性80%以上のユーザーが見つかりませんでした<br>
+            距離範囲を広げるか、更新ボタンを押してみてください
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    list.innerHTML = top5.map(c =>
+      renderMatchCard(c, myScores, currentMode)
+    ).join('');
+
+    // イベント設定
+    list.querySelectorAll('.match-unlock-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        selectedUserId = btn.dataset.userId;
+        showPaymentModal(selectedUserId);
+      });
+    });
+  }
+
+  // マッチカードHTML（スコアバー付き）
+  function renderMatchCard(candidate, myScores, mode) {
+    const score = candidate._score || 0;
+    const isUnlocked = unlockedUsers.has(candidate.id);
+    const family = candidate.family || 'Architects';
+    const fColor = typeof familyColor === 'function' ? familyColor(family) : '108,92,231';
+    const emoji = typeof getTypeEmoji === 'function' ? getTypeEmoji(candidate.type_number) : '👤';
+    const scoreEmoji = score >= 95 ? '🔥' : score >= 90 ? '✨' : score >= 85 ? '💫' : '⭐';
+
+    // 課金ボタンの内容（法的確認まで非表示）
+    const actionHtml = `
+      <div class="legal-lock" style="padding:12px;margin:0;text-align:center">
+        <div style="font-size:.75rem;color:var(--text2)">⚖️ マッチング機能は法的確認完了後に開放されます</div>
+      </div>
+    `;
+
+    return `
+      <div class="match-card">
+        <div class="match-card-header">
+          <div class="match-user">
+            <div class="match-avatar" style="background:rgba(${fColor},.12);border:1px solid rgba(${fColor},.3)">
+              ${candidate.avatar_url
+                ? `<img src="${escapeHtml(candidate.avatar_url)}" style="width:44px;height:44px;border-radius:50%;object-fit:cover">`
+                : emoji}
+            </div>
+            <div class="match-user-info">
+              <div class="match-type-name">${escapeHtml(candidate.nickname || candidate.type_name)}</div>
+              <div class="match-display-id">
+                <span class="badge badge-${family.toLowerCase()}">${escapeHtml(candidate.type_name)}</span>
+                <span>${escapeHtml(candidate.display_id)}</span>
+              </div>
+              <!-- スコアバー -->
+              <div style="margin-top:6px">
+                <div class="score-bar" style="width:100%">
+                  <div class="score-bar-fill" style="width:${score}%"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="match-score">
+            <div class="match-score-emoji">${scoreEmoji}</div>
+            <span class="match-score-num" style="background:linear-gradient(135deg,var(--accent),var(--pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent">${score}%</span>
+            <div class="match-score-label">相性スコア</div>
+          </div>
+        </div>
+        ${candidate.bio ? `<div class="match-bio">${escapeHtml(candidate.bio)}</div>` : ''}
+        <div class="match-action">
+          ${isUnlocked
+            ? `<a href="chat.html?user=${candidate.id}" class="btn btn-primary">💬 チャットを開く</a>`
+            : actionHtml}
+        </div>
+      </div>
+    `;
+  }
+
+  // ============================================================
+  // リロード機能（3回ごとに広告）
+  // ============================================================
+  document.getElementById('reload-btn').addEventListener('click', () => {
+    reloadCount++;
+    updateReloadCounter();
+
+    if (reloadCount % AD_INTERVAL === 0) {
+      // 広告表示（テストモードはconfirm）
+      if (confirm('📢 広告を視聴するとリロードできます\n（本番ではAdMob動画広告が表示されます）\nOKで広告視聴済みとして更新します')) {
+        doReload();
+      } else {
+        reloadCount--; // キャンセルしたらカウントを戻す
+        updateReloadCounter();
+      }
+    } else {
+      doReload();
+    }
+  });
+
+  function doReload() {
+    // 順番をシャッフルして次の5名を表示
+    displayedCandidates = shuffleArray([...displayedCandidates]);
+    renderCandidates();
+  }
+
+  function shuffleArray(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  function updateReloadCounter() {
+    const remaining = AD_INTERVAL - (reloadCount % AD_INTERVAL);
+    const el = document.getElementById('reload-count');
+    if (el) {
+      el.textContent = remaining === AD_INTERVAL ? '' : `あと${remaining}回で広告`;
+    }
+  }
+
+  // ============================================================
+  // モード切替
+  // ============================================================
   document.querySelectorAll('.mode-tab').forEach(tab => {
     tab.addEventListener('click', () => {
       document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
@@ -228,11 +445,24 @@
     });
   });
 
-  // --- 課金確認モーダル ---
-  function showPaymentModal(userId) {
-    const user = candidates.find(c => c.id === userId);
-    if (!user) return;
+  // ============================================================
+  // 距離フィルター
+  // ============================================================
+  document.querySelectorAll('.dist-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.dist-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      currentDist = tab.dataset.dist;
+      loadCandidates(); // テストモードでは距離フィルターはノーオペ
+    });
+  });
 
+  // ============================================================
+  // 課金確認モーダル（将来用）
+  // ============================================================
+  function showPaymentModal(userId) {
+    const user = displayedCandidates.find(c => c.id === userId);
+    if (!user) return;
     document.getElementById('payment-target').innerHTML = `
       <div style="text-align:center;margin-top:12px">
         <span class="badge badge-${user.family.toLowerCase()}">${user.type_name} (${user.display_id})</span>
@@ -251,65 +481,57 @@
     }
   });
 
-  // --- 課金実行（テスト） ---
   document.getElementById('payment-confirm').addEventListener('click', () => {
     const btn = document.getElementById('payment-confirm');
-    btn.disabled = true;
-    btn.textContent = '処理中...';
-
-    // 課金処理のシミュレーション（1.5秒）
+    btn.disabled = true; btn.textContent = '処理中...';
     setTimeout(() => {
       document.getElementById('payment-modal').classList.remove('show');
-      btn.disabled = false;
-      btn.textContent = '💳 購入する（¥500）';
-
-      // マッチ成立
+      btn.disabled = false; btn.textContent = '💳 購入する';
       unlockedUsers.add(selectedUserId);
       showMatchSuccess(selectedUserId);
     }, 1500);
   });
 
-  // --- マッチ成立モーダル ---
+  // ============================================================
+  // マッチ成立モーダル
+  // ============================================================
   function showMatchSuccess(userId) {
-    const user = candidates.find(c => c.id === userId);
+    const user = displayedCandidates.find(c => c.id === userId);
     if (!user) return;
-
-    const myEmoji = '👤';
-    const otherEmoji = getTypeEmoji(user.type_number);
-
+    const fColor = typeof familyColor === 'function' ? familyColor(user.family) : '108,92,231';
+    const emoji = typeof getTypeEmoji === 'function' ? getTypeEmoji(user.type_number) : '👤';
     document.getElementById('match-pair').innerHTML = `
       <div class="match-success-user">
-        <div class="match-success-avatar" style="background:var(--surface2);border:1px solid var(--surface3)">${myEmoji}</div>
+        <div class="match-success-avatar" style="background:var(--surface2);border:1px solid var(--surface3)">👤</div>
         <div class="match-success-name">あなた</div>
       </div>
       <div class="match-success-heart">💕</div>
       <div class="match-success-user">
-        <div class="match-success-avatar" style="background:rgba(${familyColor(user.family)},.12);border:1px solid rgba(${familyColor(user.family)},.3)">${otherEmoji}</div>
-        <div class="match-success-name">${escapeHtml(user.type_name)}</div>
+        <div class="match-success-avatar" style="background:rgba(${fColor},.12);border:1px solid rgba(${fColor},.3)">${emoji}</div>
+        <div class="match-success-name">${escapeHtml(user.nickname || user.type_name)}</div>
       </div>
     `;
-
     document.getElementById('match-success-modal').classList.add('show');
   }
 
   document.getElementById('go-to-chat').addEventListener('click', () => {
     document.getElementById('match-success-modal').classList.remove('show');
-    alert('💬 チャット機能は今後のアップデートで実装予定です！\n\nマッチ成立後、ここから個人チャットが始まります。');
+    if (selectedUserId) location.href = `chat.html?user=${selectedUserId}`;
   });
-
   document.getElementById('back-to-list').addEventListener('click', () => {
     document.getElementById('match-success-modal').classList.remove('show');
-    loadCandidates(); // リスト更新（ロック解除済みの表示に変わる）
+    renderCandidates();
   });
-
   document.getElementById('match-success-modal').addEventListener('click', (e) => {
     if (e.target.id === 'match-success-modal') {
       document.getElementById('match-success-modal').classList.remove('show');
-      loadCandidates();
+      renderCandidates();
     }
   });
 
-  // --- 起動 ---
+  // ============================================================
+  // 起動
+  // ============================================================
   init();
 })();
 </script>

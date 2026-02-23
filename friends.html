@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Doppelganger - フレンド</title>
+<link rel="stylesheet" href="css/common.css">
+<style>
+/* ============================================================
+   フレンドページ
+   ============================================================ */
+.friend-tabs { margin-bottom: 16px; }
+
+.friend-card {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 16px;
+  background: var(--surface); border: 1px solid var(--surface3);
+  border-radius: var(--radius); margin-bottom: 8px;
+  transition: border-color .2s;
+}
+.friend-card:hover { border-color: rgba(108,92,231,.3); }
+.friend-info { flex: 1; min-width: 0; }
+.friend-name { font-size: .9rem; font-weight: 700; }
+.friend-type { font-size: .72rem; color: var(--text2); margin-top: 2px; }
+.friend-source { font-size: .65rem; color: var(--text2); }
+.friend-actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+
+.req-card {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 16px;
+  background: var(--surface); border: 1px solid var(--surface3);
+  border-radius: var(--radius); margin-bottom: 8px;
+  border-left: 3px solid var(--accent);
+}
+.req-info { flex: 1; min-width: 0; }
+.req-name { font-size: .9rem; font-weight: 700; }
+.req-type { font-size: .72rem; color: var(--text2); margin-top: 2px; }
+.req-actions { display: flex; gap: 8px; flex-shrink: 0; }
+
+/* フレンド申請フォーム */
+.add-friend-area {
+  background: var(--surface); border: 1px solid var(--surface3);
+  border-radius: var(--radius); padding: 20px; margin-bottom: 20px;
+}
+.add-friend-title { font-size: .92rem; font-weight: 700; margin-bottom: 12px; }
+.invite-link-box {
+  background: var(--surface2); border: 1px solid var(--surface3);
+  border-radius: 8px; padding: 10px 14px;
+  font-size: .78rem; color: var(--text2);
+  display: flex; align-items: center; gap: 10px;
+  margin-top: 12px; word-break: break-all;
+}
+.invite-link-text { flex: 1; font-size: .72rem; }
+.invite-copy-btn {
+  font-size: .72rem; padding: 4px 10px;
+  background: var(--accent); color: #fff;
+  border: none; border-radius: 6px; cursor: pointer; flex-shrink: 0;
+}
+</style>
+</head>
+<body>
+
+<div class="page">
+  <div class="container">
+
+    <!-- ヘッダー -->
+    <div class="page-header">
+      <div>
+        <div class="page-title">👥 フレンド</div>
+        <div class="page-subtitle">フレンド申請・DM管理</div>
+      </div>
+    </div>
+
+    <!-- フレンド申請・招待 -->
+    <div class="add-friend-area">
+      <div class="add-friend-title">フレンドを追加</div>
+
+      <div class="form-group" style="margin-bottom:8px">
+        <label class="form-label">IDで検索</label>
+        <div style="display:flex;gap:8px">
+          <input type="text" class="form-input" id="search-id-input"
+            placeholder="@ユーザー名 または 招待コード"
+            style="flex:1">
+          <button class="btn btn-primary btn-sm" id="search-friend-btn">検索</button>
+        </div>
+      </div>
+
+      <!-- 検索結果 -->
+      <div id="search-result"></div>
+
+      <!-- 招待リンク -->
+      <div class="form-label" style="margin-top:14px">招待リンクを共有</div>
+      <div class="invite-link-box">
+        <span class="invite-link-text" id="invite-link">読み込み中...</span>
+        <button class="invite-copy-btn" id="invite-copy-btn">コピー</button>
+      </div>
+    </div>
+
+    <!-- タブ -->
+    <div class="tabs friend-tabs">
+      <button class="tab active" data-tab="friends">フレンド</button>
+      <button class="tab" data-tab="requests">申請中</button>
+      <button class="tab" data-tab="pending">受信</button>
+    </div>
+
+    <!-- フレンド一覧 -->
+    <div id="tab-friends" class="tab-content">
+      <div class="loading" id="loading-friends">
+        <div class="spinner"></div><span>読み込み中...</span>
+      </div>
+      <div id="friends-list"></div>
+    </div>
+
+    <!-- 申請中（自分から送った） -->
+    <div id="tab-requests" class="tab-content hidden">
+      <div id="requests-list"></div>
+    </div>
+
+    <!-- 受信（相手から来た） -->
+    <div id="tab-pending" class="tab-content hidden">
+      <div id="pending-list"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ナビゲーションバー（モバイル用） -->
+<nav class="nav-bar">
+  <a href="board.html" class="nav-item">
+    <span class="nav-icon">💬</span>
+    <span>掲示板</span>
+  </a>
+  <a href="friends.html" class="nav-item active">
+    <span class="nav-icon">👥</span>
+    <span>フレンド</span>
+  </a>
+  <a href="matching.html" class="nav-item">
+    <span class="nav-icon">💕</span>
+    <span>マッチング</span>
+  </a>
+  <a href="profile.html" class="nav-item">
+    <span class="nav-icon">👤</span>
+    <span>マイページ</span>
+  </a>
+</nav>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="js/supabase-config.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/i18n.js"></script>
+<script>
+(function () {
+  let myProfile = null;
+
+  // ——— タブ切替 ———
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+      tab.classList.add('active');
+      document.getElementById('tab-' + tab.dataset.tab).classList.remove('hidden');
+    });
+  });
+
+  // ——— 初期化 ———
+  async function init() {
+    const user = await requireAuth();
+    if (!user) return;
+
+    myProfile = await getMyProfile();
+    if (!myProfile) return;
+
+    // 招待リンク
+    const inviteCode = myProfile.invite_code || myProfile.id.slice(0, 8);
+    const inviteUrl = `${location.origin}${location.pathname.replace('friends.html', 'index.html')}?invite=${inviteCode}`;
+    document.getElementById('invite-link').textContent = inviteUrl;
+    document.getElementById('invite-copy-btn').addEventListener('click', () => {
+      navigator.clipboard.writeText(inviteUrl).then(() => showToast('コピーしました', 'success'));
+    });
+
+    // 招待コード経由の自動フレンド申請チェック
+    const urlParams = new URLSearchParams(location.search);
+    const fromInvite = urlParams.get('from_invite');
+    if (fromInvite) {
+      await handleInviteAccept(fromInvite);
+    }
+
+    await loadAllFriends();
+    initNavUser();
+  }
+
+  // ——— フレンド一覧の読み込み ———
+  async function loadAllFriends() {
+    const user = await getCurrentUser();
+    if (!user) return;
+
+    const { data, error } = await supabase
+      .from('friends')
+      .select(`
+        *,
+        requester:users!friends_requester_id_fkey(id, nickname, type_name, family, avatar_url, display_id, username),
+        receiver:users!friends_receiver_id_fkey(id, nickname, type_name, family, avatar_url, display_id, username)
+      `)
+      .or(`requester_id.eq.${user.id},receiver_id.eq.${user.id}`);
+
+    if (error) {
+      showToast('読み込みに失敗しました', 'error');
+      return;
+    }
+
+    const friends = [], requests = [], pending = [];
+    for (const row of (data || [])) {
+      const isRequester = row.requester_id === user.id;
+      const other = isRequester ? row.receiver : row.requester;
+      const item = { ...row, other };
+
+      if (row.status === 'accepted') {
+        friends.push(item);
+      } else if (row.status === 'pending') {
+        if (isRequester) requests.push(item);
+        else pending.push(item);
+      }
+    }
+
+    document.getElementById('loading-friends').classList.add('hidden');
+    renderFriendsList(friends);
+    renderRequestsList(requests);
+    renderPendingList(pending);
+
+    // 申請タブのバッジ更新
+    if (typeof updateNavBadge === 'function') {
+      updateNavBadge('friends', pending.length);
+    }
+  }
+
+  function renderFriendsList(friends) {
+    const el = document.getElementById('friends-list');
+    if (friends.length === 0) {
+      el.innerHTML = `<div class="empty-state"><div class="empty-icon">👥</div><div class="empty-text">フレンドがいません<br>IDや招待リンクで友達を追加しましょう</div></div>`;
+      return;
+    }
+    el.innerHTML = friends.map(f => `
+      <div class="friend-card">
+        ${renderUserAvatar(f.other, 40)}
+        <div class="friend-info">
+          <div class="friend-name">${escapeHtml(f.other.nickname || f.other.type_name || '不明')}</div>
+          <div class="friend-type">${escapeHtml(f.other.type_name || '')} · ${escapeHtml(f.other.display_id || '')}</div>
+          <div class="friend-source">${sourceLabel(f.source)}</div>
+        </div>
+        <div class="friend-actions">
+          <a href="chat.html?user=${f.other.id}" class="btn btn-primary btn-sm">💬 DM</a>
+          <a href="user-profile.html?id=${f.other.id}" class="btn btn-secondary btn-sm">プロフィール</a>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function renderRequestsList(requests) {
+    const el = document.getElementById('requests-list');
+    if (requests.length === 0) {
+      el.innerHTML = `<div class="empty-state"><div class="empty-icon">✉️</div><div class="empty-text">申請中のフレンドはいません</div></div>`;
+      return;
+    }
+    el.innerHTML = requests.map(f => `
+      <div class="req-card">
+        ${renderUserAvatar(f.other, 40)}
+        <div class="req-info">
+          <div class="req-name">${escapeHtml(f.other.nickname || f.other.type_name || '不明')}</div>
+          <div class="req-type">${escapeHtml(f.other.type_name || '')} · 申請中</div>
+        </div>
+        <div class="req-actions">
+          <button class="btn btn-secondary btn-sm" onclick="cancelRequest('${f.id}')">キャンセル</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function renderPendingList(pending) {
+    const el = document.getElementById('pending-list');
+    if (pending.length === 0) {
+      el.innerHTML = `<div class="empty-state"><div class="empty-icon">🔔</div><div class="empty-text">フレンド申請は届いていません</div></div>`;
+      return;
+    }
+    el.innerHTML = pending.map(f => `
+      <div class="req-card">
+        ${renderUserAvatar(f.other, 40)}
+        <div class="req-info">
+          <div class="req-name">${escapeHtml(f.other.nickname || f.other.type_name || '不明')}</div>
+          <div class="req-type">${escapeHtml(f.other.type_name || '')} · ${sourceLabel(f.source)}</div>
+        </div>
+        <div class="req-actions">
+          <button class="btn btn-primary btn-sm" onclick="acceptRequest('${f.id}')">承認</button>
+          <button class="btn btn-secondary btn-sm" onclick="rejectRequest('${f.id}')">拒否</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // ——— フレンド申請 承認/拒否/キャンセル ———
+  window.acceptRequest = async function (id) {
+    const { error } = await supabase.from('friends').update({ status: 'accepted' }).eq('id', id);
+    if (error) return showToast('承認に失敗しました', 'error');
+    showToast('フレンドになりました！', 'success');
+    await loadAllFriends();
+  };
+  window.rejectRequest = async function (id) {
+    const { error } = await supabase.from('friends').update({ status: 'rejected' }).eq('id', id);
+    if (error) return showToast('エラーが発生しました', 'error');
+    showToast('拒否しました', 'info');
+    await loadAllFriends();
+  };
+  window.cancelRequest = async function (id) {
+    const { error } = await supabase.from('friends').delete().eq('id', id);
+    if (error) return showToast('エラーが発生しました', 'error');
+    await loadAllFriends();
+  };
+
+  // ——— ID検索 ———
+  document.getElementById('search-friend-btn').addEventListener('click', searchFriend);
+  document.getElementById('search-id-input').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') searchFriend();
+  });
+
+  async function searchFriend() {
+    const val = document.getElementById('search-id-input').value.trim().toLowerCase();
+    if (!val) return;
+
+    const resultEl = document.getElementById('search-result');
+    resultEl.innerHTML = '<div class="loading"><div class="spinner"></div><span>検索中...</span></div>';
+
+    // username または invite_code で検索
+    const { data, error } = await supabase
+      .from('users')
+      .select('id, nickname, type_name, family, avatar_url, display_id, username')
+      .or(`username.eq.${val},invite_code.eq.${val}`)
+      .neq('id', myProfile.id)
+      .limit(1);
+
+    if (error || !data || data.length === 0) {
+      resultEl.innerHTML = `<div class="text-muted text-sm" style="padding:8px 0">ユーザーが見つかりませんでした</div>`;
+      return;
+    }
+
+    const target = data[0];
+    resultEl.innerHTML = `
+      <div class="friend-card" style="border-color:rgba(108,92,231,.4)">
+        ${renderUserAvatar(target, 40)}
+        <div class="friend-info">
+          <div class="friend-name">${escapeHtml(target.nickname || target.type_name || '不明')}</div>
+          <div class="friend-type">${escapeHtml(target.type_name || '')} · ${escapeHtml(target.display_id || '')}</div>
+        </div>
+        <div class="friend-actions">
+          <a href="user-profile.html?id=${target.id}" class="btn btn-secondary btn-sm">プロフィール</a>
+          <button class="btn btn-primary btn-sm" onclick="sendFriendRequest('${target.id}')">申請する</button>
+        </div>
+      </div>
+    `;
+  }
+
+  // ——— フレンド申請送信 ———
+  window.sendFriendRequest = async function (targetId) {
+    const user = await getCurrentUser();
+    if (!user) return;
+
+    const { error } = await supabase.from('friends').insert({
+      requester_id: user.id,
+      receiver_id: targetId,
+      source: 'search',
+    });
+
+    if (error) {
+      if (error.code === '23505') return showToast('すでに申請済みです', 'error');
+      return showToast('申請に失敗しました: ' + error.message, 'error');
+    }
+
+    // 通知送信
+    await supabase.from('notifications').insert({
+      user_id: targetId,
+      type: 'friend_request',
+      from_user_id: user.id,
+      message: `${myProfile.nickname || '誰か'}からフレンド申請が届いています`,
+    }).catch(() => {});
+
+    showToast('フレンド申請を送りました！', 'success');
+    document.getElementById('search-result').innerHTML = '';
+    document.getElementById('search-id-input').value = '';
+    await loadAllFriends();
+  };
+
+  // ——— 招待リンクからの自動申請 ———
+  async function handleInviteAccept(inviteCode) {
+    const { data: target } = await supabase
+      .from('users')
+      .select('id')
+      .eq('invite_code', inviteCode)
+      .maybeSingle();
+    if (!target) return;
+
+    const user = await getCurrentUser();
+    if (!user || user.id === target.id) return;
+
+    await supabase.from('friends').insert({
+      requester_id: user.id,
+      receiver_id: target.id,
+      source: 'invite',
+    }).catch(() => {});
+  }
+
+  // ——— ラベル変換 ———
+  function sourceLabel(source) {
+    const map = { search: 'ID検索', match: 'マッチング', invite: '招待' };
+    return map[source] || '';
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>

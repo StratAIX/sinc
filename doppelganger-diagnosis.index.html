@@ -7,12 +7,14 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="format-detection" content="telephone=no">
 <title>Doppelganger - 性格診断</title>
+<link rel="stylesheet" href="css/common.css">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--bg:#0a0a0f;--surface:#12121e;--surface2:#1a1a2e;--surface3:#242440;--accent:#6c5ce7;--accent2:#a29bfe;--pink:#e84393;--text:#e8e8ef;--text2:#7a7a9e;--success:#00b894;--warning:#fdcb6e;--danger:#e17055;--radius:14px;--shadow:0 8px 32px rgba(0,0,0,.5)}
 html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%;touch-action:manipulation}
-.screen{display:none;min-height:100vh;min-height:100dvh;padding:20px;padding-top:env(safe-area-inset-top,20px);position:relative}
+.screen{display:none;min-height:100vh;min-height:100dvh;padding:20px;padding-top:env(safe-area-inset-top,20px);padding-bottom:calc(80px + env(safe-area-inset-bottom,0px));position:relative}
 .screen.active{display:flex;flex-direction:column;align-items:center;justify-content:center}
+@media(min-width:768px){body.has-sidebar .screen{padding-left:260px;padding-bottom:20px}}
 @keyframes fadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
 @keyframes fadeOut{from{opacity:1}to{opacity:0}}
 @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
@@ -1909,8 +1911,30 @@ function startFresh(){
 })();
 </script>
 
+<!-- ナビゲーションバー（モバイル用） -->
+<nav class="nav-bar">
+  <a href="board.html" class="nav-item">
+    <span class="nav-icon">💬</span>
+    <span>掲示板</span>
+  </a>
+  <a href="friends.html" class="nav-item">
+    <span class="nav-icon">👥</span>
+    <span>フレンド</span>
+  </a>
+  <a href="matching.html" class="nav-item">
+    <span class="nav-icon">💕</span>
+    <span>マッチング</span>
+  </a>
+  <a href="profile.html" class="nav-item">
+    <span class="nav-icon">👤</span>
+    <span>マイページ</span>
+  </a>
+</nav>
+
 <!-- Supabase SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="js/supabase-config.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/i18n.js"></script>
 </body>
 </html>

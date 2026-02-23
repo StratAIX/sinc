@@ -62,6 +62,7 @@ const Board = {
 
   // ============================================================
   // 板（小カテゴリー）を作成（ユーザー）
+  // ※ 毎月1枚目無料、2〜5枚目50pt、6枚目〜100pt
   // ============================================================
   async createBoard({ subcategoryId, areaType, profile, name, desc, icon }) {
     // バリデーション
@@ -70,6 +71,18 @@ const Board = {
 
     const user = await getCurrentUser();
     if (!user) throw new Error('ログインが必要です');
+
+    // ——— ポイント消費計算 ———
+    const cost = await this._calcBoardCost(user.id);
+    if (cost > 0) {
+      // ポイント残高確認（DBから最新を取得）
+      const { data: me } = await supabase
+        .from('users').select('point_balance').eq('id', user.id).single();
+      const balance = me?.point_balance ?? 0;
+      if (balance < cost) {
+        throw new Error(`ポイントが不足しています（必要: ${cost}pt / 残高: ${balance}pt）`);
+      }
+    }
 
     const insertData = {
       subcategory_id: subcategoryId,
@@ -94,7 +107,42 @@ const Board = {
       .single();
 
     if (error) throw error;
+
+    // ポイントを消費（cost > 0 の場合）
+    if (cost > 0) {
+      await supabase.from('users')
+        .update({ point_balance: supabase.rpc ? undefined : undefined }) // RPCが使えない場合は手動更新
+        .eq('id', user.id);
+      // 簡易方式: point_balance を SELECT して UPDATE
+      const { data: me } = await supabase
+        .from('users').select('point_balance').eq('id', user.id).single();
+      await supabase.from('users')
+        .update({ point_balance: (me?.point_balance ?? 0) - cost })
+        .eq('id', user.id);
+      await supabase.from('point_ledger').insert({
+        user_id: user.id,
+        amount: -cost,
+        reason: 'board_create',
+        ref_id: data.id,
+      }).catch(() => {}); // 履歴保存は失敗してもOK
+    }
+
     return data;
+  },
+
+  // 当月の板作成数からコストを計算
+  async _calcBoardCost(userId) {
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+    const { count } = await supabase
+      .from('boards')
+      .select('id', { count: 'exact', head: true })
+      .eq('created_by', userId)
+      .gte('created_at', monthStart);
+    const n = count || 0;
+    if (n === 0) return 0;     // 1枚目: 無料
+    if (n < 5)   return 50;    // 2〜5枚目: 50pt
+    return 100;                // 6枚目〜: 100pt
   },
 
   // ============================================================
@@ -227,20 +275,23 @@ const Board = {
   // ============================================================
   // 投稿（返信）を作成
   // ============================================================
-  async createPost(threadId, content) {
+  async createPost(threadId, content, replyToNumber = null) {
     const contentCheck = Moderation.checkContent(content);
     if (!contentCheck.ok) throw new Error(contentCheck.reason);
 
     const user = await getCurrentUser();
     if (!user) throw new Error('ログインが必要です');
 
+    const insertData = {
+      thread_id: threadId,
+      user_id: user.id,
+      content: content.trim(),
+    };
+    if (replyToNumber) insertData.reply_to_number = replyToNumber;
+
     const { data, error } = await supabase
       .from('posts')
-      .insert({
-        thread_id: threadId,
-        user_id: user.id,
-        content: content.trim(),
-      })
+      .insert(insertData)
       .select(`
         *,
         user:users!posts_user_id_fkey(display_id, type_name, type_number, family, nickname, avatar_url)
@@ -248,7 +299,38 @@ const Board = {
       .single();
 
     if (error) throw error;
+
+    // メンション・レス通知の送信（非同期、失敗しても続行）
+    this._sendReplyNotifications(data, content, user.id).catch(() => {});
+
     return data;
+  },
+
+  // レス・メンションの通知を送信
+  async _sendReplyNotifications(post, content, myUserId) {
+    if (!post.board_id) return;
+
+    // >>N 形式のレス先ユーザーに通知
+    const replyNums = [...content.matchAll(/>>\s*(\d+)/g)].map(m => parseInt(m[1]));
+    for (const num of replyNums) {
+      const { data: target } = await supabase
+        .from('posts')
+        .select('user_id, id')
+        .eq('board_id', post.board_id)
+        .eq('post_number', num)
+        .maybeSingle();
+      if (target && target.user_id !== myUserId) {
+        await supabase.from('notifications').insert({
+          user_id: target.user_id,
+          type: 'reply',
+          from_user_id: myUserId,
+          post_id: post.id,
+          thread_id: post.thread_id,
+          board_id: post.board_id,
+          message: `あなたの投稿#${num}への返信があります`,
+        }).catch(() => {});
+      }
+    }
   },
 
   // ============================================================
@@ -397,23 +479,42 @@ const Board = {
       ? renderUserAvatar(user, 36)
       : `<div class="user-type-icon" style="background:rgba(${familyColor(family)},.12);border:1px solid rgba(${familyColor(family)},.3)">${getTypeEmoji(user.type_number)}</div>`;
 
+    // 投稿番号
+    const postNum = post.post_number;
+    const numHtml = postNum
+      ? `<span class="post-num" id="post-n-${postNum}">#${postNum}</span>`
+      : '';
+
+    // 返信先表示
+    const replyToHtml = post.reply_to_number
+      ? `<div class="post-reply-to"><a href="#post-n-${post.reply_to_number}" class="post-ref">&gt;&gt;${post.reply_to_number}</a> への返信</div>`
+      : '';
+
+    // 本文: >>N リンク化 + >>@名前 ハイライト
+    const parsedContent = Board._parseContent(escapeHtml(post.content));
+
     return `
-      <div class="post-card" data-post-id="${post.id}">
+      <div class="post-card" data-post-id="${post.id}" data-post-num="${postNum || ''}">
         <div class="post-header">
           <div class="user-badge">
             ${avatarHtml}
             <div class="user-info">
-              <span class="user-type-name">${escapeHtml(displayName)}</span>
+              <div style="display:flex;align-items:center;gap:6px">
+                <span class="user-type-name">${escapeHtml(displayName)}</span>
+                ${numHtml}
+              </div>
               <span class="user-display-id">${escapeHtml(user.type_name || '')} ${escapeHtml(user.display_id || '')}</span>
             </div>
           </div>
           <span class="badge ${badgeClass}">${family}</span>
         </div>
-        <div class="post-content">${escapeHtml(post.content).replace(/\n/g, '<br>')}</div>
+        ${replyToHtml}
+        <div class="post-content">${parsedContent}</div>
         <div class="post-actions">
           <button class="post-action ${isLiked ? 'liked' : ''}" data-action="like" data-post-id="${post.id}">
             ${isLiked ? '❤️' : '🤍'} <span class="like-count">${post.likes_count || 0}</span>
           </button>
+          ${postNum ? `<button class="post-action" data-action="reply" data-post-num="${postNum}">↩ 返信</button>` : ''}
           <button class="post-action" data-action="report" data-post-id="${post.id}">
             🚩 通報
           </button>
@@ -422,6 +523,15 @@ const Board = {
         </div>
       </div>
     `;
+  },
+
+  // 本文パース: >>N → クリッカブルリンク、>>@name → メンション強調
+  _parseContent(escaped) {
+    return escaped
+      .replace(/&gt;&gt;(\d+)/g, '<a class="post-ref" href="#post-n-$1">&gt;&gt;$1</a>')
+      .replace(/&gt;&gt;(@[\w\u3040-\u9FFF\u30A0-\u30FF\u4E00-\u9FFF]+)/g,
+               '<span class="post-mention">&gt;&gt;$1</span>')
+      .replace(/\n/g, '<br>');
   },
 };
 

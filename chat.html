@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Doppelganger - チャット</title>
+<link rel="stylesheet" href="css/common.css">
+<style>
+/* ============================================================
+   DMチャット
+   ============================================================ */
+.chat-page {
+  display: flex; flex-direction: column;
+  min-height: 100vh; min-height: 100dvh;
+  padding: 0;
+}
+.chat-header {
+  position: fixed; top: 0; left: 0; right: 0;
+  height: 56px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--surface3);
+  display: flex; align-items: center; gap: 12px;
+  padding: 0 16px;
+  z-index: 50;
+  padding-top: env(safe-area-inset-top, 0);
+}
+.chat-header-back {
+  width: 36px; height: 36px;
+  border: 1px solid var(--surface3); border-radius: 50%;
+  background: var(--surface); color: var(--text2);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 1rem; transition: all .2s;
+  flex-shrink: 0;
+}
+.chat-header-back:hover { border-color: var(--accent); color: var(--text); }
+.chat-header-user { flex: 1; min-width: 0; }
+.chat-header-name { font-size: .9rem; font-weight: 700; }
+.chat-header-type { font-size: .68rem; color: var(--text2); }
+
+.chat-messages {
+  flex: 1;
+  padding: 72px 16px 90px;
+  display: flex; flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+  min-height: 100vh;
+}
+
+.msg-bubble {
+  max-width: 72%;
+  display: flex; flex-direction: column;
+  gap: 3px;
+}
+.msg-bubble.mine { align-self: flex-end; align-items: flex-end; }
+.msg-bubble.theirs { align-self: flex-start; align-items: flex-start; }
+
+.msg-content {
+  padding: 10px 14px;
+  border-radius: 16px;
+  font-size: .88rem; line-height: 1.6;
+  word-break: break-word;
+}
+.msg-bubble.mine .msg-content {
+  background: var(--accent);
+  color: #fff;
+  border-bottom-right-radius: 4px;
+}
+.msg-bubble.theirs .msg-content {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--surface3);
+  border-bottom-left-radius: 4px;
+}
+.msg-time {
+  font-size: .62rem; color: var(--text2);
+}
+.msg-img {
+  max-width: 100%; border-radius: 10px;
+  cursor: pointer; display: block;
+}
+
+/* 入力エリア */
+.chat-input-area {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: var(--surface);
+  border-top: 1px solid var(--surface3);
+  padding: 10px 12px;
+  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  display: flex; align-items: flex-end; gap: 8px;
+  z-index: 50;
+}
+.chat-input-box {
+  flex: 1;
+  padding: 10px 14px;
+  background: var(--surface2);
+  border: 1px solid var(--surface3);
+  border-radius: 20px;
+  color: var(--text); font-size: .88rem;
+  resize: none; outline: none;
+  max-height: 120px; overflow-y: auto;
+  line-height: 1.5; font-family: inherit;
+  -webkit-appearance: none;
+}
+.chat-input-box:focus { border-color: var(--accent); }
+.chat-send-btn {
+  width: 40px; height: 40px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border: none; border-radius: 50%;
+  color: #fff; font-size: 1rem;
+  cursor: pointer; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .2s;
+}
+.chat-send-btn:hover { transform: scale(1.05); }
+.chat-send-btn:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+.chat-img-btn {
+  width: 36px; height: 36px;
+  background: none; border: 1px solid var(--surface3);
+  border-radius: 50%; color: var(--text2);
+  font-size: 1rem; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .2s;
+}
+.chat-img-btn:hover { border-color: var(--accent); color: var(--accent2); }
+
+/* デスクトップ対応 */
+@media (min-width: 768px) {
+  body.has-sidebar .chat-header { left: 240px; }
+  body.has-sidebar .chat-input-area { left: 240px; }
+  .chat-messages { max-width: 640px; margin: 0 auto; width: 100%; }
+}
+</style>
+</head>
+<body>
+<div class="chat-page">
+  <!-- チャットヘッダー -->
+  <div class="chat-header">
+    <button class="chat-header-back" id="back-btn">←</button>
+    <div id="chat-user-avatar" style="flex-shrink:0"></div>
+    <div class="chat-header-user">
+      <div class="chat-header-name" id="chat-header-name">読み込み中...</div>
+      <div class="chat-header-type" id="chat-header-type"></div>
+    </div>
+    <a id="view-profile-btn" href="#" class="btn btn-secondary btn-sm">プロフィール</a>
+  </div>
+
+  <!-- メッセージエリア -->
+  <div class="chat-messages" id="chat-messages">
+    <div class="loading"><div class="spinner"></div><span>読み込み中...</span></div>
+  </div>
+
+  <!-- 画像非表示 input -->
+  <input type="file" id="img-input" accept="image/*" style="display:none">
+
+  <!-- 入力エリア -->
+  <div class="chat-input-area">
+    <button class="chat-img-btn" id="img-btn">🖼️</button>
+    <textarea class="chat-input-box" id="chat-input"
+      placeholder="メッセージを入力..." rows="1"></textarea>
+    <button class="chat-send-btn" id="chat-send" disabled>▶</button>
+  </div>
+</div>
+
+<!-- ナビゲーションバー（モバイル用） -->
+<nav class="nav-bar">
+  <a href="board.html" class="nav-item">
+    <span class="nav-icon">💬</span>
+    <span>掲示板</span>
+  </a>
+  <a href="friends.html" class="nav-item active">
+    <span class="nav-icon">👥</span>
+    <span>フレンド</span>
+  </a>
+  <a href="matching.html" class="nav-item">
+    <span class="nav-icon">💕</span>
+    <span>マッチング</span>
+  </a>
+  <a href="profile.html" class="nav-item">
+    <span class="nav-icon">👤</span>
+    <span>マイページ</span>
+  </a>
+</nav>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="js/supabase-config.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/avatar.js"></script>
+<script>
+(function () {
+  let myUserId = null;
+  let targetUserId = null;
+  let conversationId = null;
+  let realtimeChannel = null;
+  let targetProfile = null;
+
+  // conversation_id 生成（2つのUUIDを辞書順でソートして結合）
+  function makeConversationId(a, b) {
+    return [a, b].sort().join('_');
+  }
+
+  async function init() {
+    const user = await requireAuth();
+    if (!user) return;
+    myUserId = user.id;
+
+    const params = new URLSearchParams(location.search);
+    targetUserId = params.get('user');
+    if (!targetUserId) { location.href = 'friends.html'; return; }
+
+    // フレンド関係の確認
+    const { data: friendship } = await supabase
+      .from('friends')
+      .select('id, status')
+      .or(`and(requester_id.eq.${myUserId},receiver_id.eq.${targetUserId}),and(requester_id.eq.${targetUserId},receiver_id.eq.${myUserId})`)
+      .eq('status', 'accepted')
+      .maybeSingle();
+
+    if (!friendship) {
+      showToast('フレンドではないのでDMは送れません', 'error');
+      setTimeout(() => location.href = 'friends.html', 2000);
+      return;
+    }
+
+    conversationId = makeConversationId(myUserId, targetUserId);
+
+    // 相手プロフィール
+    const { data: tp } = await supabase
+      .from('users')
+      .select('id, nickname, type_name, family, avatar_url, display_id')
+      .eq('id', targetUserId)
+      .single();
+    targetProfile = tp;
+
+    document.getElementById('back-btn').addEventListener('click', () => location.href = 'friends.html');
+    document.getElementById('view-profile-btn').href = `user-profile.html?id=${targetUserId}`;
+
+    if (tp) {
+      document.getElementById('chat-user-avatar').innerHTML = renderUserAvatar(tp, 36);
+      document.getElementById('chat-header-name').textContent = tp.nickname || tp.type_name || '不明';
+      document.getElementById('chat-header-type').textContent = tp.type_name || '';
+    }
+
+    await loadMessages();
+    setupRealtime();
+    setupInput();
+    setupImageUpload();
+  }
+
+  async function loadMessages() {
+    const { data, error } = await supabase
+      .from('dms')
+      .select('*')
+      .eq('conversation_id', conversationId)
+      .eq('is_deleted', false)
+      .order('created_at', { ascending: true })
+      .limit(100);
+
+    const container = document.getElementById('chat-messages');
+    if (error || !data) {
+      container.innerHTML = `<div class="empty-state"><div class="empty-icon">💬</div><div class="empty-text">まだメッセージがありません</div></div>`;
+      return;
+    }
+
+    container.innerHTML = data.length > 0 ? '' : `<div class="empty-state"><div class="empty-icon">💬</div><div class="empty-text">まだメッセージがありません<br>最初のメッセージを送ってみましょう</div></div>`;
+    data.forEach(msg => appendMessage(msg));
+
+    // 未読を既読にする
+    await supabase.from('dms')
+      .update({ is_read: true })
+      .eq('conversation_id', conversationId)
+      .eq('receiver_id', myUserId)
+      .eq('is_read', false);
+
+    scrollToBottom(false);
+  }
+
+  function appendMessage(msg) {
+    const container = document.getElementById('chat-messages');
+    const isMine = msg.sender_id === myUserId;
+
+    // 空のメッセージ（初期空状態）を削除
+    const empty = container.querySelector('.empty-state');
+    if (empty) empty.remove();
+
+    const div = document.createElement('div');
+    div.className = `msg-bubble ${isMine ? 'mine' : 'theirs'}`;
+    div.dataset.msgId = msg.id;
+
+    let contentHtml = '';
+    if (msg.media_url) {
+      contentHtml = `<img class="msg-img" src="${escapeHtml(msg.media_url)}" alt="" loading="lazy">`;
+    }
+    if (msg.content) {
+      contentHtml += `<div class="msg-content">${escapeHtml(msg.content).replace(/\n/g, '<br>')}</div>`;
+    }
+
+    div.innerHTML = `
+      ${contentHtml}
+      <div class="msg-time">${timeAgo(msg.created_at)}${isMine && msg.is_read ? ' · 既読' : ''}</div>
+    `;
+    container.appendChild(div);
+  }
+
+  function setupRealtime() {
+    realtimeChannel = supabase
+      .channel(`dm-${conversationId}`)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'dms',
+        filter: `conversation_id=eq.${conversationId}`,
+      }, async (payload) => {
+        const msg = payload.new;
+        if (msg.sender_id !== myUserId) {
+          appendMessage(msg);
+          scrollToBottom(true);
+          // 既読にする
+          await supabase.from('dms').update({ is_read: true }).eq('id', msg.id);
+        }
+      })
+      .subscribe();
+  }
+
+  function setupInput() {
+    const input = document.getElementById('chat-input');
+    const sendBtn = document.getElementById('chat-send');
+
+    input.addEventListener('input', () => {
+      input.style.height = 'auto';
+      input.style.height = Math.min(input.scrollHeight, 120) + 'px';
+      sendBtn.disabled = input.value.trim().length === 0;
+    });
+
+    sendBtn.addEventListener('click', sendMessage);
+    input.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+  }
+
+  async function sendMessage() {
+    const input = document.getElementById('chat-input');
+    const sendBtn = document.getElementById('chat-send');
+    const content = input.value.trim();
+    if (!content) return;
+
+    sendBtn.disabled = true;
+
+    const { data, error } = await supabase.from('dms').insert({
+      conversation_id: conversationId,
+      sender_id: myUserId,
+      receiver_id: targetUserId,
+      content,
+    }).select().single();
+
+    if (error) {
+      showToast('送信に失敗しました: ' + error.message, 'error');
+    } else {
+      input.value = '';
+      input.style.height = 'auto';
+      appendMessage(data);
+      scrollToBottom(true);
+
+      // 通知
+      await supabase.from('notifications').insert({
+        user_id: targetUserId,
+        type: 'dm',
+        from_user_id: myUserId,
+        message: `${(await getMyProfile())?.nickname || '誰か'}からメッセージが届きました`,
+      }).catch(() => {});
+    }
+
+    sendBtn.disabled = input.value.trim().length === 0;
+  }
+
+  function setupImageUpload() {
+    const imgBtn = document.getElementById('img-btn');
+    const imgInput = document.getElementById('img-input');
+
+    imgBtn.addEventListener('click', () => imgInput.click());
+    imgInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      try {
+        showToast('画像を送信中...', 'info');
+        const blob = await Avatar.processImage(file);
+        const ext = blob.type === 'image/webp' ? 'webp' : 'jpg';
+        const path = `dms/${myUserId}/${Date.now()}.${ext}`;
+
+        const { error: uploadErr } = await supabase.storage
+          .from('avatars')
+          .upload(path, blob, { contentType: blob.type, upsert: false });
+
+        if (uploadErr) throw uploadErr;
+
+        const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(path);
+
+        const { data, error } = await supabase.from('dms').insert({
+          conversation_id: conversationId,
+          sender_id: myUserId,
+          receiver_id: targetUserId,
+          media_url: urlData.publicUrl,
+        }).select().single();
+
+        if (!error) {
+          appendMessage(data);
+          scrollToBottom(true);
+        }
+      } catch (err) {
+        showToast('画像の送信に失敗しました', 'error');
+      }
+      imgInput.value = '';
+    });
+  }
+
+  function scrollToBottom(smooth = true) {
+    const container = document.getElementById('chat-messages');
+    setTimeout(() => {
+      container.scrollTo({ top: container.scrollHeight, behavior: smooth ? 'smooth' : 'auto' });
+    }, 50);
+  }
+
+  window.addEventListener('beforeunload', () => {
+    if (realtimeChannel) supabase.removeChannel(realtimeChannel);
+  });
+
+  init();
+})();
+</script>
+</body>
+</html>

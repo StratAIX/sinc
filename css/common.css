@@ -231,6 +231,36 @@ textarea.form-input{
 .user-type-name{font-size:.78rem;font-weight:600;color:var(--text)}
 .user-display-id{font-size:.68rem;color:var(--text2)}
 
+/* --- 投稿番号・レス・メンション --- */
+.post-num{
+  font-size:.68rem;font-weight:700;
+  color:var(--text2);
+  background:var(--surface2);
+  border:1px solid var(--surface3);
+  border-radius:4px;
+  padding:1px 6px;
+  cursor:default;
+  font-family:monospace;
+}
+.post-ref{
+  color:var(--accent2);
+  font-weight:700;
+  text-decoration:none;
+  font-size:.88rem;
+}
+.post-ref:hover{text-decoration:underline;color:var(--accent)}
+.post-mention{
+  color:var(--pink);
+  font-weight:700;
+}
+.post-reply-to{
+  font-size:.75rem;color:var(--text2);
+  margin-bottom:6px;
+  padding:4px 8px;
+  border-left:2px solid var(--surface3);
+  border-radius:0 4px 4px 0;
+}
+
 /* --- 投稿カード --- */
 .post-card{
   background:var(--surface);
@@ -410,6 +440,131 @@ textarea.form-input{
   margin:16px 0;
 }
 
+/* --- ユーザーアバター --- */
+.user-avatar{
+  width:32px;height:32px;
+  border-radius:50%;
+  object-fit:cover;
+  flex-shrink:0;
+}
+.user-avatar-emoji{
+  display:flex;align-items:center;justify-content:center;
+  border-radius:50%;
+  flex-shrink:0;
+}
+.nav-avatar-img{
+  width:24px;height:24px;
+  border-radius:50%;
+  object-fit:cover;
+  border:1px solid var(--surface3);
+}
+
+/* --- プロフィール編集フォーム --- */
+.profile-edit-section{
+  background:var(--surface);
+  border:1px solid var(--surface3);
+  border-radius:var(--radius);
+  padding:24px;
+  margin-bottom:16px;
+  animation:fadeIn .4s ease;
+}
+.profile-edit-title{
+  font-size:1rem;font-weight:700;
+  margin-bottom:16px;
+  display:flex;align-items:center;gap:8px;
+}
+.profile-setup-welcome{
+  text-align:center;
+  margin-bottom:20px;
+  animation:fadeIn .5s ease;
+}
+.profile-setup-welcome .welcome-emoji{
+  font-size:2.5rem;
+  animation:float 3s ease-in-out infinite;
+  margin-bottom:8px;
+}
+.profile-setup-welcome .welcome-title{
+  font-size:1.15rem;font-weight:900;
+  background:linear-gradient(135deg,var(--accent),var(--pink));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  margin-bottom:6px;
+}
+.profile-setup-welcome .welcome-desc{
+  font-size:.82rem;color:var(--text2);line-height:1.6;
+}
+
+/* アバターアップロードUI */
+.avatar-upload-area{
+  display:flex;align-items:center;gap:16px;
+  margin-bottom:16px;
+}
+.avatar-preview{
+  width:80px;height:80px;
+  border-radius:50%;
+  border:2px dashed var(--surface3);
+  display:flex;align-items:center;justify-content:center;
+  font-size:2rem;
+  overflow:hidden;
+  flex-shrink:0;
+  transition:border-color .2s;
+  background:var(--surface2);
+  cursor:pointer;
+  position:relative;
+}
+.avatar-preview:hover{border-color:var(--accent)}
+.avatar-preview img{
+  width:100%;height:100%;
+  object-fit:cover;
+  border-radius:50%;
+}
+.avatar-preview .avatar-overlay{
+  position:absolute;
+  inset:0;
+  background:rgba(0,0,0,.5);
+  display:flex;align-items:center;justify-content:center;
+  border-radius:50%;
+  opacity:0;
+  transition:opacity .2s;
+  font-size:.7rem;
+  color:#fff;
+}
+.avatar-preview:hover .avatar-overlay{opacity:1}
+.avatar-upload-info{flex:1;min-width:0}
+.avatar-upload-info .upload-label{
+  font-size:.82rem;font-weight:600;margin-bottom:4px;
+}
+.avatar-upload-info .upload-hint{
+  font-size:.7rem;color:var(--text2);line-height:1.5;
+}
+.avatar-upload-btn{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:6px 14px;margin-top:6px;
+  font-size:.75rem;font-weight:600;
+  background:var(--surface2);
+  border:1px solid var(--surface3);
+  border-radius:20px;
+  color:var(--text);
+  cursor:pointer;
+  transition:all .2s;
+}
+.avatar-upload-btn:hover{border-color:var(--accent);color:var(--accent2)}
+.avatar-remove-btn{
+  font-size:.7rem;color:var(--danger);
+  border:none;background:none;
+  cursor:pointer;margin-top:4px;
+  padding:2px 0;
+}
+.avatar-remove-btn:hover{text-decoration:underline}
+
+/* 文字数カウンター */
+.char-count{
+  font-size:.68rem;
+  color:var(--text2);
+  text-align:right;
+  margin-top:2px;
+}
+.char-count.over{color:var(--danger)}
+
 /* --- ユーティリティ --- */
 .hidden{display:none!important}
 .text-center{text-align:center}
@@ -422,10 +577,131 @@ textarea.form-input{
 .mb-8{margin-bottom:8px}
 .mb-16{margin-bottom:16px}
 
-/* --- レスポンシブ --- */
+/* --- レスポンシブ（モバイル） --- */
 @media(max-width:420px){
   .page{padding:14px}
   .card{padding:14px}
   .post-card{padding:12px}
   .board-card{padding:12px 14px}
 }
+
+/* ============================================================
+   デスクトップ サイドバーレイアウト
+   モバイル（<768px）: 下部タブバーを維持（Capacitorアプリ最適）
+   デスクトップ（≥768px）: 左サイドバー（Twitter/Claude型）
+   ============================================================ */
+
+/* サイドバー本体（デフォルト非表示） */
+.sidebar{
+  position:fixed;top:0;left:0;bottom:0;
+  width:240px;
+  background:var(--surface);
+  border-right:1px solid var(--surface3);
+  flex-direction:column;
+  overflow-y:auto;
+  z-index:100;
+  display:none;
+}
+
+/* デスクトップでサイドバーを表示・ナビバーを非表示 */
+@media(min-width:768px){
+  body.has-sidebar .sidebar{display:flex}
+  body.has-sidebar .nav-bar{display:none!important}
+  body.has-sidebar .page{
+    padding-left:260px;
+    padding-bottom:20px;
+  }
+  body.has-sidebar .toast{bottom:40px}
+  body.has-sidebar .modal-overlay{left:240px}
+}
+
+/* ----- サイドバー内部スタイル ----- */
+
+/* ロゴ */
+.sidebar-logo{
+  padding:24px 20px 16px;
+  border-bottom:1px solid var(--surface3);
+  flex-shrink:0;
+}
+.sb-logo-text{
+  font-size:1.05rem;font-weight:900;
+  background:linear-gradient(135deg,var(--accent),var(--accent2),#fd79a8);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.sb-logo-sub{font-size:.62rem;color:var(--text2);margin-top:2px;letter-spacing:.06em}
+
+/* ユーザー情報 */
+.sidebar-user{
+  display:flex;align-items:center;gap:10px;
+  padding:14px 18px;
+  border-bottom:1px solid var(--surface3);
+  cursor:pointer;transition:background .2s;
+  flex-shrink:0;
+}
+.sidebar-user:hover{background:var(--surface2)}
+.sb-avatar-wrap{flex-shrink:0}
+.sb-user-info{flex:1;min-width:0;overflow:hidden}
+.sb-nickname{
+  font-size:.88rem;font-weight:700;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.sb-type{font-size:.68rem;color:var(--text2);margin-top:1px}
+
+/* ナビリンク */
+.sidebar-nav{
+  flex:1;
+  padding:8px 0;
+  display:flex;flex-direction:column;
+  overflow-y:auto;
+}
+.sb-item{
+  display:flex;align-items:center;gap:12px;
+  padding:11px 18px;
+  color:var(--text2);text-decoration:none;
+  font-size:.88rem;font-weight:500;
+  transition:all .2s;
+  position:relative;
+  border:none;background:none;width:100%;cursor:pointer;
+  border-left:3px solid transparent;
+  text-align:left;
+}
+.sb-item:hover{background:var(--surface2);color:var(--text);border-left-color:rgba(108,92,231,.35)}
+.sb-item.active{color:var(--accent2);font-weight:700;background:rgba(108,92,231,.07);border-left-color:var(--accent)}
+.sb-icon{font-size:1.15rem;width:24px;text-align:center;flex-shrink:0}
+.sb-label{flex:1}
+.sb-badge{
+  background:var(--danger);color:#fff;
+  border-radius:50px;font-size:.62rem;font-weight:700;
+  padding:1px 6px;min-width:18px;text-align:center;
+  display:none;
+}
+.sb-badge.show{display:inline-block}
+
+/* ポイント表示 */
+.sb-points-area{
+  display:flex;align-items:center;gap:6px;
+  padding:10px 18px;
+  border-top:1px solid var(--surface3);
+  font-size:.75rem;color:var(--text2);
+  flex-shrink:0;
+}
+.sb-points-icon{font-size:1rem}
+.sb-points-val{color:var(--warning);font-weight:700}
+.sb-points-unit{font-size:.65rem}
+
+/* フッター（ログアウト） */
+.sidebar-footer{
+  padding:12px 18px;
+  border-top:1px solid var(--surface3);
+  flex-shrink:0;
+}
+.sb-logout-btn{
+  width:100%;
+  padding:8px 16px;
+  background:transparent;
+  border:1px solid var(--surface3);
+  border-radius:8px;
+  color:var(--text2);font-size:.78rem;font-weight:500;
+  cursor:pointer;transition:all .2s;
+}
+.sb-logout-btn:hover{border-color:var(--danger);color:var(--danger)}
