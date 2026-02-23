@@ -516,7 +516,8 @@
 
   document.getElementById('go-to-chat').addEventListener('click', () => {
     document.getElementById('match-success-modal').classList.remove('show');
-    if (selectedUserId) location.href = `chat.html?user=${selectedUserId}`;
+    // マッチングはサンプルユーザーのため test=1 でフレンドチェックをスキップ
+    if (selectedUserId) location.href = `chat.html?user=${selectedUserId}&test=1`;
   });
   document.getElementById('back-to-list').addEventListener('click', () => {
     document.getElementById('match-success-modal').classList.remove('show');

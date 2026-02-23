@@ -204,6 +204,48 @@
     font-size:.72rem;color:var(--text2);margin-top:8px;text-align:right;
   }
   .hobby-limit-hint.over{color:var(--danger)}
+
+  /* 性別選択 */
+  .gender-btn-group{display:flex;gap:8px;flex-wrap:wrap;}
+  .gender-btn{
+    flex:1;min-width:72px;
+    padding:10px 8px;
+    background:var(--surface);border:1.5px solid var(--surface3);
+    border-radius:10px;cursor:pointer;
+    font-size:.8rem;color:var(--text2);transition:all .2s;text-align:center;
+  }
+  .gender-btn:hover{border-color:rgba(108,92,231,.4);color:var(--text);}
+  .gender-btn.selected{
+    border-color:var(--accent);background:rgba(108,92,231,.1);
+    color:var(--accent2);font-weight:600;
+  }
+
+  /* 本人確認バナー */
+  .verify-banner{
+    background:var(--surface);border:1px solid rgba(255,165,0,.4);
+    border-radius:var(--radius);padding:14px 16px;
+    display:flex;align-items:center;gap:12px;margin-bottom:12px;
+  }
+  .verify-banner.verified{border-color:rgba(0,184,148,.4);}
+  .verify-banner-icon{font-size:1.4rem;flex-shrink:0;}
+  .verify-banner-body{flex:1;}
+  .verify-banner-title{font-size:.85rem;font-weight:700;margin-bottom:2px;}
+  .verify-banner-sub{font-size:.72rem;color:var(--text2);}
+
+  /* 本人確認ステップ */
+  .verify-steps{margin:16px 0;display:flex;flex-direction:column;gap:10px;}
+  .verify-step{
+    display:flex;align-items:flex-start;gap:12px;
+    padding:12px;background:var(--surface2);border-radius:8px;
+  }
+  .verify-step-num{
+    width:24px;height:24px;border-radius:50%;
+    background:var(--accent);color:#fff;
+    display:flex;align-items:center;justify-content:center;
+    font-size:.75rem;font-weight:700;flex-shrink:0;
+  }
+  .verify-step-title{font-size:.85rem;font-weight:700;margin-bottom:2px;}
+  .verify-step-sub{font-size:.75rem;color:var(--text2);line-height:1.5;}
 </style>
 </head>
 <body>
@@ -273,6 +315,18 @@
           <div class="char-count"><span id="bio-count">0</span>/100</div>
         </div>
 
+        <!-- 性別 -->
+        <div class="form-group" id="gender-form-group">
+          <label class="form-label">性別（任意・マッチングで使用）</label>
+          <div class="gender-btn-group" id="gender-select">
+            <button type="button" class="gender-btn" data-val="male">👨 男性</button>
+            <button type="button" class="gender-btn" data-val="female">👩 女性</button>
+            <button type="button" class="gender-btn" data-val="other">🧑 その他</button>
+            <button type="button" class="gender-btn" data-val="secret">🔒 非公開</button>
+          </div>
+          <div class="form-hint">マッチング相手の絞り込みに使用されます。後から変更可能です。</div>
+        </div>
+
         <!-- 趣味選択 -->
         <div class="form-group" id="hobby-form-group">
           <label class="form-label">好きなカテゴリー（最大3つ）</label>
@@ -292,6 +346,9 @@
     <div class="profile-card" id="profile-card">
       <div class="loading"><div class="spinner"></div></div>
     </div>
+
+    <!-- 本人確認バナー -->
+    <div id="verify-banner-wrap" style="display:none"></div>
 
     <!-- 統計 -->
     <div class="profile-stats" id="profile-stats"></div>
@@ -366,6 +423,41 @@
   </div>
 </div>
 
+<!-- 本人確認モーダル -->
+<div class="modal-overlay" id="verify-modal">
+  <div class="modal" style="max-width:420px;padding:24px">
+    <div class="modal-title">🪪 本人確認</div>
+    <p style="font-size:.82rem;color:var(--text2);line-height:1.7;margin-bottom:0">
+      マッチング機能を利用するには18歳以上であることの確認が必要です。<br>
+      <small>※ 出会い系サイト規制法に基づく義務です。</small>
+    </p>
+    <div class="verify-steps">
+      <div class="verify-step">
+        <div class="verify-step-num">1</div>
+        <div>
+          <div class="verify-step-title">✅ 年齢確認</div>
+          <div class="verify-step-sub">18歳以上であることを確認します</div>
+        </div>
+      </div>
+      <div class="verify-step" style="opacity:.6">
+        <div class="verify-step-num" style="background:var(--surface3)">2</div>
+        <div>
+          <div class="verify-step-title">⏳ 身分証の提出（準備中）</div>
+          <div class="verify-step-sub">運転免許証・マイナンバーカード等の提出機能は近日公開予定。現時点では不要です。</div>
+        </div>
+      </div>
+    </div>
+    <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:.88rem;margin-bottom:20px">
+      <input type="checkbox" id="age-confirm-check" style="width:18px;height:18px;accent-color:var(--accent)">
+      <span>私は18歳以上です</span>
+    </label>
+    <div class="modal-actions">
+      <button class="btn btn-secondary btn-sm" id="verify-cancel-btn">後で行う</button>
+      <button class="btn btn-primary btn-sm" id="verify-submit-btn" disabled>確認完了</button>
+    </div>
+  </div>
+</div>
+
 <!-- ナビゲーションバー（モバイル用） -->
 <nav class="nav-bar">
   <a href="board.html" class="nav-item">
@@ -427,6 +519,7 @@
   let currentProfile = null;
   let pendingAvatarBlob = null; // アップロード待ちのblob
   let selectedHobbies  = [];    // 選択中の大カテゴリーIDリスト
+  let selectedGender   = null;  // 選択中の性別
   let cropperInstance  = null;  // Cropper.jsインスタンス
 
   async function init() {
@@ -501,6 +594,12 @@
     updateCharCount('nickname');
     updateCharCount('bio');
 
+    // 性別プリフィル
+    selectedGender = currentProfile.gender || null;
+    document.querySelectorAll('.gender-btn').forEach(btn => {
+      btn.classList.toggle('selected', btn.dataset.val === selectedGender);
+    });
+
     // 趣味グリッドを初期化
     selectedHobbies = Array.isArray(currentProfile.hobbies) ? [...currentProfile.hobbies] : [];
     renderHobbyGrid();
@@ -540,6 +639,9 @@
 
     // 編集ボタン
     document.getElementById('edit-btn')?.addEventListener('click', () => showEditMode(false));
+
+    // 本人確認バナー
+    renderVerifyBanner(profile.age_verified);
 
     // 診断履歴
     renderDiagnosisHistory(profile.diagnosis_history);
@@ -611,6 +713,74 @@
       });
     });
   }
+
+  // --- 性別ボタン ---
+  document.getElementById('gender-select')?.querySelectorAll('.gender-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      selectedGender = btn.dataset.val;
+      document.querySelectorAll('#gender-select .gender-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+    });
+  });
+
+  // --- 本人確認バナー ---
+  function renderVerifyBanner(isVerified) {
+    const wrap = document.getElementById('verify-banner-wrap');
+    if (!wrap) return;
+    wrap.style.display = 'block';
+    if (isVerified) {
+      wrap.innerHTML = `
+        <div class="verify-banner verified">
+          <div class="verify-banner-icon">✅</div>
+          <div class="verify-banner-body">
+            <div class="verify-banner-title">本人確認済み</div>
+            <div class="verify-banner-sub">マッチング機能が利用できます</div>
+          </div>
+        </div>`;
+    } else {
+      wrap.innerHTML = `
+        <div class="verify-banner">
+          <div class="verify-banner-icon">⚠️</div>
+          <div class="verify-banner-body">
+            <div class="verify-banner-title">本人確認が未完了</div>
+            <div class="verify-banner-sub">マッチング機能を利用するには年齢確認が必要です</div>
+          </div>
+          <button class="btn btn-primary btn-sm" id="verify-open-btn">確認する</button>
+        </div>`;
+      document.getElementById('verify-open-btn')?.addEventListener('click', () => {
+        document.getElementById('age-confirm-check').checked = false;
+        document.getElementById('verify-submit-btn').disabled = true;
+        document.getElementById('verify-modal').classList.add('show');
+      });
+    }
+  }
+
+  // 本人確認モーダル
+  document.getElementById('age-confirm-check')?.addEventListener('change', (e) => {
+    document.getElementById('verify-submit-btn').disabled = !e.target.checked;
+  });
+  document.getElementById('verify-cancel-btn')?.addEventListener('click', () => {
+    document.getElementById('verify-modal').classList.remove('show');
+  });
+  document.getElementById('verify-modal')?.addEventListener('click', (e) => {
+    if (e.target.id === 'verify-modal') document.getElementById('verify-modal').classList.remove('show');
+  });
+  document.getElementById('verify-submit-btn')?.addEventListener('click', async () => {
+    const btn = document.getElementById('verify-submit-btn');
+    btn.disabled = true;
+    btn.textContent = '処理中...';
+    try {
+      await updateMyProfile({ age_verified: true });
+      currentProfile = await getMyProfile(true);
+      document.getElementById('verify-modal').classList.remove('show');
+      showToast('本人確認が完了しました！', 'success');
+      renderVerifyBanner(true);
+    } catch (err) {
+      showToast('確認に失敗しました: ' + err.message, 'error');
+      btn.disabled = false;
+      btn.textContent = '確認完了';
+    }
+  });
 
   // --- アバタープレビュー ---
   function updateAvatarPreview() {
@@ -780,8 +950,8 @@
         delete currentProfile._removeAvatar;
       }
 
-      // プロフィール保存（username / ニックネーム / 趣味 を含む）
-      await Auth.saveProfile(nickname, bio, selectedHobbies, usernameVal);
+      // プロフィール保存（username / ニックネーム / 性別 / 趣味 を含む）
+      await Auth.saveProfile(nickname, bio, selectedHobbies, usernameVal, selectedGender);
 
       // キャッシュ更新
       currentProfile = await getMyProfile(true);

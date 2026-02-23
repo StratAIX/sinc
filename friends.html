@@ -98,6 +98,16 @@
       </div>
     </div>
 
+    <!-- テスト機能 -->
+    <div style="background:linear-gradient(135deg,rgba(253,203,110,.08),rgba(225,112,85,.08));border:1px dashed rgba(253,203,110,.4);border-radius:var(--radius);padding:12px 16px;margin-bottom:16px">
+      <div style="font-size:.8rem;font-weight:700;color:var(--warning);margin-bottom:6px">🧪 テスト機能</div>
+      <div style="font-size:.74rem;color:var(--text2);margin-bottom:10px">フレンドがいなくてもDMやプロフィール画面を確認できます</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button id="test-dm-btn" class="btn btn-secondary btn-sm">💬 DM画面をテスト</button>
+        <button id="test-profile-btn" class="btn btn-secondary btn-sm">👤 他人プロフィールをテスト</button>
+      </div>
+    </div>
+
     <!-- タブ -->
     <div class="tabs friend-tabs">
       <button class="tab active" data-tab="friends">フレンド</button>
@@ -414,6 +424,21 @@
     const map = { search: 'ID検索', match: 'マッチング', invite: '招待' };
     return map[source] || '';
   }
+
+  // ——— テスト機能 ———
+  document.getElementById('test-dm-btn')?.addEventListener('click', async () => {
+    const user = await getCurrentUser();
+    if (user) {
+      location.href = `chat.html?user=${user.id}&test=1`;
+    }
+  });
+  document.getElementById('test-profile-btn')?.addEventListener('click', async () => {
+    const user = await getCurrentUser();
+    if (user) {
+      // test=1 で自分のIDでも他人視点プロフィールを表示
+      location.href = `user-profile.html?id=${user.id}&test=1`;
+    }
+  });
 
   init();
 })();

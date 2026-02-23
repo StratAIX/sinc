@@ -100,7 +100,7 @@ const Auth = {
   // ============================================================
   // プロフィール保存（ニックネーム・自己紹介・username）
   // ============================================================
-  async saveProfile(nickname, bio, hobbies = [], username = null) {
+  async saveProfile(nickname, bio, hobbies = [], username = null, gender = null) {
     const user = await getCurrentUser();
     if (!user) throw new Error('ログインが必要です');
 
@@ -114,6 +114,11 @@ const Auth = {
     // usernameは初回のみ設定（nullなら更新しない）
     if (username) {
       updates.username = username.toLowerCase().slice(0, 20);
+    }
+
+    // 性別（指定があれば更新）
+    if (gender) {
+      updates.gender = gender;
     }
 
     const { error } = await supabase

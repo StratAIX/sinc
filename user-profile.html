@@ -173,10 +173,18 @@ function getTypeEmoji(n) {
 
     const params = new URLSearchParams(location.search);
     targetId = params.get('id');
+    const isTestMode = params.get('test') === '1';
     if (!targetId) { location.href = 'friends.html'; return; }
 
-    // 自分のプロフィールは profile.html へ
-    if (targetId === myUserId) { location.href = 'profile.html'; return; }
+    // 自分のプロフィールは profile.html へ（テストモードは除外）
+    if (targetId === myUserId && !isTestMode) { location.href = 'profile.html'; return; }
+
+    if (isTestMode) {
+      const banner = document.createElement('div');
+      banner.style.cssText = 'background:#f39c12;color:#000;text-align:center;font-size:.75rem;padding:4px;font-weight:700;margin-bottom:8px;border-radius:6px';
+      banner.textContent = '🧪 テストモード（自分のプロフィールを他人視点で表示）';
+      document.querySelector('.container').prepend(banner);
+    }
 
     document.getElementById('back-btn').addEventListener('click', () => history.back());
 
