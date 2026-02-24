@@ -237,7 +237,7 @@ canvas#radarChart{max-width:320px;width:100%;height:auto}
     <div class="logo-sub">Personality Architecture</div>
   </div>
   <p class="subtitle">最新AIが導き出す<strong>あなたの本当の性格</strong>を知り、<br>最高の仲間たちと楽しめる<strong>世界唯一の掲示板</strong>へ</p>
-  <p class="start-sub">※ 診断結果は気分や状況によって変わることがあります。定期的に受け直すことで、今の自分をより深く知れます。</p>
+  <p class="start-sub">※ タイプ判定は気分や状況によって変わることがあります。定期的に受け直すことで、今の自分をより深く知れます。<br>本サービスの分析は娯楽・自己理解を目的とするものであり、医学的・心理学的診断ではありません。</p>
   <button class="start-btn" onclick="startDiagnosis()">診断を始める</button>
   <p class="start-info">136問 ｜ 所要時間 約35〜45分<br>途中で戻ることもできます</p>
 </div>
@@ -292,7 +292,7 @@ canvas#radarChart{max-width:320px;width:100%;height:auto}
 <div id="analyzeScreen" class="screen">
 <div class="analyzing">
   <div class="analyze-spinner"></div>
-  <div class="analyze-text">あなたの精神構造を解析しています...</div>
+  <div class="analyze-text">あなたの思考・行動パターンを分析しています...</div>
   <div class="analyze-step" id="analyzeStep"></div>
 </div>
 </div>
@@ -1159,7 +1159,7 @@ function prevQ(){if(cur>0){cur--;renderQ()}}
 function showAnalyzing(){
 clearSave();
 show('analyzeScreen');
-const steps=['15次元のP変数を計算中...','5つの軸を判定中...','矛盾の指紋を検出中...','関係性スタイルを分析中...','32タイプを照合中...','あなたの精神構造を描画中...'];
+const steps=['15次元のP変数を計算中...','5つの軸を判定中...','矛盾の指紋を検出中...','関係性スタイルを分析中...','32タイプを照合中...','あなたのパターンを描画中...'];
 let i=0;
 const el=document.getElementById('analyzeStep');
 const iv=setInterval(()=>{if(i<steps.length){el.textContent=steps[i];i++}else{clearInterval(iv);showResult()}},700);
@@ -1655,6 +1655,9 @@ ${buildSpectrumHTML(scores)}
 </div>
 
 <a href="types.html?type=${t.n}" class="types-link-btn">📖 全32タイプ一覧を見る</a>
+<div style="margin:20px 0 8px;padding:14px 16px;background:rgba(122,122,158,.07);border:1px solid rgba(122,122,158,.2);border-radius:10px;font-size:.72rem;color:var(--text2);line-height:1.7;text-align:center">
+  本サービスの性格分析は娯楽・自己理解を目的とするものであり、医学的・心理学的診断ではありません。<br>精神的な問題が心配な場合は、専門の医療機関にご相談ください。
+</div>
 <button class="retry-btn" onclick="retry()">もう一度診断する</button>
 <button id="go-board-btn" onclick="goToBoard()" style="display:block;width:100%;padding:16px;margin-top:16px;background:linear-gradient(135deg,#6c5ce7,#a29bfe);color:#fff;border:none;border-radius:14px;font-size:1rem;font-weight:700;cursor:pointer;letter-spacing:.05em;opacity:.6;">保存中...</button>
 `;

@@ -705,3 +705,49 @@ textarea.form-input{
   cursor:pointer;transition:all .2s;
 }
 .sb-logout-btn:hover{border-color:var(--danger);color:var(--danger)}
+
+/* サイドバー内法務リンク */
+.sb-legal-links{
+  display:flex;flex-wrap:wrap;gap:6px;
+  margin-top:10px;
+  padding-top:10px;
+  border-top:1px solid var(--surface3);
+}
+.sb-legal-link{
+  font-size:.65rem;color:var(--text2);text-decoration:none;
+  transition:color .2s;
+}
+.sb-legal-link:hover{color:var(--accent2)}
+.sb-copyright{
+  margin-top:8px;font-size:.62rem;color:var(--surface3);
+}
+
+/* ページ下部共通フッター（モバイルで表示、デスクトップはサイドバーで代替） */
+.page-footer{
+  background:var(--surface);
+  border-top:1px solid var(--surface3);
+  padding:24px 20px calc(24px + env(safe-area-inset-bottom,0px));
+  margin-top:40px;
+}
+.page-footer-inner{
+  max-width:640px;
+  margin:0 auto;
+  text-align:center;
+}
+.page-footer-links{
+  display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:4px 12px;
+  margin-bottom:10px;
+}
+.page-footer-links a{font-size:.72rem;color:var(--text2);text-decoration:none;transition:color .2s}
+.page-footer-links a:hover{color:var(--accent2)}
+.pf-sep{color:var(--surface3);font-size:.7rem}
+.page-footer-disclaimer{
+  font-size:.65rem;color:var(--text2);line-height:1.6;
+  margin-bottom:6px;
+  opacity:.7;
+}
+.page-footer-copy{font-size:.62rem;color:var(--surface3)}
+/* デスクトップではページフッターを非表示（サイドバーに移動） */
+@media(min-width:768px){
+  .page-footer{display:none}
+}

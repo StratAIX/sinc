@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>マッチング機能を解放する - Doppelganger</title>
+<link rel="stylesheet" href="css/common.css">
+<style>
+  .unlock-page{min-height:100vh;min-height:100dvh;padding:20px 20px 100px;animation:fadeIn .5s ease}
+  .unlock-container{max-width:480px;margin:0 auto}
+
+  /* 進捗ステップ */
+  .step-progress{display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:32px}
+  .step-dot{
+    width:28px;height:28px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-size:.7rem;font-weight:700;
+    background:var(--surface2);border:2px solid var(--surface3);
+    color:var(--text2);transition:all .3s;flex-shrink:0;
+  }
+  .step-dot.active{background:var(--accent);border-color:var(--accent);color:#fff}
+  .step-dot.done{background:var(--success);border-color:var(--success);color:#fff}
+  .step-line{flex:1;height:2px;background:var(--surface3);transition:background .3s}
+  .step-line.done{background:var(--success)}
+
+  /* カード */
+  .step-card{background:var(--surface);border:1px solid var(--surface3);border-radius:var(--radius);padding:24px;animation:fadeIn .4s ease}
+  .step-title{font-size:1.1rem;font-weight:900;margin-bottom:4px}
+  .step-desc{font-size:.82rem;color:var(--text2);line-height:1.7;margin-bottom:20px}
+
+  /* 説明リスト */
+  .feature-list{display:flex;flex-direction:column;gap:10px;margin-bottom:20px}
+  .feature-item{display:flex;gap:12px;align-items:flex-start;background:var(--surface2);border-radius:10px;padding:12px}
+  .feature-icon{font-size:1.2rem;flex-shrink:0;margin-top:1px}
+  .feature-text{font-size:.82rem;line-height:1.6}
+  .feature-text strong{display:block;font-weight:700;margin-bottom:2px;color:var(--text)}
+  .feature-text span{color:var(--text2)}
+
+  /* 料金バナー */
+  .price-banner{
+    background:linear-gradient(135deg,rgba(108,92,231,.12),rgba(232,67,147,.08));
+    border:1px solid rgba(108,92,231,.3);border-radius:12px;
+    padding:16px;margin-bottom:16px;text-align:center;
+  }
+  .price-gender{display:flex;gap:12px}
+  .price-card{flex:1;background:var(--surface2);border-radius:10px;padding:12px;text-align:center}
+  .price-label{font-size:.72rem;color:var(--text2);margin-bottom:4px}
+  .price-value{font-size:1.1rem;font-weight:900;color:var(--accent2)}
+  .price-note{font-size:.65rem;color:var(--text2);margin-top:3px}
+
+  /* 法的注意 */
+  .legal-notice{background:rgba(253,203,110,.07);border:1px solid rgba(253,203,110,.25);border-radius:10px;padding:12px 14px;font-size:.75rem;color:var(--text2);line-height:1.7;margin-bottom:20px}
+
+  /* フォーム */
+  .gender-select{display:flex;gap:8px;margin-bottom:4px}
+  .gender-opt{flex:1;padding:10px 6px;border:1px solid var(--surface3);border-radius:10px;background:var(--surface2);color:var(--text2);font-size:.82rem;text-align:center;cursor:pointer;transition:all .2s;font-family:inherit}
+  .gender-opt.active{border-color:var(--accent);color:var(--accent2);background:rgba(108,92,231,.1)}
+  .age-input{display:flex;gap:8px;align-items:center}
+  .age-input select{flex:1}
+  .pref-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;max-height:180px;overflow-y:auto;padding:4px}
+  .pref-opt{padding:6px 4px;border:1px solid var(--surface3);border-radius:6px;background:var(--surface2);color:var(--text2);font-size:.72rem;text-align:center;cursor:pointer;transition:all .2s}
+  .pref-opt.active{border-color:var(--accent);color:var(--accent2);background:rgba(108,92,231,.1)}
+
+  /* eKYC */
+  .kyc-status{background:var(--surface2);border-radius:10px;padding:14px;margin-bottom:14px;text-align:center}
+  .kyc-status-icon{font-size:2rem;margin-bottom:6px}
+  .kyc-status-text{font-size:.82rem;color:var(--text2)}
+  .kyc-placeholder{
+    border:2px dashed var(--surface3);border-radius:10px;
+    padding:24px;text-align:center;margin-bottom:14px;
+    cursor:pointer;transition:all .2s;
+  }
+  .kyc-placeholder:hover{border-color:var(--accent)}
+  .kyc-placeholder-icon{font-size:2rem;margin-bottom:8px}
+  .kyc-placeholder-text{font-size:.82rem;color:var(--text2);line-height:1.6}
+  .kyc-check-wrap{display:flex;align-items:flex-start;gap:10px;margin-bottom:14px;cursor:pointer}
+  .kyc-check-wrap input{margin-top:3px;accent-color:var(--accent);width:16px;height:16px;cursor:pointer}
+  .kyc-check-label{font-size:.8rem;color:var(--text2);line-height:1.6;cursor:pointer}
+
+  /* 購入 */
+  .purchase-card{border:2px solid rgba(108,92,231,.3);border-radius:var(--radius);padding:20px;text-align:center;margin-bottom:14px;background:linear-gradient(135deg,rgba(108,92,231,.05),rgba(232,67,147,.05))}
+  .purchase-amount{font-size:2rem;font-weight:900;background:linear-gradient(135deg,var(--accent),var(--pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:4px}
+  .purchase-label{font-size:.78rem;color:var(--text2);margin-bottom:8px}
+  .purchase-includes{font-size:.75rem;color:var(--text2);line-height:1.7;text-align:left;background:var(--surface2);border-radius:8px;padding:10px 12px}
+  .purchase-includes li{margin-left:14px;margin-bottom:3px}
+
+  /* 女性向け無料表示 */
+  .free-badge{display:inline-block;background:linear-gradient(135deg,var(--success),#00cec9);color:#fff;font-size:.75rem;font-weight:700;padding:4px 12px;border-radius:50px;margin-bottom:12px}
+
+  /* 成功画面 */
+  .success-screen{text-align:center;padding:20px 0}
+  .success-emoji{font-size:3.5rem;animation:float 2s ease-in-out infinite;margin-bottom:12px}
+  .success-title{font-size:1.3rem;font-weight:900;background:linear-gradient(135deg,var(--accent),var(--pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px}
+  .success-desc{font-size:.85rem;color:var(--text2);line-height:1.7;margin-bottom:24px}
+
+  /* ナビ */
+  .nav-bar{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--surface3);display:flex;padding:8px 0;padding-bottom:calc(8px + env(safe-area-inset-bottom,0px));z-index:100}
+  .nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0;color:var(--text2);font-size:.65rem;text-decoration:none;transition:all .2s}
+  .nav-item:hover,.nav-item.active{color:var(--accent2)}
+  .nav-icon{font-size:1.3rem}
+
+  .status-msg{text-align:center;font-size:.82rem;min-height:1.2em;margin-top:8px}
+  .status-msg.error{color:var(--danger)}
+  .status-msg.success{color:var(--success)}
+</style>
+</head>
+<body>
+
+<div class="unlock-page" id="unlock-page">
+  <div class="unlock-container">
+
+    <!-- ヘッダー -->
+    <div style="text-align:center;margin-bottom:24px">
+      <div style="font-size:1.2rem;font-weight:900;background:linear-gradient(135deg,#6c5ce7,#a29bfe,#fd79a8);-webkit-background-clip:text;-webkit-text-fill-color:transparent">Doppelganger</div>
+      <div style="font-size:.72rem;color:var(--text2);margin-top:2px;letter-spacing:.15em">MATCHING UNLOCK</div>
+    </div>
+
+    <!-- 進捗ステップバー -->
+    <div class="step-progress" id="step-progress">
+      <div class="step-dot active" id="dot-1">1</div>
+      <div class="step-line" id="line-1"></div>
+      <div class="step-dot" id="dot-2">2</div>
+      <div class="step-line" id="line-2"></div>
+      <div class="step-dot" id="dot-3">3</div>
+      <div class="step-line" id="line-3"></div>
+      <div class="step-dot" id="dot-4">4</div>
+    </div>
+
+    <!-- ============================================================
+         STEP 1: 説明 + 料金案内
+    ============================================================ -->
+    <div class="step-card" id="step-1">
+      <div class="step-title">💕 マッチング機能について</div>
+      <div class="step-desc">性格タイプで相性の良い相手と繋がれる機能です。ご利用前に内容をご確認ください。</div>
+
+      <div class="feature-list">
+        <div class="feature-item">
+          <div class="feature-icon">🔍</div>
+          <div class="feature-text">
+            <strong>相性マッチング</strong>
+            <span>15次元の性格分析から相性スコアが高い上位5名を提案します</span>
+          </div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">💬</div>
+          <div class="feature-text">
+            <strong>個人チャット解放</strong>
+            <span>マッチングが成立すると1対1のチャットができるようになります</span>
+          </div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">🔒</div>
+          <div class="feature-text">
+            <strong>年齢確認が必要</strong>
+            <span>18歳以上の方のみご利用いただけます（本人確認書類が必要です）</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="price-banner">
+        <div style="font-size:.75rem;color:var(--text2);margin-bottom:10px;font-weight:600">料金プラン</div>
+        <div class="price-gender">
+          <div class="price-card">
+            <div class="price-label">👨 男性</div>
+            <div class="price-value">¥990</div>
+            <div class="price-note">機能解放（初回のみ）</div>
+            <div class="price-note">+ ¥990/打診（女性への申し込み）</div>
+          </div>
+          <div class="price-card">
+            <div class="price-label">👩 女性</div>
+            <div class="price-value">無料</div>
+            <div class="price-note">機能解放・被打診 ともに無料</div>
+            <div class="price-note">本人確認のみ</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="legal-notice">
+        ⚖️ 本サービスは出会い系サイト規制法（インターネット異性紹介事業規制法）に基づき、公安委員会への届出を行っています。マッチング機能のご利用は18歳以上の方のみとし、利用目的は友人・恋人の出会いに限ります。
+      </div>
+
+      <button class="btn btn-primary btn-block" id="step1-next">
+        内容を確認しました → 次へ
+      </button>
+    </div>
+
+    <!-- ============================================================
+         STEP 2: 性別・生年月日・都道府県の入力
+    ============================================================ -->
+    <div class="step-card hidden" id="step-2">
+      <div class="step-title">👤 プロフィール情報の入力</div>
+      <div class="step-desc">マッチングに必要な情報を入力してください。性別・生年月日・地域は一度設定すると変更できません。</div>
+
+      <!-- 性別 -->
+      <div class="form-group">
+        <label class="form-label">性別 <span style="color:var(--danger)">*</span></label>
+        <div class="gender-select" id="gender-select">
+          <button class="gender-opt" data-gender="male" type="button">👨 男性</button>
+          <button class="gender-opt" data-gender="female" type="button">👩 女性</button>
+        </div>
+        <div class="form-hint">非公開にする場合はマッチング機能を利用できません</div>
+      </div>
+
+      <!-- 生年月日 -->
+      <div class="form-group">
+        <label class="form-label">生年月日 <span style="color:var(--danger)">*</span></label>
+        <div class="age-input">
+          <select class="form-input" id="birth-year" style="flex:2">
+            <option value="">年</option>
+          </select>
+          <select class="form-input" id="birth-month" style="flex:1">
+            <option value="">月</option>
+          </select>
+          <select class="form-input" id="birth-day" style="flex:1">
+            <option value="">日</option>
+          </select>
+        </div>
+        <div class="form-hint">18歳未満の方はマッチング機能を利用できません</div>
+      </div>
+
+      <!-- 都道府県 -->
+      <div class="form-group">
+        <label class="form-label">都道府県 <span style="color:var(--danger)">*</span></label>
+        <select class="form-input" id="prefecture-select">
+          <option value="">都道府県を選択</option>
+          <option>北海道</option><option>青森県</option><option>岩手県</option><option>宮城県</option>
+          <option>秋田県</option><option>山形県</option><option>福島県</option><option>茨城県</option>
+          <option>栃木県</option><option>群馬県</option><option>埼玉県</option><option>千葉県</option>
+          <option>東京都</option><option>神奈川県</option><option>新潟県</option><option>富山県</option>
+          <option>石川県</option><option>福井県</option><option>山梨県</option><option>長野県</option>
+          <option>岐阜県</option><option>静岡県</option><option>愛知県</option><option>三重県</option>
+          <option>滋賀県</option><option>京都府</option><option>大阪府</option><option>兵庫県</option>
+          <option>奈良県</option><option>和歌山県</option><option>鳥取県</option><option>島根県</option>
+          <option>岡山県</option><option>広島県</option><option>山口県</option><option>徳島県</option>
+          <option>香川県</option><option>愛媛県</option><option>高知県</option><option>福岡県</option>
+          <option>佐賀県</option><option>長崎県</option><option>熊本県</option><option>大分県</option>
+          <option>宮崎県</option><option>鹿児島県</option><option>沖縄県</option>
+        </select>
+      </div>
+
+      <div class="status-msg" id="step2-status"></div>
+
+      <div style="display:flex;gap:8px;margin-top:4px">
+        <button class="btn btn-secondary" id="step2-back" style="flex:1">← 戻る</button>
+        <button class="btn btn-primary" id="step2-next" style="flex:2">次へ →</button>
+      </div>
+    </div>
+
+    <!-- ============================================================
+         STEP 3: 本人確認（eKYC）
+    ============================================================ -->
+    <div class="step-card hidden" id="step-3">
+      <div class="step-title">🪪 本人確認（年齢確認）</div>
+      <div class="step-desc">出会い系サイト規制法に基づき、18歳以上であることを確認するため、本人確認書類が必要です。</div>
+
+      <div class="kyc-status">
+        <div class="kyc-status-icon">📋</div>
+        <div class="kyc-status-text">有効な書類：運転免許証・マイナンバーカード・パスポート・健康保険証</div>
+      </div>
+
+      <!-- eKYC プレースホルダー（正式リリース時にLIQUID eKYCと連携） -->
+      <div class="kyc-placeholder" id="kyc-upload-area">
+        <div class="kyc-placeholder-icon">📸</div>
+        <div class="kyc-placeholder-text">
+          本人確認書類をアップロード<br>
+          <span style="font-size:.7rem;opacity:.7">現在準備中。正式リリース時に自動本人確認（eKYC）が利用可能になります。</span>
+        </div>
+      </div>
+
+      <!-- 仮確認チェックボックス（法的届出完了までの暫定措置） -->
+      <label class="kyc-check-wrap">
+        <input type="checkbox" id="kyc-age-check">
+        <span class="kyc-check-label">私は18歳以上であり、上記の説明および<a href="legal/terms.html" style="color:var(--accent2)">利用規約</a>・<a href="legal/privacy.html" style="color:var(--accent2)">プライバシーポリシー</a>に同意します。</span>
+      </label>
+      <label class="kyc-check-wrap">
+        <input type="checkbox" id="kyc-real-check">
+        <span class="kyc-check-label">私の入力した性別・生年月日・都道府県は真実であり、他者になりすましていないことを誓約します。</span>
+      </label>
+
+      <div class="status-msg" id="step3-status"></div>
+
+      <div style="display:flex;gap:8px;margin-top:4px">
+        <button class="btn btn-secondary" id="step3-back" style="flex:1">← 戻る</button>
+        <button class="btn btn-primary" id="step3-next" style="flex:2" disabled>同意して次へ →</button>
+      </div>
+    </div>
+
+    <!-- ============================================================
+         STEP 4: 購入 / 解放確認
+    ============================================================ -->
+    <div class="step-card hidden" id="step-4">
+      <div class="step-title" id="step4-title">💎 機能解放パスを購入</div>
+      <div class="step-desc" id="step4-desc">下記内容をご確認の上、購入してください。</div>
+
+      <!-- 男性向け -->
+      <div id="purchase-male">
+        <div class="purchase-card">
+          <div class="purchase-amount">¥990</div>
+          <div class="purchase-label">マッチング機能解放パス（買い切り）</div>
+          <ul class="purchase-includes">
+            <li>マッチング候補の閲覧（無制限）</li>
+            <li>女性への打診：¥990/回（別途課金）</li>
+            <li>打診→女性がOKでチャット解放</li>
+          </ul>
+        </div>
+        <div style="font-size:.72rem;color:var(--text2);text-align:center;margin-bottom:14px;line-height:1.7">
+          ※ App Store / Google Play のアプリ内課金で処理されます<br>
+          ※ 購入は取り消せません。利用規約をご確認ください
+        </div>
+        <button class="btn btn-primary btn-block" id="purchase-btn-male" style="background:linear-gradient(135deg,var(--accent),var(--pink))">
+          💳 ¥990 で購入する
+        </button>
+      </div>
+
+      <!-- 女性向け -->
+      <div id="purchase-female" style="display:none;text-align:center">
+        <div class="free-badge">女性は完全無料</div>
+        <p style="font-size:.85rem;color:var(--text2);line-height:1.7;margin-bottom:20px">
+          本人確認が完了したら、マッチング機能を無料で解放します。<br>
+          男性からの打診を受け取り、OKした相手とチャットできます。
+        </p>
+        <button class="btn btn-primary btn-block" id="purchase-btn-female" style="background:linear-gradient(135deg,var(--success),#00cec9)">
+          ✅ 機能を解放する（無料）
+        </button>
+      </div>
+
+      <div class="status-msg" id="step4-status"></div>
+
+      <div style="margin-top:12px">
+        <button class="btn btn-secondary btn-sm" id="step4-back" style="width:100%">← 戻る</button>
+      </div>
+    </div>
+
+    <!-- ============================================================
+         STEP 5: 解放完了！
+    ============================================================ -->
+    <div class="step-card hidden" id="step-5">
+      <div class="success-screen">
+        <div class="success-emoji">🎊</div>
+        <div class="success-title">マッチング機能を解放しました！</div>
+        <div class="success-desc" id="step5-desc">
+          これからマッチング機能をご利用いただけます。<br>
+          性格タイプが相性の良い方と繋がりましょう。
+        </div>
+        <button class="btn btn-primary btn-block" id="go-matching-btn" style="background:linear-gradient(135deg,var(--accent),var(--pink))">
+          💕 マッチング画面へ
+        </button>
+        <button class="btn btn-secondary btn-sm mt-16" id="go-board-btn2" style="width:100%">
+          掲示板に戻る
+        </button>
+      </div>
+    </div>
+
+  </div><!-- /.unlock-container -->
+</div><!-- /.unlock-page -->
+
+<!-- ナビゲーションバー（モバイル用） -->
+<nav class="nav-bar">
+  <a href="board.html" class="nav-item"><span class="nav-icon">💬</span>掲示板</a>
+  <a href="friends.html" class="nav-item"><span class="nav-icon">👥</span>フレンド</a>
+  <a href="matching.html" class="nav-item active"><span class="nav-icon">💕</span>マッチング</a>
+  <a href="profile.html" class="nav-item"><span class="nav-icon">👤</span>マイページ</a>
+</nav>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="js/supabase-config.js"></script>
+<script src="js/nav.js"></script>
+<script>
+(function() {
+'use strict';
+
+let currentStep = 1;
+let selectedGender = null;
+let myUserId = null;
+
+// ============================================================
+// 初期化
+// ============================================================
+async function init() {
+  const user = await requireAuth();
+  if (!user) return;
+  myUserId = user.id;
+
+  // 既にunlock済みなら直接マッチング画面へ
+  const profile = await getMyProfile();
+  if (profile && profile.matching_enabled) {
+    location.href = 'matching.html';
+    return;
+  }
+
+  // 生年月日セレクトを生成
+  buildDateSelects();
+}
+
+function buildDateSelects() {
+  const yearEl = document.getElementById('birth-year');
+  const monthEl = document.getElementById('birth-month');
+  const dayEl = document.getElementById('birth-day');
+  const now = new Date();
+  // 年: 現在-100年〜現在-18年
+  for (let y = now.getFullYear() - 18; y >= now.getFullYear() - 100; y--) {
+    const o = document.createElement('option');
+    o.value = y; o.textContent = y + '年';
+    yearEl.appendChild(o);
+  }
+  for (let m = 1; m <= 12; m++) {
+    const o = document.createElement('option');
+    o.value = m; o.textContent = m + '月';
+    monthEl.appendChild(o);
+  }
+  for (let d = 1; d <= 31; d++) {
+    const o = document.createElement('option');
+    o.value = d; o.textContent = d + '日';
+    dayEl.appendChild(o);
+  }
+}
+
+// ============================================================
+// ステップ制御
+// ============================================================
+function showStep(n) {
+  for (let i = 1; i <= 5; i++) {
+    const el = document.getElementById('step-' + i);
+    if (el) el.classList.toggle('hidden', i !== n);
+    const dot = document.getElementById('dot-' + i);
+    if (dot) {
+      dot.classList.remove('active', 'done');
+      if (i < n) dot.classList.add('done'), dot.textContent = '✓';
+      else if (i === n) dot.classList.add('active'), dot.textContent = i;
+      else dot.textContent = i;
+    }
+    if (i < 4) {
+      const line = document.getElementById('line-' + i);
+      if (line) line.classList.toggle('done', i < n);
+    }
+  }
+  currentStep = n;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ============================================================
+// STEP 1 → 2
+// ============================================================
+document.getElementById('step1-next').addEventListener('click', () => {
+  showStep(2);
+});
+
+// ============================================================
+// STEP 2: 性別選択
+// ============================================================
+document.getElementById('gender-select').addEventListener('click', (e) => {
+  const btn = e.target.closest('.gender-opt');
+  if (!btn) return;
+  document.querySelectorAll('.gender-opt').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  selectedGender = btn.dataset.gender;
+
+  // 購入画面の切り替えプリセット
+  document.getElementById('purchase-male').style.display = selectedGender === 'male' ? '' : 'none';
+  document.getElementById('purchase-female').style.display = selectedGender === 'female' ? '' : 'none';
+  if (selectedGender === 'female') {
+    document.getElementById('step4-title').textContent = '✅ 機能解放の確認';
+    document.getElementById('step4-desc').textContent = '女性は無料でマッチング機能を解放できます。';
+  } else {
+    document.getElementById('step4-title').textContent = '💎 機能解放パスを購入';
+    document.getElementById('step4-desc').textContent = '下記内容をご確認の上、購入してください。';
+  }
+});
+
+document.getElementById('step2-back').addEventListener('click', () => showStep(1));
+
+document.getElementById('step2-next').addEventListener('click', () => {
+  const status = document.getElementById('step2-status');
+  status.className = 'status-msg';
+  status.textContent = '';
+
+  if (!selectedGender) {
+    status.className = 'status-msg error';
+    status.textContent = '性別を選択してください';
+    return;
+  }
+  const y = document.getElementById('birth-year').value;
+  const m = document.getElementById('birth-month').value;
+  const d = document.getElementById('birth-day').value;
+  if (!y || !m || !d) {
+    status.className = 'status-msg error';
+    status.textContent = '生年月日を入力してください';
+    return;
+  }
+  const age = calcAge(parseInt(y), parseInt(m), parseInt(d));
+  if (age < 18) {
+    status.className = 'status-msg error';
+    status.textContent = '18歳未満の方はマッチング機能を利用できません';
+    return;
+  }
+  const pref = document.getElementById('prefecture-select').value;
+  if (!pref) {
+    status.className = 'status-msg error';
+    status.textContent = '都道府県を選択してください';
+    return;
+  }
+  showStep(3);
+});
+
+function calcAge(y, m, d) {
+  const today = new Date();
+  let age = today.getFullYear() - y;
+  const bm = m - 1;
+  if (today.getMonth() < bm || (today.getMonth() === bm && today.getDate() < d)) age--;
+  return age;
+}
+
+// ============================================================
+// STEP 3: eKYC
+// ============================================================
+function updateStep3Btn() {
+  const a = document.getElementById('kyc-age-check').checked;
+  const b = document.getElementById('kyc-real-check').checked;
+  document.getElementById('step3-next').disabled = !(a && b);
+}
+document.getElementById('kyc-age-check').addEventListener('change', updateStep3Btn);
+document.getElementById('kyc-real-check').addEventListener('change', updateStep3Btn);
+document.getElementById('step3-back').addEventListener('click', () => showStep(2));
+document.getElementById('step3-next').addEventListener('click', () => showStep(4));
+
+// ============================================================
+// STEP 4: 購入
+// ============================================================
+document.getElementById('step4-back').addEventListener('click', () => showStep(3));
+
+async function doUnlock(isFree) {
+  const btn = isFree
+    ? document.getElementById('purchase-btn-female')
+    : document.getElementById('purchase-btn-male');
+  const status = document.getElementById('step4-status');
+  btn.disabled = true;
+  btn.textContent = isFree ? '処理中...' : '決済処理中...';
+  status.className = 'status-msg';
+  status.textContent = '';
+
+  try {
+    const y = parseInt(document.getElementById('birth-year').value);
+    const m = parseInt(document.getElementById('birth-month').value);
+    const d = parseInt(document.getElementById('birth-day').value);
+    const pref = document.getElementById('prefecture-select').value;
+
+    const birthdate = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+
+    // DBにプロフィール情報 + matching_enabled を保存
+    const { error } = await supabase.from('users').update({
+      gender: selectedGender === 'male' ? 'male' : 'female',
+      birthdate: birthdate,
+      prefecture: pref,
+      age_verified: true,
+      matching_enabled: true,
+    }).eq('id', myUserId);
+
+    if (error) throw error;
+
+    // 購入完了の説明文（性別別）
+    const desc = isFree
+      ? '男性からの打診を受け取ることができます。\nOKした相手とチャットで話しましょう。'
+      : 'マッチング候補の閲覧と女性への打診ができます。\n打診１回あたり¥990です（別途購入）。';
+    document.getElementById('step5-desc').textContent = desc;
+
+    showStep(5);
+  } catch (e) {
+    status.className = 'status-msg error';
+    status.textContent = '処理中にエラーが発生しました: ' + (e.message || e);
+    btn.disabled = false;
+    btn.textContent = isFree ? '機能を解放する（無料）' : '¥990 で購入する';
+  }
+}
+
+document.getElementById('purchase-btn-male').addEventListener('click', () => doUnlock(false));
+document.getElementById('purchase-btn-female').addEventListener('click', () => doUnlock(true));
+
+// ============================================================
+// STEP 5: 完了後の遷移
+// ============================================================
+document.getElementById('go-matching-btn').addEventListener('click', () => {
+  location.href = 'matching.html';
+});
+document.getElementById('go-board-btn2').addEventListener('click', () => {
+  location.href = 'board.html';
+});
+
+// ============================================================
+// 起動
+// ============================================================
+init();
+
+})();
+</script>
+</body>
+</html>

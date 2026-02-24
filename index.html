@@ -95,7 +95,7 @@
   <div class="auth-logo-sub">find your true self</div>
 
   <div class="auth-intro">
-    <p>136の問いがあなたの精神構造を解き明かす。<br>
+    <p>136の問いがあなたの思考・行動パターンを解き明かす。<br>
     同じ魂を持つ者たちが集う掲示板へ。</p>
   </div>
 
@@ -148,9 +148,10 @@
       <div class="auth-status" id="signup-status"></div>
     </form>
 
-    <div class="auth-divider">または</div>
+    <!-- Google認証: 一般公開時に display:none を削除して有効化 -->
+    <div class="auth-divider" style="display:none">または</div>
 
-    <button class="google-btn" id="google-btn">
+    <button class="google-btn" id="google-btn" style="display:none">
       <svg viewBox="0 0 24 24" fill="none">
         <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
         <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
@@ -161,7 +162,7 @@
     </button>
 
     <div class="auth-footer mt-16">
-      アカウント作成により<a href="docs/legal-checklist.md">利用規約</a>に同意したものとみなされます
+      アカウント作成により<a href="legal/terms.html">利用規約</a>および<a href="legal/privacy.html">プライバシーポリシー</a>に同意したものとみなされます
     </div>
   </div>
 </div>

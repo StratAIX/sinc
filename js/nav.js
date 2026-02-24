@@ -73,9 +73,35 @@
 
       <div class="sidebar-footer">
         <button class="sb-logout-btn" id="sb-logout-btn" type="button">ログアウト</button>
+        <div class="sb-legal-links">
+          <a href="legal/privacy.html" class="sb-legal-link">プライバシーポリシー</a>
+          <a href="legal/terms.html" class="sb-legal-link">利用規約</a>
+          <a href="legal/tokusho.html" class="sb-legal-link">特定商取引法</a>
+        </div>
+        <div class="sb-copyright">© 2026 Doppelganger</div>
       </div>
     `;
     return aside;
+  }
+
+  // ページ下部に共通フッターを注入（モバイル表示用）
+  function buildPageFooter() {
+    const footer = document.createElement('footer');
+    footer.className = 'page-footer';
+    footer.innerHTML = `
+      <div class="page-footer-inner">
+        <div class="page-footer-links">
+          <a href="legal/privacy.html">プライバシーポリシー</a>
+          <span class="pf-sep">·</span>
+          <a href="legal/terms.html">利用規約</a>
+          <span class="pf-sep">·</span>
+          <a href="legal/tokusho.html">特定商取引法に基づく表示</a>
+        </div>
+        <p class="page-footer-disclaimer">本サービスの性格分析は娯楽・自己理解を目的とするものであり、医学的・心理学的診断ではありません。</p>
+        <p class="page-footer-copy">© 2026 Doppelganger</p>
+      </div>
+    `;
+    return footer;
   }
 
   // ユーザー情報を非同期でサイドバーに反映
@@ -137,6 +163,13 @@
 
     // ユーザー情報を非同期でロード
     loadSidebarUser();
+
+    // ページ下部フッターを body の末尾に挿入（legal/ 配下は除外）
+    const isLegalPage = location.pathname.includes('/legal/');
+    if (!isLegalPage) {
+      const pageFooter = buildPageFooter();
+      document.body.append(pageFooter);
+    }
   }
 
   // DOMロード後に実行

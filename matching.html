@@ -98,15 +98,17 @@
       🧪 テストモード: サンプルユーザーとのマッチング体験です。実際の課金は発生しません。
     </div>
 
-    <!-- マッチング機能ロック（法的確認まで非表示） -->
+    <!-- マッチング機能ロック / 解放CTA -->
     <div class="legal-lock" id="legal-lock">
-      <div class="legal-lock-icon">⚖️</div>
-      <div class="legal-lock-title">マッチング機能 準備中</div>
+      <div class="legal-lock-icon">🔐</div>
+      <div class="legal-lock-title">マッチング機能を解放しよう</div>
       <div class="legal-lock-desc">
-        出会い系サイト規制法に基づく届出・年齢確認システムの整備が完了次第、<br>
-        マッチング機能を正式リリースします。<br>
-        現在は下記でサンプルを閲覧できます。
+        年齢確認（18歳以上）を完了すると、相性の良い相手と繋がれます。<br>
+        女性は無料・男性は¥990の機能解放パスが必要です。
       </div>
+      <a href="matching-unlock.html" class="btn btn-primary" style="margin-top:12px;display:inline-block;background:linear-gradient(135deg,var(--accent),var(--pink))">
+        💕 マッチング機能を解放する
+      </a>
     </div>
 
     <!-- モード切替 -->
@@ -150,21 +152,22 @@
 
     <div class="payment-detail">
       <div class="payment-row">
-        <span>マッチング料</span>
-        <span>¥500</span>
+        <span>マッチング打診料</span>
+        <span>¥990</span>
       </div>
       <div class="payment-row">
-        <span>App Store 手数料</span>
+        <span>App Store / Google Play 手数料</span>
         <span>含む</span>
       </div>
       <div class="payment-row payment-total">
         <span>合計</span>
-        <span>¥500（税込）</span>
+        <span>¥990（税込）</span>
       </div>
     </div>
     <div class="payment-note">
       ※ テストモードのため実際の決済は発生しません<br>
-      ※ 本番ではApp Store / Google Play のアプリ内課金で処理されます
+      ※ 本番ではApp Store / Google Play のアプリ内課金で処理されます<br>
+      ※ 相手がOKした場合のみチャットが解放されます
     </div>
 
     <div id="payment-target" style="display:none"></div>
@@ -172,7 +175,7 @@
     <div class="modal-actions">
       <button class="btn btn-secondary btn-sm" id="payment-cancel">キャンセル</button>
       <button class="btn btn-primary btn-sm" id="payment-confirm" style="background:linear-gradient(135deg,var(--accent),var(--pink))">
-        💳 購入する（¥500）
+        💳 打診する（¥990）
       </button>
     </div>
   </div>
@@ -246,6 +249,17 @@
     if (!myScores) {
       myScores = {P1:45,P2:55,P3:60,P4:40,P5:50,P6:65,P7:55,P8:48,P9:42,P10:58,P11:52,P12:45,P13:55,P14:48,P15:50};
     }
+
+    // matching_enabled チェック: 解放済みならロックバナーを非表示
+    try {
+      if (typeof getMyProfile === 'function') {
+        const profile = await getMyProfile();
+        if (profile && profile.matching_enabled) {
+          const lockEl = document.getElementById('legal-lock');
+          if (lockEl) lockEl.style.display = 'none';
+        }
+      }
+    } catch(e) { /* 無視 */ }
 
     updateReloadCounter();
     loadCandidates();
@@ -345,11 +359,11 @@
     const emoji = typeof getTypeEmoji === 'function' ? getTypeEmoji(candidate.type_number) : '👤';
     const scoreEmoji = score >= 95 ? '🔥' : score >= 90 ? '✨' : score >= 85 ? '💫' : '⭐';
 
-    // 課金ボタンの内容（法的確認まで非表示）
+    // 課金ボタンの内容（matching_enabled が false の場合はアンロックCTAへ）
     const actionHtml = `
-      <div class="legal-lock" style="padding:12px;margin:0;text-align:center">
-        <div style="font-size:.75rem;color:var(--text2)">⚖️ マッチング機能は法的確認完了後に開放されます</div>
-      </div>
+      <a href="matching-unlock.html" class="btn btn-primary match-unlock-btn" style="display:block;width:100%;text-align:center">
+        🔓 マッチングを解放して打診する
+      </a>
     `;
 
     return `

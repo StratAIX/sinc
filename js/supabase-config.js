@@ -32,7 +32,18 @@ async function getMyProfile(forceRefresh = false) {
   if (_cachedProfile && !forceRefresh) return _cachedProfile;
   const user = await getCurrentUser();
   if (!user) return null;
-  _cachedProfile = await getUserProfile(user.id);
+  try {
+    _cachedProfile = await getUserProfile(user.id);
+  } catch (e) {
+    // users行が存在しない場合（Google OAuth新規ユーザー等）は自動作成
+    if (e.code === 'PGRST116') {
+      await supabase.from('users').insert({ id: user.id }).select().single();
+      const { data } = await supabase.from('users').select('*').eq('id', user.id).single();
+      _cachedProfile = data;
+    } else {
+      throw e;
+    }
+  }
   return _cachedProfile;
 }
 

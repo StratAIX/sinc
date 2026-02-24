@@ -304,7 +304,11 @@
 
     let contentHtml = '';
     if (msg.media_url) {
-      contentHtml = `<img class="msg-img" src="${escapeHtml(msg.media_url)}" alt="" loading="lazy">`;
+      // media_signed_url があればそれを使用、なければパスからsigned URLを非同期取得
+      const imgSrc = msg.media_signed_url || '';
+      contentHtml = `<img class="msg-img" src="${escapeHtml(imgSrc)}" alt="" loading="lazy"
+        data-media-path="${escapeHtml(msg.media_url)}"
+        onerror="this.src='';this.style.display='none'">`;
     }
     if (msg.content) {
       contentHtml += `<div class="msg-content">${escapeHtml(msg.content).replace(/\n/g, '<br>')}</div>`;
@@ -404,21 +408,29 @@
         showToast('画像を送信中...', 'info');
         const blob = await Avatar.processImage(file);
         const ext = blob.type === 'image/webp' ? 'webp' : 'jpg';
-        const path = `dms/${myUserId}/${Date.now()}.${ext}`;
+        const path = `${myUserId}/${Date.now()}.${ext}`;
 
+        // プライベートバケット "dms" にアップロード
         const { error: uploadErr } = await supabase.storage
-          .from('avatars')
+          .from('dms')
           .upload(path, blob, { contentType: blob.type, upsert: false });
 
         if (uploadErr) throw uploadErr;
 
-        const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(path);
+        // signed URL（1時間有効）を生成してDBに保存
+        const { data: signedData, error: signErr } = await supabase.storage
+          .from('dms')
+          .createSignedUrl(path, 3600);
 
+        if (signErr) throw signErr;
+
+        // DBには path（ストレージパス）を保存し、表示時に都度signed URLを生成
         const { data, error } = await supabase.from('dms').insert({
           conversation_id: conversationId,
           sender_id: myUserId,
           receiver_id: targetUserId,
-          media_url: urlData.publicUrl,
+          media_url: path,           // パスのみ保存（公開URLではない）
+          media_signed_url: signedData.signedUrl, // 表示用（一時的）
         }).select().single();
 
         if (!error) {
