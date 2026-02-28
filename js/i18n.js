@@ -101,6 +101,26 @@ const I18n = (() => {
       'diagnosis.continue': '続きから',
       'diagnosis.restart':  '最初から',
       'diagnosis.go_board': '✨ コミュニティ掲示板へ進む →',
+      'diagnosis.logo_sub': 'Personality Architecture',
+      'diagnosis.subtitle_html': '最新AIが導き出す<strong>あなたの本当の性格</strong>を知り、<br>最高の仲間たちと楽しめる<strong>世界唯一の掲示板</strong>へ',
+      'diagnosis.start_sub': 'タイプ判定は気分や状況によって変わることがあります。定期的に受け直すことで、今の自分をより深く知れます。<br>本サービスの分析は娯楽・自己理解を目的とするものであり、医学的・心理学的診断ではありません。',
+      'diagnosis.start_btn': '診断を始める',
+      'diagnosis.start_info': '136問 ｜ 所要時間 約35〜45分<br>途中で戻ることもできます',
+
+      // ログインページ
+      'index.intro_html': '136の問いがあなたの思考・行動パターンを解き明かす。<br>同じ魂を持つ者たちが集う掲示板へ。',
+      'auth.tab_login': 'ログイン',
+      'auth.tab_register': '新規登録',
+      'auth.label_email': 'メールアドレス',
+      'auth.label_password': 'パスワード',
+      'auth.password_hint': '8文字以上の英数字',
+      'auth.password_confirm': 'パスワード（確認）',
+      'auth.forgot_pw': 'パスワードを忘れた方',
+      'auth.agree_html': 'アカウント作成により<a href="legal/terms.html">利用規約</a>および<a href="legal/privacy.html">プライバシーポリシー</a>に同意したものとみなされます',
+      'auth.reset_title': 'パスワードリセット',
+      'auth.reset_desc': '登録済みのメールアドレスを入力してください。パスワードリセット用のリンクをお送りします。',
+      'auth.reset_send': '送信',
+      'auth.cancel': 'キャンセル',
 
       // 認証
       'auth.login':    'ログイン',
@@ -213,6 +233,26 @@ const I18n = (() => {
       'diagnosis.continue': 'Continue',
       'diagnosis.restart':  'Start Over',
       'diagnosis.go_board': '✨ Go to Community Board →',
+      'diagnosis.logo_sub': 'Personality Architecture',
+      'diagnosis.subtitle_html': 'Discover <strong>your true personality</strong> with AI,<br>and join the <strong>world\'s only community board</strong> for your type',
+      'diagnosis.start_sub': 'Your personality type may shift with mood or context. Retake periodically to understand yourself better.<br>This analysis is for entertainment and self-understanding, not a medical or psychological diagnosis.',
+      'diagnosis.start_btn': 'Start Assessment',
+      'diagnosis.start_info': '136 questions | Est. 35–45 min<br>You can go back at any time',
+
+      // Login page
+      'index.intro_html': '136 questions to reveal your thinking and behavioral patterns.<br>Join the community board of kindred souls.',
+      'auth.tab_login': 'Login',
+      'auth.tab_register': 'Sign Up',
+      'auth.label_email': 'Email',
+      'auth.label_password': 'Password',
+      'auth.password_hint': 'At least 8 characters',
+      'auth.password_confirm': 'Confirm Password',
+      'auth.forgot_pw': 'Forgot password?',
+      'auth.agree_html': 'By creating an account, you agree to our <a href="legal/terms.html">Terms of Service</a> and <a href="legal/privacy.html">Privacy Policy</a>.',
+      'auth.reset_title': 'Password Reset',
+      'auth.reset_desc': 'Enter your registered email address. We will send you a password reset link.',
+      'auth.reset_send': 'Send',
+      'auth.cancel': 'Cancel',
 
       // Auth
       'auth.login':    'Login',
@@ -272,6 +312,12 @@ const I18n = (() => {
       } else {
         el.textContent = text;
       }
+    });
+
+    // HTMLを含む翻訳（リンクなど）
+    document.querySelectorAll('[data-i18n-html]').forEach(el => {
+      const key = el.dataset.i18nHtml;
+      el.innerHTML = t(key);
     });
 
     document.querySelectorAll('[data-i18n-ph]').forEach(el => {

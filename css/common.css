@@ -817,3 +817,61 @@ body[data-theme="light"]{
 }
 .theme-toggle-mobile:hover{border-color:var(--accent)}
 @media(min-width:768px){.theme-toggle-mobile{display:none}}
+
+/* ============================================================
+   ライトモード: カラーコントラスト修正
+   ============================================================ */
+
+/* テストバナー: 黄色テキスト → 濃い琥珀色で視認性確保 */
+[data-theme="light"] .test-banner{
+  background:rgba(180,130,0,.07);
+  border-color:rgba(180,130,0,.25);
+  color:#8a6300;
+}
+
+/* マッチングロック背景: 淡いグラデ → ニュートラルなsurface2 */
+[data-theme="light"] .legal-lock{
+  background:var(--surface2);
+  border-color:rgba(108,92,231,.2);
+}
+
+/* 警告色（warning）をテキストとして使う要素の明度調整 */
+[data-theme="light"] .notice-box{
+  background:rgba(108,92,231,.06);
+  border-color:rgba(108,92,231,.2);
+  color:var(--text);
+}
+
+/* 診断ページ系: グラデ背景の上のテキスト */
+[data-theme="light"] .score-label{color:var(--text2)}
+[data-theme="light"] .rank-label{color:var(--text2)}
+
+/* バッジ: ダーク向けの明るい色をlight用に調整 */
+[data-theme="light"] .badge{
+  font-weight:700;
+  opacity:1;
+}
+
+/* マッチングページ: モードタブ inactive状態の文字をより濃く */
+[data-theme="light"] .mode-tab:not(.active){color:var(--text)}
+[data-theme="light"] .dist-tab:not(.active){color:var(--text);border-color:var(--surface3)}
+
+/* スコアバーのラベル文字 */
+[data-theme="light"] .match-score-label{color:rgba(255,255,255,.8)}
+
+/* マッチカードのbio背景 */
+[data-theme="light"] .match-bio{background:var(--surface2);color:var(--text2)}
+
+/* リロードボタン */
+[data-theme="light"] .reload-btn{color:var(--text)}
+[data-theme="light"] .reload-count{color:var(--text2)}
+
+/* フレンド・チャット系のステータスバッジ */
+[data-theme="light"] .status-online{color:#00a86b}
+
+/* 掲示板: おすすめチップ */
+[data-theme="light"] .recommend-chip{color:var(--text)}
+[data-theme="light"] .recommend-chip:hover{color:var(--accent)}
+
+/* サブカテゴリー矢印 */
+[data-theme="light"] .subcategory-arrow{color:var(--text2)}

@@ -87,40 +87,49 @@
     margin-bottom:28px;animation:fadeIn .8s ease;
   }
   .auth-intro p{font-size:.85rem;color:var(--text2);line-height:1.7}
+  .auth-lang-toggle{
+    position:absolute;top:16px;right:16px;
+    padding:6px 12px;
+    background:transparent;border:1px solid var(--surface3);
+    border-radius:50px;color:var(--text2);
+    font-size:.75rem;cursor:pointer;transition:all .2s;
+  }
+  .auth-lang-toggle:hover{border-color:var(--accent);color:var(--accent2)}
 </style>
 </head>
 <body>
 
-<div class="auth-page" id="auth-page">
+<div class="auth-page" id="auth-page" style="position:relative">
+  <button class="auth-lang-toggle" id="auth-lang-btn">🇺🇸 EN</button>
   <div class="auth-logo">Doppelganger</div>
   <div class="auth-logo-sub">find your true self</div>
 
   <div class="auth-intro">
-    <p>136の問いがあなたの思考・行動パターンを解き明かす。<br>
+    <p data-i18n-html="index.intro_html">136の問いがあなたの思考・行動パターンを解き明かす。<br>
     同じ魂を持つ者たちが集う掲示板へ。</p>
   </div>
 
   <div class="auth-card">
     <div class="auth-tabs">
-      <button class="auth-tab active" data-tab="login">ログイン</button>
-      <button class="auth-tab" data-tab="signup">新規登録</button>
+      <button class="auth-tab active" data-tab="login" data-i18n="auth.tab_login">ログイン</button>
+      <button class="auth-tab" data-tab="signup" data-i18n="auth.tab_register">新規登録</button>
     </div>
 
     <!-- ログインフォーム -->
     <form class="auth-form active" id="login-form">
       <div class="form-group">
-        <label class="form-label">メールアドレス</label>
+        <label class="form-label" data-i18n="auth.label_email">メールアドレス</label>
         <input type="email" class="form-input" id="login-email"
                placeholder="email@example.com" required autocomplete="email">
       </div>
       <div class="form-group">
-        <label class="form-label">パスワード</label>
+        <label class="form-label" data-i18n="auth.label_password">パスワード</label>
         <input type="password" class="form-input" id="login-password"
                placeholder="パスワード" required autocomplete="current-password">
-        <span class="forgot-link" id="forgot-link">パスワードを忘れた方</span>
+        <span class="forgot-link" id="forgot-link" data-i18n="auth.forgot_pw">パスワードを忘れた方</span>
       </div>
       <button type="submit" class="btn btn-primary btn-block" id="login-btn">
-        ログイン
+        <span data-i18n="auth.tab_login">ログイン</span>
       </button>
       <div class="auth-status" id="login-status"></div>
     </form>
@@ -128,23 +137,23 @@
     <!-- 新規登録フォーム -->
     <form class="auth-form" id="signup-form">
       <div class="form-group">
-        <label class="form-label">メールアドレス</label>
+        <label class="form-label" data-i18n="auth.label_email">メールアドレス</label>
         <input type="email" class="form-input" id="signup-email"
                placeholder="email@example.com" required autocomplete="email">
       </div>
       <div class="form-group">
-        <label class="form-label">パスワード</label>
+        <label class="form-label" data-i18n="auth.label_password">パスワード</label>
         <input type="password" class="form-input" id="signup-password"
                placeholder="8文字以上" required minlength="8" autocomplete="new-password">
-        <div class="form-hint">8文字以上の英数字</div>
+        <div class="form-hint" data-i18n="auth.password_hint">8文字以上の英数字</div>
       </div>
       <div class="form-group">
-        <label class="form-label">パスワード（確認）</label>
+        <label class="form-label" data-i18n="auth.password_confirm">パスワード（確認）</label>
         <input type="password" class="form-input" id="signup-password-confirm"
                placeholder="もう一度入力" required minlength="8" autocomplete="new-password">
       </div>
       <button type="submit" class="btn btn-primary btn-block" id="signup-btn">
-        アカウント作成
+        <span data-i18n="auth.register">アカウント作成</span>
       </button>
       <div class="auth-status" id="signup-status"></div>
     </form>
@@ -162,7 +171,7 @@
       Googleでログイン
     </button>
 
-    <div class="auth-footer mt-16">
+    <div class="auth-footer mt-16" data-i18n-html="auth.agree_html">
       アカウント作成により<a href="legal/terms.html">利用規約</a>および<a href="legal/privacy.html">プライバシーポリシー</a>に同意したものとみなされます
     </div>
   </div>
@@ -171,15 +180,15 @@
 <!-- パスワードリセットモーダル -->
 <div class="modal-overlay" id="reset-modal">
   <div class="modal">
-    <div class="modal-title">パスワードリセット</div>
-    <p class="text-sm text-muted mb-16">登録済みのメールアドレスを入力してください。パスワードリセット用のリンクをお送りします。</p>
+    <div class="modal-title" data-i18n="auth.reset_title">パスワードリセット</div>
+    <p class="text-sm text-muted mb-16" data-i18n="auth.reset_desc">登録済みのメールアドレスを入力してください。パスワードリセット用のリンクをお送りします。</p>
     <div class="form-group">
       <input type="email" class="form-input" id="reset-email" placeholder="email@example.com">
     </div>
     <div class="auth-status" id="reset-status"></div>
     <div class="modal-actions">
-      <button class="btn btn-secondary btn-sm" id="reset-cancel">キャンセル</button>
-      <button class="btn btn-primary btn-sm" id="reset-submit">送信</button>
+      <button class="btn btn-secondary btn-sm" id="reset-cancel" data-i18n="auth.cancel">キャンセル</button>
+      <button class="btn btn-primary btn-sm" id="reset-submit" data-i18n="auth.reset_send">送信</button>
     </div>
   </div>
 </div>
@@ -188,6 +197,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="js/supabase-config.js"></script>
 <script src="js/auth.js"></script>
+<script src="js/i18n.js"></script>
 <script>
 (function() {
   // --- タブ切り替え ---
@@ -325,6 +335,19 @@
 
   // --- 初期化: 既にログイン済みならリダイレクト ---
   Auth.initAuthUI();
+
+  // --- 言語切替ボタン（右上）---
+  const authLangBtn = document.getElementById('auth-lang-btn');
+  function updateLangBtn() {
+    const lang = I18n.getLang();
+    authLangBtn.textContent = lang === 'ja' ? '🇺🇸 EN' : '🇯🇵 JA';
+  }
+  updateLangBtn();
+  authLangBtn.addEventListener('click', () => {
+    const lang = I18n.getLang();
+    I18n.setLang(lang === 'ja' ? 'en' : 'ja');
+    updateLangBtn();
+  });
 })();
 </script>
 </body>
