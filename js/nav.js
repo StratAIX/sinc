@@ -7,61 +7,89 @@
 (function () {
   'use strict';
 
-  // 現在のページファイル名を取得
   function getCurrentPage() {
     return location.pathname.split('/').pop() || 'index.html';
   }
 
-  // nav-itemのアクティブクラス判定
   function isActive(pages) {
     const current = getCurrentPage();
     return pages.includes(current) ? 'active' : '';
   }
 
-  // サイドバーHTMLを生成して返す
+  // ——————————————————————————————
+  // テーマ管理
+  // ——————————————————————————————
+  function getCurrentTheme() {
+    return localStorage.getItem('theme') || 'dark';
+  }
+
+  function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    document.body.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+    const icon  = document.getElementById('sb-theme-icon');
+    const mIcon = document.getElementById('sb-theme-icon-mobile');
+    const label = document.getElementById('sb-theme-label');
+    const isDark = theme === 'dark';
+    if (icon)  icon.textContent  = isDark ? '☀️' : '🌙';
+    if (mIcon) mIcon.textContent = isDark ? '☀️' : '🌙';
+    if (label) label.textContent = isDark ? 'ライトモード' : 'ダークモード';
+  }
+
+  function toggleTheme() {
+    applyTheme(getCurrentTheme() === 'light' ? 'dark' : 'light');
+  }
+
+  // ——————————————————————————————
+  // サイドバー生成
+  // ——————————————————————————————
   function buildSidebar() {
     const aside = document.createElement('aside');
     aside.className = 'sidebar';
     aside.id = 'main-sidebar';
     aside.setAttribute('aria-label', 'メインメニュー');
 
+    const isDark = getCurrentTheme() === 'dark';
+
     aside.innerHTML = `
       <div class="sidebar-logo">
         <div class="sb-logo-text">Doppelganger</div>
-        <div class="sb-logo-sub">あなたの本当の自分</div>
+        <div class="sb-logo-sub" data-i18n="app.tagline">あなたの本当の自分</div>
       </div>
 
-      <div class="sidebar-user" id="sb-user" role="button" tabindex="0" onclick="location.href='profile.html'" onkeydown="if(event.key==='Enter')location.href='profile.html'">
+      <div class="sidebar-user" id="sb-user" role="button" tabindex="0"
+           onclick="location.href='profile.html'"
+           onkeydown="if(event.key==='Enter')location.href='profile.html'">
         <div class="sb-avatar-wrap" id="sb-avatar">
           <div class="sb-avatar-emoji" style="width:36px;height:36px;border-radius:50%;background:var(--surface2);border:1px solid var(--surface3);display:flex;align-items:center;justify-content:center;font-size:1.2rem">👤</div>
         </div>
         <div class="sb-user-info">
-          <div class="sb-nickname" id="sb-nickname">読み込み中...</div>
+          <div class="sb-nickname" id="sb-nickname" data-i18n="common.loading">読み込み中...</div>
           <div class="sb-type" id="sb-type"></div>
         </div>
       </div>
 
       <nav class="sidebar-nav" aria-label="メインナビ">
-        <a href="board.html" class="sb-item ${isActive(['board.html', 'thread.html'])}">
+        <a href="board.html" class="sb-item ${isActive(['board.html','thread.html'])}">
           <span class="sb-icon" aria-hidden="true">💬</span>
-          <span class="sb-label">掲示板</span>
+          <span class="sb-label" data-i18n="nav.board">掲示板</span>
         </a>
-        <a href="friends.html" class="sb-item ${isActive(['friends.html', 'chat.html', 'user-profile.html'])}">
+        <a href="friends.html" class="sb-item ${isActive(['friends.html','chat.html','user-profile.html'])}">
           <span class="sb-icon" aria-hidden="true">👥</span>
-          <span class="sb-label">フレンド</span>
+          <span class="sb-label" data-i18n="nav.friends">フレンド</span>
           <span class="sb-badge" id="sb-badge-fr" title="未読"></span>
         </a>
         <a href="matching.html" class="sb-item ${isActive(['matching.html'])}">
           <span class="sb-icon" aria-hidden="true">💕</span>
-          <span class="sb-label">マッチング</span>
+          <span class="sb-label" data-i18n="nav.matching">マッチング</span>
         </a>
         <a href="profile.html" class="sb-item ${isActive(['profile.html'])}">
           <span class="sb-icon" aria-hidden="true">👤</span>
-          <span class="sb-label">マイページ</span>
+          <span class="sb-label" data-i18n="nav.profile">マイページ</span>
         </a>
         <a href="doppelganger-diagnosis.index.html" class="sb-item ${isActive(['doppelganger-diagnosis.index.html'])}">
           <span class="sb-icon" aria-hidden="true">🧬</span>
-          <span class="sb-label">性格診断</span>
+          <span class="sb-label" data-i18n="nav.diagnosis">性格診断</span>
         </a>
       </nav>
 
@@ -72,11 +100,15 @@
       </div>
 
       <div class="sidebar-footer">
-        <button class="sb-logout-btn" id="sb-logout-btn" type="button">ログアウト</button>
+        <button class="sb-logout-btn" id="sb-logout-btn" type="button" data-i18n="nav.logout">ログアウト</button>
+        <button class="sb-theme-btn" id="sb-theme-btn" type="button">
+          <span id="sb-theme-icon">${isDark ? '☀️' : '🌙'}</span>
+          <span id="sb-theme-label">${isDark ? 'ライトモード' : 'ダークモード'}</span>
+        </button>
         <div class="sb-legal-links">
-          <a href="legal/privacy.html" class="sb-legal-link">プライバシーポリシー</a>
-          <a href="legal/terms.html" class="sb-legal-link">利用規約</a>
-          <a href="legal/tokusho.html" class="sb-legal-link">特定商取引法</a>
+          <a href="legal/privacy.html" class="sb-legal-link" data-i18n="footer.privacy">プライバシーポリシー</a>
+          <a href="legal/terms.html" class="sb-legal-link" data-i18n="footer.terms">利用規約</a>
+          <a href="legal/tokusho.html" class="sb-legal-link" data-i18n="footer.tokusho">特定商取引法</a>
         </div>
         <div class="sb-copyright">© 2026 Doppelganger</div>
       </div>
@@ -84,38 +116,49 @@
     return aside;
   }
 
-  // ページ下部に共通フッターを注入（モバイル表示用）
+  // ページ下部フッター（モバイル用）
   function buildPageFooter() {
     const footer = document.createElement('footer');
     footer.className = 'page-footer';
     footer.innerHTML = `
       <div class="page-footer-inner">
         <div class="page-footer-links">
-          <a href="legal/privacy.html">プライバシーポリシー</a>
+          <a href="legal/privacy.html" data-i18n="footer.privacy">プライバシーポリシー</a>
           <span class="pf-sep">·</span>
-          <a href="legal/terms.html">利用規約</a>
+          <a href="legal/terms.html" data-i18n="footer.terms">利用規約</a>
           <span class="pf-sep">·</span>
-          <a href="legal/tokusho.html">特定商取引法に基づく表示</a>
+          <a href="legal/tokusho.html" data-i18n="footer.tokusho_full">特定商取引法に基づく表示</a>
         </div>
-        <p class="page-footer-disclaimer">本サービスの性格分析は娯楽・自己理解を目的とするものであり、医学的・心理学的診断ではありません。</p>
+        <p class="page-footer-disclaimer" data-i18n="footer.disclaimer">本サービスの性格分析は娯楽・自己理解を目的とするものであり、医学的・心理学的診断ではありません。</p>
         <p class="page-footer-copy">© 2026 Doppelganger</p>
       </div>
     `;
     return footer;
   }
 
-  // ユーザー情報を非同期でサイドバーに反映
+  // モバイル用テーマトグルボタン
+  function buildMobileThemeBtn() {
+    const btn = document.createElement('button');
+    btn.className = 'theme-toggle-mobile';
+    btn.id = 'sb-theme-btn-mobile';
+    btn.title = 'テーマ切替';
+    btn.innerHTML = `<span id="sb-theme-icon-mobile">${getCurrentTheme() === 'dark' ? '☀️' : '🌙'}</span>`;
+    btn.addEventListener('click', toggleTheme);
+    return btn;
+  }
+
+  // ユーザー情報をサイドバーに反映
   async function loadSidebarUser() {
     try {
       if (typeof getMyProfile !== 'function') return;
       const profile = await getMyProfile();
       if (!profile) return;
 
-      const avatarEl = document.getElementById('sb-avatar');
+      const avatarEl   = document.getElementById('sb-avatar');
       const nicknameEl = document.getElementById('sb-nickname');
-      const typeEl = document.getElementById('sb-type');
+      const typeEl     = document.getElementById('sb-type');
       const pointsArea = document.getElementById('sb-points-area');
-      const pointsVal = document.getElementById('sb-points-val');
+      const pointsVal  = document.getElementById('sb-points-val');
 
       if (avatarEl) {
         if (typeof renderUserAvatar === 'function') {
@@ -125,6 +168,7 @@
         }
       }
       if (nicknameEl) {
+        nicknameEl.removeAttribute('data-i18n');
         nicknameEl.textContent = profile.nickname || 'ユーザー';
       }
       if (typeEl && profile.type_name) {
@@ -134,64 +178,58 @@
         pointsArea.style.display = 'flex';
         if (pointsVal) pointsVal.textContent = Number(profile.point_balance).toLocaleString('ja-JP');
       }
-    } catch (e) {
-      // ログインしていない場合などは無視
-    }
+    } catch (e) { /* 無視 */ }
   }
 
   // ——————————————————————————————
   // 初期化
   // ——————————————————————————————
   function init() {
-    // サイドバーを body の先頭に挿入
-    const sidebar = buildSidebar();
-    document.body.prepend(sidebar);
+    // テーマ即時適用（チラつき防止）
+    applyTheme(getCurrentTheme());
+
+    // サイドバー挿入
+    document.body.prepend(buildSidebar());
     document.body.classList.add('has-sidebar');
 
-    // ログアウトボタン
+    // ログアウト
     const logoutBtn = document.getElementById('sb-logout-btn');
     if (logoutBtn) {
       logoutBtn.addEventListener('click', async () => {
-        try {
-          if (typeof supabase !== 'undefined') {
-            await supabase.auth.signOut();
-          }
-        } catch (e) { /* 無視 */ }
+        try { if (typeof supabase !== 'undefined') await supabase.auth.signOut(); } catch (e) {}
         window.location.href = 'index.html';
       });
     }
 
-    // ユーザー情報を非同期でロード
+    // テーマトグル
+    const themeBtn = document.getElementById('sb-theme-btn');
+    if (themeBtn) themeBtn.addEventListener('click', toggleTheme);
+
     loadSidebarUser();
 
-    // ページ下部フッターを body の末尾に挿入（legal/ 配下は除外）
-    const isLegalPage = location.pathname.includes('/legal/');
-    if (!isLegalPage) {
-      const pageFooter = buildPageFooter();
-      document.body.append(pageFooter);
+    // フッター・モバイルテーマボタン（legal/ 配下は除外）
+    if (!location.pathname.includes('/legal/')) {
+      document.body.append(buildPageFooter());
+      document.body.append(buildMobileThemeBtn());
     }
+
+    // i18n が既にロード済みなら翻訳を再適用
+    if (typeof I18n !== 'undefined') I18n.applyTranslations();
   }
 
-  // DOMロード後に実行
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
   } else {
     init();
   }
 
-  // ——————————————————————————————
-  // 通知バッジ更新（Phase 2以降で使用）
-  // ——————————————————————————————
+  // 通知バッジ更新
   window.updateNavBadge = function (type, count) {
     const map = { friends: 'sb-badge-fr' };
     const el = document.getElementById(map[type]);
     if (!el) return;
-    if (count > 0) {
-      el.textContent = count > 99 ? '99+' : count;
-      el.classList.add('show');
-    } else {
-      el.classList.remove('show');
-    }
+    if (count > 0) { el.textContent = count > 99 ? '99+' : count; el.classList.add('show'); }
+    else el.classList.remove('show');
   };
 
 })();
