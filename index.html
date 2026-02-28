@@ -320,6 +320,12 @@
     }
   });
 
+  // --- 招待コードをlocalStorageに保存（ログイン後も引き継ぐため） ---
+  (function() {
+    const _inv = new URLSearchParams(location.search).get('invite');
+    if (_inv) localStorage.setItem('pendingInvite', _inv);
+  })();
+
   // --- 認証エラーの日本語化 ---
   function translateAuthError(msg) {
     const map = {

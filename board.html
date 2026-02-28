@@ -445,6 +445,14 @@
       if (!myProfile) return;
 
       initNavUser();
+
+      // 招待リンク経由の自動フレンド申請処理
+      const _pendingInvite = localStorage.getItem('pendingInvite');
+      if (_pendingInvite) {
+        localStorage.removeItem('pendingInvite');
+        handlePendingInvite(_pendingInvite, user.id);
+      }
+
       renderTopView();
       showView('view-top');
     } catch (err) {
@@ -452,6 +460,30 @@
     } finally {
       showLoading(false);
     }
+  }
+
+  // 招待コードからフレンド申請を自動送信
+  async function handlePendingInvite(inviteCode, myUserId) {
+    try {
+      const { data: target } = await supabase
+        .from('users')
+        .select('id, nickname')
+        .eq('invite_code', inviteCode)
+        .maybeSingle();
+
+      if (!target || target.id === myUserId) return;
+
+      const { error } = await supabase.from('friends').insert({
+        requester_id: myUserId,
+        receiver_id: target.id,
+        source: 'invite',
+      });
+
+      if (!error) {
+        showToast(`${escapeHtml(target.nickname || '招待者')}にフレンド申請を送りました！`, 'success');
+      }
+      // error.code === '23505' は重複申請（既に申請済み）→ 無視
+    } catch (e) { /* 無視 */ }
   }
 
   // ================================================================
