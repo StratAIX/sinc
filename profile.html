@@ -398,6 +398,19 @@
         <span class="menu-label" data-i18n="profile.share_results">診断結果をシェア</span>
         <span class="menu-arrow">›</span>
       </div>
+
+      <!-- マッチング解放（未解放時のみ表示） -->
+      <div class="menu-item" id="unlock-matching-item" style="display:none">
+        <span class="menu-icon">💕</span>
+        <span class="menu-label" data-i18n="profile.unlock_matching_btn">マッチング機能を解放する</span>
+        <span class="menu-arrow">›</span>
+      </div>
+
+      <!-- マッチング解放済み（解放後に表示） -->
+      <div class="menu-item" id="matching-unlocked-item" style="display:none;cursor:default;opacity:.65">
+        <span class="menu-icon">✅</span>
+        <span class="menu-label" data-i18n="profile.matching_unlocked_label">マッチング解放済み</span>
+      </div>
     </div>
 
     <!-- ログアウト -->
@@ -562,6 +575,17 @@
 
     renderProfile(currentProfile);
     loadStats(currentProfile.id);
+
+    // マッチング解放状態をメニューに反映
+    const unlockItem   = document.getElementById('unlock-matching-item');
+    const unlockedItem = document.getElementById('matching-unlocked-item');
+    if (currentProfile.matching_unlocked) {
+      if (unlockItem)   unlockItem.style.display   = 'none';
+      if (unlockedItem) unlockedItem.style.display = 'flex';
+    } else {
+      if (unlockItem)   unlockItem.style.display   = 'flex';
+      if (unlockedItem) unlockedItem.style.display = 'none';
+    }
   }
 
   // --- 編集モード ---
@@ -1089,6 +1113,23 @@
       } catch (e) {
         showToast('シェアに失敗しました', 'error');
       }
+    }
+  });
+
+  // --- マッチング解放 ---
+  document.getElementById('unlock-matching-item')?.addEventListener('click', async () => {
+    const _t = (typeof I18n !== 'undefined') ? I18n.t.bind(I18n) : (k) => k;
+    if (!confirm(_t('profile.unlock_matching_confirm') || 'マッチング機能を解放しますか？')) return;
+    try {
+      await updateMyProfile({ matching_unlocked: true });
+      currentProfile.matching_unlocked = true;
+      localStorage.setItem('doppelganger_matching', '1');
+      if (typeof window.updateMatchingNav === 'function') window.updateMatchingNav(true);
+      document.getElementById('unlock-matching-item').style.display = 'none';
+      document.getElementById('matching-unlocked-item').style.display = 'flex';
+      showToast('マッチング機能が解放されました！', 'success');
+    } catch (err) {
+      showToast('エラーが発生しました', 'error');
     }
   });
 

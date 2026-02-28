@@ -251,6 +251,9 @@ const I18n = (() => {
       'profile.verify_open':   '確認する',
       'profile.edit_btn':      '✏️ プロフィール編集',
       'profile.verify_desc_full': 'マッチング機能を利用するには18歳以上であることの確認が必要です。<br><small>※ 出会い系サイト規制法に基づく義務です。</small>',
+      'profile.unlock_matching_btn':     '💕 マッチング機能を解放する',
+      'profile.unlock_matching_confirm': 'マッチング機能を解放しますか？\n（掲示板でフレンドを作り、個人チャットとマッチングが利用可能になります）',
+      'profile.matching_unlocked_label': '✅ マッチング解放済み',
 
       // フレンド（追加）
       'friends.page_title':   '👥 フレンド',
@@ -508,6 +511,9 @@ const I18n = (() => {
       'profile.verify_open':   'Verify',
       'profile.edit_btn':      '✏️ Edit Profile',
       'profile.verify_desc_full': 'You must be 18 or older to use the matching feature.<br><small>※ Required by the Dating Site Regulation Law.</small>',
+      'profile.unlock_matching_btn':     '💕 Unlock Matching Feature',
+      'profile.unlock_matching_confirm': 'Unlock matching?\n(Make friends on the board to use personal chat and matching.)',
+      'profile.matching_unlocked_label': '✅ Matching Unlocked',
 
       // Friends (added)
       'friends.page_title':   '👥 Friends',

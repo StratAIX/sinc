@@ -79,7 +79,7 @@
           <span class="sb-label" data-i18n="nav.friends">フレンド</span>
           <span class="sb-badge" id="sb-badge-fr" title="未読"></span>
         </a>
-        <a href="matching.html" class="sb-item ${isActive(['matching.html'])}">
+        <a href="matching.html" class="sb-item ${isActive(['matching.html'])}" id="sb-matching-link">
           <span class="sb-icon" aria-hidden="true">💕</span>
           <span class="sb-label" data-i18n="nav.matching">マッチング</span>
         </a>
@@ -196,6 +196,11 @@
         pointsArea.style.display = 'flex';
         if (pointsVal) pointsVal.textContent = Number(profile.point_balance).toLocaleString('ja-JP');
       }
+
+      // マッチング解放状態をlocalStorageに保存してナビに反映
+      const unlocked = !!profile.matching_unlocked;
+      localStorage.setItem('doppelganger_matching', unlocked ? '1' : '0');
+      window.updateMatchingNav(unlocked);
     } catch (e) { /* 無視 */ }
   }
 
@@ -225,11 +230,19 @@
 
     loadSidebarUser();
 
-    // フッター・モバイルテーマボタン・モバイル言語ボタン（legal/ 配下は除外）
+    // マッチング未解放なら即時非表示（localStorageで判断してチラつき防止）
+    if (localStorage.getItem('doppelganger_matching') !== '1') {
+      window.updateMatchingNav(false);
+    }
+
+    // フッター・モバイルテーマボタン（legal/ 配下は除外）
+    // 言語切替ボタンは profile.html のみ表示（他のページではボタンと干渉するため）
     if (!location.pathname.includes('/legal/')) {
       document.body.append(buildPageFooter());
       document.body.append(buildMobileThemeBtn());
-      document.body.append(buildMobileLangBtn());
+      if (getCurrentPage() === 'profile.html') {
+        document.body.append(buildMobileLangBtn());
+      }
     }
 
     // i18n が既にロード済みなら翻訳を再適用
@@ -241,6 +254,17 @@
   } else {
     init();
   }
+
+  // マッチングナビ表示/非表示
+  window.updateMatchingNav = function (unlocked) {
+    // サイドバー
+    const sbMatch = document.getElementById('sb-matching-link');
+    if (sbMatch) sbMatch.style.display = unlocked ? '' : 'none';
+    // モバイルナビバー
+    document.querySelectorAll('.nav-bar a[href="matching.html"]').forEach(function(el) {
+      el.style.display = unlocked ? '' : 'none';
+    });
+  };
 
   // 通知バッジ更新
   window.updateNavBadge = function (type, count) {
