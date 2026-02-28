@@ -219,8 +219,8 @@
 
       <!-- おすすめの板（趣味に応じたパーソナライズ） -->
       <div class="recommend-section" id="recommend-section" style="display:none">
-        <div class="section-title">⭐ おすすめのカテゴリー</div>
-        <div class="recommend-hint">あなたの趣味設定に基づいています</div>
+        <div class="section-title" data-i18n="board.recommend_title">⭐ おすすめのカテゴリー</div>
+        <div class="recommend-hint" data-i18n="board.recommend_hint">あなたの趣味設定に基づいています</div>
         <div class="recommend-chips" id="recommend-chips"></div>
       </div>
 
@@ -237,16 +237,16 @@
         <div class="area-card type-card" id="btn-type-area">
           <div class="area-card-icon" id="type-area-icon">🎭</div>
           <div class="area-card-name" id="type-area-name">タイプの部屋</div>
-          <div class="area-card-desc">完全に同じタイプの人だけの密な空間</div>
+          <div class="area-card-desc" data-i18n="board.type_room_desc">完全に同じタイプの人だけの密な空間</div>
         </div>
       </div>
 
       <!-- 趣味未設定のお知らせ -->
       <div id="hobby-setup-hint" style="display:none">
         <div class="recommend-section">
-          <div class="section-title">🌟 趣味を設定しよう</div>
-          <div class="recommend-hint">趣味を設定すると、おすすめのカテゴリーが表示されます</div>
-          <a href="profile.html?tab=hobby" class="btn btn-secondary btn-sm" style="display:inline-block;margin-top:4px">趣味を設定する →</a>
+          <div class="section-title" data-i18n="board.hobby_setup_title">🌟 趣味を設定しよう</div>
+          <div class="recommend-hint" data-i18n="board.hobby_setup_hint">趣味を設定すると、おすすめのカテゴリーが表示されます</div>
+          <a href="profile.html?tab=hobby" class="btn btn-secondary btn-sm" style="display:inline-block;margin-top:4px" data-i18n="board.hobby_setup_btn">趣味を設定する →</a>
         </div>
       </div>
     </div>
@@ -290,7 +290,7 @@
 
       <div class="board-list-header">
         <span style="font-size:.8rem;color:var(--text2)" id="boards-count-label"></span>
-        <button class="new-board-btn" id="new-board-btn">＋ 板を作る</button>
+        <button class="new-board-btn" id="new-board-btn" data-i18n="board.new_board">＋ 板を作る</button>
       </div>
       <div id="boards-list"></div>
     </div>
@@ -307,8 +307,8 @@
       <div class="breadcrumb" id="breadcrumb-threads"></div>
 
       <div class="board-view-header">
-        <span style="font-size:.8rem;color:var(--text2)">スレッド一覧</span>
-        <button class="new-thread-btn" id="new-thread-btn">＋ スレッドを立てる</button>
+        <span style="font-size:.8rem;color:var(--text2)" data-i18n="board.threads_list">スレッド一覧</span>
+        <button class="new-thread-btn" id="new-thread-btn" data-i18n="board.new_thread">＋ スレッドを立てる</button>
       </div>
       <div id="threads-list"></div>
       <div class="pagination" id="pagination"></div>
@@ -326,29 +326,31 @@
 <!-- モーダル: 板を作成 -->
 <div class="modal-overlay" id="create-board-modal">
   <div class="modal">
-    <div class="modal-title">新しい板を作る</div>
+    <div class="modal-title" data-i18n="board.create_modal_title">新しい板を作る</div>
     <p class="text-sm text-muted mb-16" id="create-board-hint" style="font-size:.8rem;color:var(--text2);margin-bottom:16px"></p>
     <div class="form-group">
-      <label class="form-label">板のタイトル</label>
+      <label class="form-label" data-i18n="board.label_board_name">板のタイトル</label>
       <input type="text" class="form-input" id="board-name-input"
-             placeholder="例: フェス好き集まれ！" maxlength="40">
+             placeholder="例: フェス好き集まれ！" maxlength="40"
+             data-i18n-ph="board.placeholder_board_name">
       <div class="char-count"><span id="board-name-count">0</span>/40</div>
     </div>
     <div class="form-group">
-      <label class="form-label">説明（任意）</label>
+      <label class="form-label" data-i18n="board.label_board_desc">説明（任意）</label>
       <textarea class="form-input" id="board-desc-input"
-                placeholder="この板について一言" maxlength="100" rows="2"></textarea>
+                placeholder="この板について一言" maxlength="100" rows="2"
+                data-i18n-ph="board.placeholder_board_desc"></textarea>
       <div class="char-count"><span id="board-desc-count">0</span>/100</div>
     </div>
     <div class="form-group">
-      <label class="form-label">アイコン（絵文字1文字）</label>
+      <label class="form-label" data-i18n="board.label_board_icon">アイコン（絵文字1文字）</label>
       <input type="text" class="form-input" id="board-icon-input"
              placeholder="例: 🎸" maxlength="2" style="max-width:80px">
     </div>
     <div class="form-error" id="create-board-error"></div>
     <div class="modal-actions">
-      <button class="btn btn-secondary btn-sm" id="cancel-create-board">キャンセル</button>
-      <button class="btn btn-primary btn-sm" id="submit-create-board">作成する</button>
+      <button class="btn btn-secondary btn-sm" id="cancel-create-board" data-i18n="common.cancel">キャンセル</button>
+      <button class="btn btn-primary btn-sm" id="submit-create-board" data-i18n="common.create">作成する</button>
     </div>
   </div>
 </div>
@@ -356,23 +358,25 @@
 <!-- モーダル: スレッドを作成 -->
 <div class="modal-overlay" id="create-thread-modal">
   <div class="modal">
-    <div class="modal-title">新しいスレッドを立てる</div>
+    <div class="modal-title" data-i18n="board.create_thread_title">新しいスレッドを立てる</div>
     <div class="form-group">
-      <label class="form-label">タイトル</label>
+      <label class="form-label" data-i18n="board.label_thread_title">タイトル</label>
       <input type="text" class="form-input" id="thread-title-input"
-             placeholder="スレッドのタイトル" maxlength="100">
+             placeholder="スレッドのタイトル" maxlength="100"
+             data-i18n-ph="board.placeholder_thread_title">
       <div class="char-count"><span id="title-char-count">0</span>/100</div>
     </div>
     <div class="form-group">
-      <label class="form-label">本文</label>
+      <label class="form-label" data-i18n="board.label_thread_body">本文</label>
       <textarea class="form-input" id="thread-content-input"
-                placeholder="最初の投稿を書いてください" maxlength="2000" rows="5"></textarea>
+                placeholder="最初の投稿を書いてください" maxlength="2000" rows="5"
+                data-i18n-ph="board.placeholder_thread_body"></textarea>
       <div class="char-count"><span id="content-char-count">0</span>/2000</div>
     </div>
     <div class="form-error" id="create-thread-error"></div>
     <div class="modal-actions">
-      <button class="btn btn-secondary btn-sm" id="cancel-create-thread">キャンセル</button>
-      <button class="btn btn-primary btn-sm" id="submit-create-thread">作成する</button>
+      <button class="btn btn-secondary btn-sm" id="cancel-create-thread" data-i18n="common.cancel">キャンセル</button>
+      <button class="btn btn-primary btn-sm" id="submit-create-thread" data-i18n="common.create">作成する</button>
     </div>
   </div>
 </div>
@@ -381,19 +385,19 @@
 <nav class="nav-bar">
   <a href="board.html" class="nav-item active">
     <span class="nav-icon">💬</span>
-    <span>掲示板</span>
+    <span data-i18n="nav.board">掲示板</span>
   </a>
   <a href="friends.html" class="nav-item">
     <span class="nav-icon">👥</span>
-    <span>フレンド</span>
+    <span data-i18n="nav.friends">フレンド</span>
   </a>
   <a href="matching.html" class="nav-item">
     <span class="nav-icon">💕</span>
-    <span>マッチング</span>
+    <span data-i18n="nav.matching">マッチング</span>
   </a>
   <a href="profile.html" class="nav-item">
     <span class="nav-icon" id="nav-my-avatar">👤</span>
-    <span id="nav-my-name">マイページ</span>
+    <span id="nav-my-name" data-i18n="nav.profile">マイページ</span>
   </a>
 </nav>
 
@@ -457,10 +461,10 @@
     const fam = myProfile.family || 'Architects';
     const familyIcons = { Architects:'🏛️', Mystics:'🌙', Commanders:'⚔️', Catalysts:'🔥' };
     const familyDescs = {
-      Architects: '分析・論理・構造を愛する者たちの広場',
-      Mystics:    '感性・没入・世界観を共有する者たちの広場',
-      Commanders: '企画・攻略・情報整理で楽しむ者たちの広場',
-      Catalysts:  '体験・共有・盛り上がりを愛する者たちの広場',
+      Architects: (typeof I18n !== 'undefined') ? I18n.t('board.family_desc_architects') : '分析・論理・構造を愛する者たちの広場',
+      Mystics:    (typeof I18n !== 'undefined') ? I18n.t('board.family_desc_mystics')    : '感性・没入・世界観を共有する者たちの広場',
+      Commanders: (typeof I18n !== 'undefined') ? I18n.t('board.family_desc_commanders') : '企画・攻略・情報整理で楽しむ者たちの広場',
+      Catalysts:  (typeof I18n !== 'undefined') ? I18n.t('board.family_desc_catalysts')  : '体験・共有・盛り上がりを愛する者たちの広場',
     };
     const colorVar = familyColor(fam);
 
@@ -481,7 +485,7 @@
     document.getElementById('family-area-icon').textContent = familyIcons[fam] || '🏛️';
     document.getElementById('family-area-name').textContent = fam + ' Lounge';
     document.querySelector('#btn-family-area .area-card-desc').textContent = familyDescs[fam] || '同じファミリーの仲間が集まる広場';
-    document.getElementById('family-section-label').textContent = '🚪 どのエリアに入る？';
+    document.getElementById('family-section-label').textContent = (typeof I18n !== 'undefined') ? I18n.t('board.section_area') : '🚪 どのエリアに入る？';
 
     // エリアカード（タイプ）
     document.getElementById('type-area-icon').textContent = getTypeEmoji(myProfile.type_number);

@@ -818,6 +818,25 @@ body[data-theme="light"]{
 .theme-toggle-mobile:hover{border-color:var(--accent)}
 @media(min-width:768px){.theme-toggle-mobile{display:none}}
 
+/* モバイル用言語切替ボタン（テーマボタンの左隣） */
+.lang-toggle-mobile{
+  position:fixed;
+  bottom:calc(68px + env(safe-area-inset-bottom,0px));
+  right:52px;
+  width:34px;height:34px;
+  background:var(--surface2);
+  border:1px solid var(--surface3);
+  border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:.85rem;
+  cursor:pointer;
+  z-index:101;
+  transition:all .2s;
+  box-shadow:var(--shadow);
+}
+.lang-toggle-mobile:hover{border-color:var(--accent)}
+@media(min-width:768px){.lang-toggle-mobile{display:none}}
+
 /* ============================================================
    ライトモード: カラーコントラスト修正
    ============================================================ */

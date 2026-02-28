@@ -69,22 +69,23 @@
     <!-- ヘッダー -->
     <div class="page-header">
       <div>
-        <div class="page-title">👥 フレンド</div>
-        <div class="page-subtitle">フレンド申請・DM管理</div>
+        <div class="page-title" data-i18n="friends.page_title">👥 フレンド</div>
+        <div class="page-subtitle" data-i18n="friends.page_subtitle">フレンド申請・DM管理</div>
       </div>
     </div>
 
     <!-- フレンド申請・招待 -->
     <div class="add-friend-area">
-      <div class="add-friend-title">フレンドを追加</div>
+      <div class="add-friend-title" data-i18n="friends.add_title">フレンドを追加</div>
 
       <div class="form-group" style="margin-bottom:8px">
-        <label class="form-label">IDで検索</label>
+        <label class="form-label" data-i18n="friends.search_label">IDで検索</label>
         <div style="display:flex;gap:8px">
           <input type="text" class="form-input" id="search-id-input"
             placeholder="@ユーザー名 または 招待コード"
+            data-i18n-ph="friends.search_ph"
             style="flex:1">
-          <button class="btn btn-primary btn-sm" id="search-friend-btn">検索</button>
+          <button class="btn btn-primary btn-sm" id="search-friend-btn" data-i18n="common.search">検索</button>
         </div>
       </div>
 
@@ -92,10 +93,10 @@
       <div id="search-result"></div>
 
       <!-- 招待リンク -->
-      <div class="form-label" style="margin-top:14px">招待リンクを共有</div>
+      <div class="form-label" style="margin-top:14px" data-i18n="friends.invite_link">招待リンクを共有</div>
       <div class="invite-link-box">
-        <span class="invite-link-text" id="invite-link">読み込み中...</span>
-        <button class="invite-copy-btn" id="invite-copy-btn">コピー</button>
+        <span class="invite-link-text" id="invite-link" data-i18n="common.loading">読み込み中...</span>
+        <button class="invite-copy-btn" id="invite-copy-btn" data-i18n="common.copy">コピー</button>
       </div>
     </div>
 
@@ -111,15 +112,15 @@
 
     <!-- タブ -->
     <div class="tabs friend-tabs">
-      <button class="tab active" data-tab="friends">フレンド</button>
-      <button class="tab" data-tab="requests">申請中</button>
-      <button class="tab" data-tab="pending">受信</button>
+      <button class="tab active" data-tab="friends" data-i18n="friends.tab_friends">フレンド</button>
+      <button class="tab" data-tab="requests" data-i18n="friends.tab_sent">申請中</button>
+      <button class="tab" data-tab="pending" data-i18n="friends.tab_received">受信</button>
     </div>
 
     <!-- フレンド一覧 -->
     <div id="tab-friends" class="tab-content">
       <div class="loading" id="loading-friends">
-        <div class="spinner"></div><span>読み込み中...</span>
+        <div class="spinner"></div><span data-i18n="common.loading">読み込み中...</span>
       </div>
       <div id="friends-list"></div>
     </div>

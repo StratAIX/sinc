@@ -147,6 +147,24 @@
     return btn;
   }
 
+  // モバイル用言語切替ボタン
+  function buildMobileLangBtn() {
+    const btn = document.createElement('button');
+    btn.className = 'lang-toggle-mobile';
+    btn.id = 'lang-toggle-mobile-btn';
+    btn.title = '言語切替 / Switch Language';
+    const lang = localStorage.getItem('doppelganger_lang') || 'ja';
+    btn.textContent = lang === 'ja' ? '🇺🇸' : '🇯🇵';
+    btn.addEventListener('click', () => {
+      if (typeof I18n !== 'undefined') {
+        const newLang = I18n.getLang() === 'ja' ? 'en' : 'ja';
+        I18n.setLang(newLang);
+        btn.textContent = newLang === 'ja' ? '🇺🇸' : '🇯🇵';
+      }
+    });
+    return btn;
+  }
+
   // ユーザー情報をサイドバーに反映
   async function loadSidebarUser() {
     try {
@@ -207,10 +225,11 @@
 
     loadSidebarUser();
 
-    // フッター・モバイルテーマボタン（legal/ 配下は除外）
+    // フッター・モバイルテーマボタン・モバイル言語ボタン（legal/ 配下は除外）
     if (!location.pathname.includes('/legal/')) {
       document.body.append(buildPageFooter());
       document.body.append(buildMobileThemeBtn());
+      document.body.append(buildMobileLangBtn());
     }
 
     // i18n が既にロード済みなら翻訳を再適用

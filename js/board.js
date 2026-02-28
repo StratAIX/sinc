@@ -5,6 +5,13 @@
 
 const Board = {
   // ============================================================
+  // ★ リリース記念: 板作成 全て無料キャンペーン ★
+  // true  → 何枚作っても無料（オープン記念期間中）
+  // false → 通常料金（2〜5枚目: 50pt、6枚目〜: 100pt）に戻す
+  // ============================================================
+  FREE_BOARD_CREATION: true,
+
+  // ============================================================
   // 大カテゴリーデータ（DBと同期したJS定数）
   // ※ カテゴリーを追加した場合はここにも追記する（id は DB の SERIAL 順）
   // ============================================================
@@ -132,6 +139,9 @@ const Board = {
 
   // 当月の板作成数からコストを計算
   async _calcBoardCost(userId) {
+    // ★ 無料キャンペーン中は常に 0 を返す
+    if (this.FREE_BOARD_CREATION) return 0;
+
     const now = new Date();
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
     const { count } = await supabase

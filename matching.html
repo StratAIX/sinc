@@ -95,34 +95,34 @@
       <div class="matching-sub">Matching</div>
     </div>
 
-    <div class="test-banner">
+    <div class="test-banner" data-i18n="matching.test_banner">
       🧪 テストモード: サンプルユーザーとのマッチング体験です。実際の課金は発生しません。
     </div>
 
     <!-- マッチング機能ロック / 解放CTA -->
     <div class="legal-lock" id="legal-lock">
       <div class="legal-lock-icon">🔐</div>
-      <div class="legal-lock-title">マッチング機能を解放しよう</div>
-      <div class="legal-lock-desc">
+      <div class="legal-lock-title" data-i18n="matching.unlock_title">マッチング機能を解放しよう</div>
+      <div class="legal-lock-desc" data-i18n-html="matching.unlock_desc">
         年齢確認（18歳以上）を完了すると、相性の良い相手と繋がれます。<br>
         女性は無料・男性は¥990の機能解放パスが必要です。
       </div>
-      <a href="matching-unlock.html" class="btn btn-primary" style="margin-top:12px;display:inline-block;background:linear-gradient(135deg,var(--accent),var(--pink))">
+      <a href="matching-unlock.html" class="btn btn-primary" style="margin-top:12px;display:inline-block;background:linear-gradient(135deg,var(--accent),var(--pink))" data-i18n="matching.unlock_btn">
         💕 マッチング機能を解放する
       </a>
     </div>
 
     <!-- モード切替 -->
     <div class="mode-tabs">
-      <button class="mode-tab friend active" data-mode="friend">👫 友人を探す</button>
-      <button class="mode-tab love" data-mode="love">💕 恋人を探す</button>
+      <button class="mode-tab friend active" data-mode="friend" data-i18n="matching.mode_friend">👫 友人を探す</button>
+      <button class="mode-tab love" data-mode="love" data-i18n="matching.mode_love">💕 恋人を探す</button>
     </div>
 
     <!-- 距離フィルター -->
     <div class="distance-tabs">
-      <button class="dist-tab active" data-dist="unlimited">無制限</button>
-      <button class="dist-tab" data-dist="1000">1,000km以内</button>
-      <button class="dist-tab" data-dist="300">300km以内</button>
+      <button class="dist-tab active" data-dist="unlimited" data-i18n="matching.dist_all">無制限</button>
+      <button class="dist-tab" data-dist="1000" data-i18n="matching.dist_1000">1,000km以内</button>
+      <button class="dist-tab" data-dist="300" data-i18n="matching.dist_300">300km以内</button>
     </div>
 
     <!-- 候補タイトル + リロード -->
@@ -130,7 +130,7 @@
       <div class="section-title" id="candidates-title" style="margin-bottom:0">相性の良い候補（上位5名）</div>
       <div style="display:flex;align-items:center;gap:8px">
         <span class="reload-count" id="reload-count"></span>
-        <button class="reload-btn" id="reload-btn">🔄 更新</button>
+        <button class="reload-btn" id="reload-btn" data-i18n="matching.reload">🔄 更新</button>
       </div>
     </div>
 
@@ -140,7 +140,7 @@
     <!-- ローディング -->
     <div class="loading hidden" id="loading">
       <div class="spinner"></div>
-      <span>候補を探しています...</span>
+      <span data-i18n="matching.searching">候補を探しています...</span>
     </div>
   </div>
 </div>
@@ -148,20 +148,20 @@
 <!-- 課金確認モーダル -->
 <div class="modal-overlay" id="payment-modal">
   <div class="modal">
-    <div class="modal-title">🔓 マッチングする</div>
-    <p class="text-sm text-muted">この相手とマッチングすると、個人チャットが解放されます。</p>
+    <div class="modal-title" data-i18n="matching.payment_title">🔓 マッチングする</div>
+    <p class="text-sm text-muted" data-i18n="matching.payment_desc">この相手とマッチングすると、個人チャットが解放されます。</p>
 
     <div class="payment-detail">
       <div class="payment-row">
-        <span>マッチング打診料</span>
+        <span data-i18n="matching.payment_fee">マッチング打診料</span>
         <span>¥990</span>
       </div>
       <div class="payment-row">
-        <span>App Store / Google Play 手数料</span>
+        <span data-i18n="matching.store_fee">App Store / Google Play 手数料</span>
         <span>含む</span>
       </div>
       <div class="payment-row payment-total">
-        <span>合計</span>
+        <span data-i18n="matching.total">合計</span>
         <span>¥990（税込）</span>
       </div>
     </div>
@@ -174,8 +174,8 @@
     <div id="payment-target" style="display:none"></div>
 
     <div class="modal-actions">
-      <button class="btn btn-secondary btn-sm" id="payment-cancel">キャンセル</button>
-      <button class="btn btn-primary btn-sm" id="payment-confirm" style="background:linear-gradient(135deg,var(--accent),var(--pink))">
+      <button class="btn btn-secondary btn-sm" id="payment-cancel" data-i18n="common.cancel">キャンセル</button>
+      <button class="btn btn-primary btn-sm" id="payment-confirm" style="background:linear-gradient(135deg,var(--accent),var(--pink))" data-i18n="matching.confirm_btn">
         💳 打診する（¥990）
       </button>
     </div>
@@ -187,15 +187,15 @@
   <div class="modal">
     <div class="match-success">
       <div class="match-success-emoji">🎉</div>
-      <div class="match-success-title">マッチ成立！</div>
+      <div class="match-success-title" data-i18n="matching.success_title">マッチ成立！</div>
       <div class="match-success-pair" id="match-pair"></div>
-      <div class="match-success-desc">
+      <div class="match-success-desc" data-i18n-html="matching.success_desc">
         おめでとうございます！<br>個人チャットが解放されました。<br>メッセージを送ってみましょう。
       </div>
-      <button class="btn btn-primary" id="go-to-chat" style="background:linear-gradient(135deg,var(--accent),var(--pink))">
+      <button class="btn btn-primary" id="go-to-chat" style="background:linear-gradient(135deg,var(--accent),var(--pink))" data-i18n="matching.go_chat_btn">
         💬 チャットを始める
       </button>
-      <button class="btn btn-secondary btn-sm mt-16" id="back-to-list">候補一覧に戻る</button>
+      <button class="btn btn-secondary btn-sm mt-16" id="back-to-list" data-i18n="matching.back_list_btn">候補一覧に戻る</button>
     </div>
   </div>
 </div>
@@ -216,7 +216,7 @@
   </a>
   <a href="profile.html" class="nav-item">
     <span class="nav-icon" id="nav-my-avatar">👤</span>
-    <span id="nav-my-name">マイページ</span>
+    <span id="nav-my-name" data-i18n="nav.profile">マイページ</span>
   </a>
 </nav>
 

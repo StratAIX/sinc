@@ -258,8 +258,8 @@
     <div id="setup-welcome" style="display:none">
       <div class="profile-setup-welcome">
         <div class="welcome-emoji">👋</div>
-        <div class="welcome-title">ようこそ！</div>
-        <div class="welcome-desc">
+        <div class="welcome-title" data-i18n="profile.welcome_title">ようこそ！</div>
+        <div class="welcome-desc" data-i18n-html="profile.welcome_desc">
           まず、あなたのプロフィールを設定しましょう。<br>
           その後、性格診断へと進みます。
         </div>
@@ -279,10 +279,10 @@
           </div>
           <input type="file" id="avatar-input" accept="image/*" style="display:none">
           <div class="avatar-upload-info">
-            <div class="upload-label">アイコン画像</div>
-            <div class="upload-hint">アップロード後に範囲を指定できます</div>
+            <div class="upload-label" data-i18n="profile.avatar_label">アイコン画像</div>
+            <div class="upload-hint" data-i18n="profile.avatar_hint">アップロード後に範囲を指定できます</div>
             <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
-              <button class="avatar-upload-btn" id="avatar-upload-btn">📷 画像を選択</button>
+              <button class="avatar-upload-btn" id="avatar-upload-btn" data-i18n="profile.select_image">📷 画像を選択</button>
               <button class="avatar-remove-btn" id="avatar-remove-btn" style="display:none">削除</button>
             </div>
           </div>
@@ -290,7 +290,7 @@
 
         <!-- アカウントID（初回セットアップ時のみ表示、変更不可） -->
         <div class="form-group" id="username-form-group" style="display:none">
-          <label class="form-label">アカウントID（必須・変更不可）</label>
+          <label class="form-label" data-i18n="profile.username_label">アカウントID（必須・変更不可）</label>
           <div class="username-input-wrap">
             <span class="username-at">@</span>
             <input type="text" class="form-input" id="username-input" maxlength="20"
@@ -303,7 +303,7 @@
 
         <!-- ニックネーム -->
         <div class="form-group">
-          <label class="form-label">ニックネーム（必須）</label>
+          <label class="form-label" data-i18n="profile.nickname_label">ニックネーム（必須）</label>
           <input type="text" class="form-input" id="nickname-input" maxlength="20" placeholder="みんなに表示される名前（後から変更可）">
           <div class="char-count"><span id="nickname-count">0</span>/20</div>
           <div class="form-error" id="nickname-error">ニックネームを入力してください</div>
@@ -311,35 +311,35 @@
 
         <!-- 自己紹介 -->
         <div class="form-group">
-          <label class="form-label">自己紹介（任意）</label>
+          <label class="form-label" data-i18n="profile.bio_label">自己紹介（任意）</label>
           <textarea class="form-input" id="bio-input" maxlength="100" placeholder="趣味や好きなことなど..." rows="3"></textarea>
           <div class="char-count"><span id="bio-count">0</span>/100</div>
         </div>
 
         <!-- 性別 -->
         <div class="form-group" id="gender-form-group">
-          <label class="form-label">性別（任意・マッチングで使用）</label>
+          <label class="form-label" data-i18n="profile.gender_label">性別（任意・マッチングで使用）</label>
           <div class="gender-btn-group" id="gender-select">
-            <button type="button" class="gender-btn" data-val="male">👨 男性</button>
-            <button type="button" class="gender-btn" data-val="female">👩 女性</button>
-            <button type="button" class="gender-btn" data-val="other">🧑 その他</button>
-            <button type="button" class="gender-btn" data-val="secret">🔒 非公開</button>
+            <button type="button" class="gender-btn" data-val="male" data-i18n="profile.gender_male">👨 男性</button>
+            <button type="button" class="gender-btn" data-val="female" data-i18n="profile.gender_female">👩 女性</button>
+            <button type="button" class="gender-btn" data-val="other" data-i18n="profile.gender_other">🧑 その他</button>
+            <button type="button" class="gender-btn" data-val="secret" data-i18n="profile.gender_private">🔒 非公開</button>
           </div>
-          <div class="form-hint">マッチング相手の絞り込みに使用されます。後から変更可能です。</div>
+          <div class="form-hint" data-i18n="profile.gender_hint">マッチング相手の絞り込みに使用されます。後から変更可能です。</div>
         </div>
 
         <!-- 趣味選択 -->
         <div class="form-group" id="hobby-form-group">
-          <label class="form-label">好きなカテゴリー（最大3つ）</label>
-          <div class="hobby-section-label">
+          <label class="form-label" data-i18n="profile.hobbies_label">好きなカテゴリー（最大3つ）</label>
+          <div class="hobby-section-label" data-i18n="profile.hobbies_hint">
             掲示板のTOPに、選んだカテゴリーが優先表示されます。
           </div>
           <div class="hobby-grid" id="hobby-grid"></div>
           <div class="hobby-limit-hint" id="hobby-limit-hint">0 / 3 選択</div>
         </div>
 
-        <button class="btn btn-primary btn-block" id="save-profile-btn">保存する</button>
-        <button class="btn btn-secondary btn-block btn-sm mt-8" id="cancel-edit-btn" style="display:none">キャンセル</button>
+        <button class="btn btn-primary btn-block" id="save-profile-btn" data-i18n="common.save">保存する</button>
+        <button class="btn btn-secondary btn-block btn-sm mt-8" id="cancel-edit-btn" style="display:none" data-i18n="common.cancel">キャンセル</button>
       </div>
     </div>
 
@@ -356,7 +356,7 @@
 
     <!-- 診断履歴 -->
     <div class="profile-section" id="history-section" style="display:none">
-      <div class="section-title">診断履歴（直近3回）</div>
+      <div class="section-title" data-i18n="profile.history_title">診断履歴（直近3回）</div>
       <div class="card">
         <div class="history-list" id="history-list"></div>
       </div>
@@ -364,44 +364,44 @@
 
     <!-- P変数スコア -->
     <div class="profile-section" id="scores-section" style="display:none">
-      <div class="section-title">診断スコア（非公開）</div>
+      <div class="section-title" data-i18n="profile.scores_title">診断スコア（非公開）</div>
       <div class="card">
         <div class="diagnosis-scores" id="diagnosis-scores"></div>
-        <button class="scores-toggle" id="scores-toggle">もっと見る ▼</button>
+        <button class="scores-toggle" id="scores-toggle" data-i18n="profile.show_more">もっと見る ▼</button>
       </div>
     </div>
 
     <!-- メニュー -->
     <div class="profile-section" id="menu-section">
-      <div class="section-title">メニュー</div>
+      <div class="section-title" data-i18n="profile.menu_title">メニュー</div>
 
       <a href="doppelganger-diagnosis.index.html" class="menu-item">
         <span class="menu-icon">🔮</span>
-        <span class="menu-label">診断をやり直す</span>
+        <span class="menu-label" data-i18n="profile.retake_label">診断をやり直す</span>
         <span class="menu-arrow">›</span>
       </a>
 
       <a href="board.html" class="menu-item">
         <span class="menu-icon">💬</span>
-        <span class="menu-label">掲示板へ</span>
+        <span class="menu-label" data-i18n="profile.to_board_label">掲示板へ</span>
         <span class="menu-arrow">›</span>
       </a>
 
       <div class="menu-item" id="edit-hobby-btn">
         <span class="menu-icon">🌟</span>
-        <span class="menu-label">趣味・カテゴリーを設定</span>
+        <span class="menu-label" data-i18n="profile.set_hobbies">趣味・カテゴリーを設定</span>
         <span class="menu-arrow">›</span>
       </div>
 
       <div class="menu-item" id="share-btn">
         <span class="menu-icon">📤</span>
-        <span class="menu-label">診断結果をシェア</span>
+        <span class="menu-label" data-i18n="profile.share_results">診断結果をシェア</span>
         <span class="menu-arrow">›</span>
       </div>
     </div>
 
     <!-- ログアウト -->
-    <button class="logout-btn" id="logout-btn">ログアウト</button>
+    <button class="logout-btn" id="logout-btn" data-i18n="nav.logout">ログアウト</button>
 
     <div class="text-center mt-16 text-xs text-muted">
       Doppelganger v1.0
@@ -412,14 +412,14 @@
 <!-- クロップモーダル -->
 <div class="modal-overlay" id="crop-modal">
   <div class="modal crop-modal-inner">
-    <div class="modal-title">アイコンの範囲を選択</div>
+    <div class="modal-title" data-i18n="profile.crop_title">アイコンの範囲を選択</div>
     <div class="crop-container">
       <img id="crop-image" src="" alt="">
     </div>
-    <p class="crop-hint">ドラッグで位置・ピンチ（スクロール）で拡大縮小</p>
+    <p class="crop-hint" data-i18n="profile.crop_hint">ドラッグで位置・ピンチ（スクロール）で拡大縮小</p>
     <div class="modal-actions">
-      <button class="btn btn-secondary btn-sm" id="crop-cancel">キャンセル</button>
-      <button class="btn btn-primary btn-sm" id="crop-confirm">この範囲で決定</button>
+      <button class="btn btn-secondary btn-sm" id="crop-cancel" data-i18n="common.cancel">キャンセル</button>
+      <button class="btn btn-primary btn-sm" id="crop-confirm" data-i18n="profile.crop_confirm">この範囲で決定</button>
     </div>
   </div>
 </div>
@@ -427,8 +427,9 @@
 <!-- 本人確認モーダル -->
 <div class="modal-overlay" id="verify-modal">
   <div class="modal" style="max-width:420px;padding:24px">
-    <div class="modal-title">🪪 本人確認</div>
-    <p style="font-size:.82rem;color:var(--text2);line-height:1.7;margin-bottom:0">
+    <div class="modal-title" data-i18n="profile.verify_title">🪪 本人確認</div>
+    <p style="font-size:.82rem;color:var(--text2);line-height:1.7;margin-bottom:0"
+       data-i18n-html="profile.verify_desc_full">
       マッチング機能を利用するには18歳以上であることの確認が必要です。<br>
       <small>※ 出会い系サイト規制法に基づく義務です。</small>
     </p>
@@ -450,11 +451,11 @@
     </div>
     <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:.88rem;margin-bottom:20px">
       <input type="checkbox" id="age-confirm-check" style="width:18px;height:18px;accent-color:var(--accent)">
-      <span>私は18歳以上です</span>
+      <span data-i18n="profile.age_check">私は18歳以上です</span>
     </label>
     <div class="modal-actions">
-      <button class="btn btn-secondary btn-sm" id="verify-cancel-btn">後で行う</button>
-      <button class="btn btn-primary btn-sm" id="verify-submit-btn" disabled>確認完了</button>
+      <button class="btn btn-secondary btn-sm" id="verify-cancel-btn" data-i18n="profile.verify_later">後で行う</button>
+      <button class="btn btn-primary btn-sm" id="verify-submit-btn" disabled data-i18n="profile.verify_confirm">確認完了</button>
     </div>
   </div>
 </div>
@@ -475,7 +476,7 @@
   </a>
   <a href="profile.html" class="nav-item active">
     <span class="nav-icon" id="nav-my-avatar">👤</span>
-    <span id="nav-my-name">マイページ</span>
+    <span id="nav-my-name" data-i18n="nav.profile">マイページ</span>
   </a>
 </nav>
 
@@ -570,9 +571,10 @@
     document.getElementById('history-section').style.display = 'none';
     document.getElementById('scores-section').style.display = 'none';
 
+    const _ti = (typeof I18n !== 'undefined') ? I18n.t.bind(I18n) : (k) => k;
     if (isFirstTime && !currentProfile.nickname) {
       document.getElementById('setup-welcome').style.display = 'block';
-      document.getElementById('edit-title').textContent = '🎨 プロフィール設定';
+      document.getElementById('edit-title').textContent = _ti('profile.setup_title');
       document.getElementById('cancel-edit-btn').style.display = 'none';
       document.getElementById('menu-section').style.display = 'none';
       // usernameがまだ未設定なら入力欄を表示
@@ -581,7 +583,7 @@
       }
     } else {
       document.getElementById('setup-welcome').style.display = 'none';
-      document.getElementById('edit-title').textContent = '✏️ プロフィール編集';
+      document.getElementById('edit-title').textContent = _ti('profile.edit_title');
       document.getElementById('cancel-edit-btn').style.display = 'block';
       // 既にusernameが設定されていたら非表示（変更不可）
       document.getElementById('username-form-group').style.display = 'none';
@@ -634,7 +636,7 @@
       </div>
       ${profile.bio ? `<div class="profile-bio">${escapeHtml(profile.bio)}</div>` : ''}
       <div class="profile-display-id">${escapeHtml(profile.display_id || '')}</div>
-      <button class="edit-profile-btn" id="edit-btn">✏️ プロフィール編集</button>
+      <button class="edit-profile-btn" id="edit-btn">${(typeof I18n !== 'undefined') ? I18n.t('profile.edit_btn') : '✏️ プロフィール編集'}</button>
       ${!profile.diagnosis_completed_at ? '<div class="mt-16"><a href="doppelganger-diagnosis.index.html" class="btn btn-primary btn-sm">診断を受ける</a></div>' : ''}
     `;
 
@@ -660,7 +662,8 @@
     const list = document.getElementById('history-list');
     section.style.display = 'block';
 
-    const labels = ['最新', '1回前', '2回前'];
+    const _t = (typeof I18n !== 'undefined') ? I18n.t.bind(I18n) : (k) => k;
+    const labels = [_t('profile.history_latest'), _t('profile.history_prev1'), _t('profile.history_prev2')];
     list.innerHTML = history.slice(0, 3).map((h, i) => {
       const date = h.completed_at
         ? new Date(h.completed_at).toLocaleDateString('ja-JP', { year:'numeric', month:'short', day:'numeric' })
@@ -729,13 +732,14 @@
     const wrap = document.getElementById('verify-banner-wrap');
     if (!wrap) return;
     wrap.style.display = 'block';
+    const _t = (typeof I18n !== 'undefined') ? I18n.t.bind(I18n) : (k) => k;
     if (isVerified) {
       wrap.innerHTML = `
         <div class="verify-banner verified">
           <div class="verify-banner-icon">✅</div>
           <div class="verify-banner-body">
-            <div class="verify-banner-title">本人確認済み</div>
-            <div class="verify-banner-sub">マッチング機能が利用できます</div>
+            <div class="verify-banner-title">${_t('profile.verified_banner')}</div>
+            <div class="verify-banner-sub">${_t('profile.verified_desc')}</div>
           </div>
         </div>`;
     } else {
@@ -743,10 +747,10 @@
         <div class="verify-banner">
           <div class="verify-banner-icon">⚠️</div>
           <div class="verify-banner-body">
-            <div class="verify-banner-title">本人確認が未完了</div>
-            <div class="verify-banner-sub">マッチング機能を利用するには年齢確認が必要です</div>
+            <div class="verify-banner-title">${_t('profile.unverified_banner')}</div>
+            <div class="verify-banner-sub">${_t('profile.unverified_desc')}</div>
           </div>
-          <button class="btn btn-primary btn-sm" id="verify-open-btn">確認する</button>
+          <button class="btn btn-primary btn-sm" id="verify-open-btn">${_t('profile.verify_open')}</button>
         </div>`;
       document.getElementById('verify-open-btn')?.addEventListener('click', () => {
         document.getElementById('age-confirm-check').checked = false;
@@ -769,7 +773,7 @@
   document.getElementById('verify-submit-btn')?.addEventListener('click', async () => {
     const btn = document.getElementById('verify-submit-btn');
     btn.disabled = true;
-    btn.textContent = '処理中...';
+    btn.textContent = (typeof I18n !== 'undefined') ? I18n.t('common.loading') : '処理中...';
     try {
       await updateMyProfile({ age_verified: true });
       currentProfile = await getMyProfile(true);
@@ -779,7 +783,7 @@
     } catch (err) {
       showToast('確認に失敗しました: ' + err.message, 'error');
       btn.disabled = false;
-      btn.textContent = '確認完了';
+      btn.textContent = (typeof I18n !== 'undefined') ? I18n.t('profile.verify_confirm') : '確認完了';
     }
   });
 
@@ -870,7 +874,7 @@
       showToast(err.message, 'error');
     } finally {
       btn.disabled = false;
-      btn.textContent = 'この範囲で決定';
+      btn.textContent = (typeof I18n !== 'undefined') ? I18n.t('profile.crop_confirm') : 'この範囲で決定';
     }
   });
 
@@ -939,7 +943,7 @@
 
     const btn = document.getElementById('save-profile-btn');
     btn.disabled = true;
-    btn.textContent = '保存中...';
+    btn.textContent = (typeof I18n !== 'undefined') ? I18n.t('common.loading') : '保存中...';
 
     try {
       // アバター画像のアップロード
@@ -975,7 +979,7 @@
       }
     } finally {
       btn.disabled = false;
-      btn.textContent = '保存する';
+      btn.textContent = (typeof I18n !== 'undefined') ? I18n.t('common.save') : '保存する';
     }
   });
 
@@ -1014,11 +1018,12 @@
     if (rest.length > 0) {
       const toggle = document.getElementById('scores-toggle');
       let expanded = false;
+      const _t = (typeof I18n !== 'undefined') ? I18n.t.bind(I18n) : (k) => k;
 
       toggle.addEventListener('click', () => {
         expanded = !expanded;
         container.innerHTML = (expanded ? entries : initial).map(renderScoreItem).join('');
-        toggle.textContent = expanded ? '閉じる ▲' : 'もっと見る ▼';
+        toggle.textContent = expanded ? _t('profile.show_less') : _t('profile.show_more');
       });
     } else {
       document.getElementById('scores-toggle').style.display = 'none';
@@ -1036,14 +1041,15 @@
           ),
       ]);
 
+      const _t = (typeof I18n !== 'undefined') ? I18n.t.bind(I18n) : (k) => k;
       document.getElementById('profile-stats').innerHTML = `
         <div class="stat-item">
           <div class="stat-value">${postsResult.count || 0}</div>
-          <div class="stat-label">投稿数</div>
+          <div class="stat-label">${_t('profile.post_count')}</div>
         </div>
         <div class="stat-item">
           <div class="stat-value">${likesResult.count || 0}</div>
-          <div class="stat-label">もらった ❤️</div>
+          <div class="stat-label">${_t('profile.likes_received')}</div>
         </div>
       `;
     } catch(e) {
