@@ -55,8 +55,21 @@ CREATE POLICY "admin_boards_delete" ON boards FOR DELETE
   USING (EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND is_admin = true));
 
 -- ============================================================
--- 4. 自分のアカウントを管理者に設定（メールアドレスで特定）
---    ★ 実行前に自分のauth.users.idを確認して置き換えること
---    確認方法: Supabase Dashboard > Authentication > Users
+-- 4. 自分のアカウントを管理者に設定
+--    ★ メールアドレスで指定するだけでOK（UUID不要）
+--    ★ Sincに登録済みのメールアドレスに変更して実行すること
 -- ============================================================
--- UPDATE users SET is_admin = true WHERE id = '【自分のユーザーID】';
+UPDATE users
+SET is_admin = true
+WHERE id = (
+  SELECT id FROM auth.users WHERE email = 'info@strataix.net'
+);
+
+-- 管理者を追加する場合は以下を繰り返す:
+-- UPDATE users SET is_admin = true
+-- WHERE id = (SELECT id FROM auth.users WHERE email = '追加するメール');
+
+-- 管理者を確認する:
+-- SELECT u.id, u.display_id, u.nickname, u.is_admin, au.email
+-- FROM users u JOIN auth.users au ON au.id = u.id
+-- WHERE u.is_admin = true;

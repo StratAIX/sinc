@@ -286,13 +286,17 @@ body{display:flex;min-height:100vh;background:var(--bg)}
 <script>
 (async () => {
   // ============================================================
-  // 管理者認証チェック
+  // 管理者認証チェック（メールアドレスで判定）
+  // 管理者を追加する場合は ADMIN_EMAILS にメアドを追記するだけ
   // ============================================================
+  const ADMIN_EMAILS = [
+    'info@strataix.net',
+    // 'other-admin@example.com', // 追加管理者はここに追記
+  ];
+
   const user = await getCurrentUser();
-  if (!user) { location.href = 'index.html'; return; }
-  const profile = await getMyProfile();
-  if (!profile || !profile.is_admin) {
-    alert('管理者権限がありません');
+  if (!user || !ADMIN_EMAILS.includes(user.email)) {
+    alert('管理者専用ページです');
     location.href = 'index.html';
     return;
   }
