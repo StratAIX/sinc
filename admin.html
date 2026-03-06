@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>管理ダッシュボード - Sinc</title>
+<script>!function(){var t=localStorage.getItem('theme');if(t)document.documentElement.setAttribute('data-theme',t)}();</script>
+<link rel="stylesheet" href="css/common.css">
+<style>
+:root{--adm-sidebar:220px}
+*{box-sizing:border-box}
+body{display:flex;min-height:100vh;background:var(--bg)}
+/* Sidebar */
+.adm-sidebar{width:var(--adm-sidebar);min-height:100vh;background:var(--surface1);border-right:1px solid var(--surface3);display:flex;flex-direction:column;position:fixed;top:0;left:0;z-index:100}
+.adm-logo{padding:20px 16px 12px;font-size:1.1rem;font-weight:900;color:var(--accent);border-bottom:1px solid var(--surface3)}
+.adm-logo span{font-size:.7rem;color:var(--text2);display:block;font-weight:400;margin-top:2px}
+.adm-nav{flex:1;padding:8px 0}
+.adm-nav a{display:flex;align-items:center;gap:10px;padding:11px 16px;font-size:.85rem;color:var(--text2);text-decoration:none;cursor:pointer;transition:all .15s;border-left:3px solid transparent}
+.adm-nav a:hover,.adm-nav a.active{color:var(--text);background:var(--surface2);border-left-color:var(--accent)}
+.adm-nav a .badge{margin-left:auto;background:var(--error,#e17355);color:#fff;font-size:.65rem;padding:2px 6px;border-radius:99px;font-weight:700}
+.adm-signout{padding:12px 16px;border-top:1px solid var(--surface3)}
+.adm-signout button{width:100%;padding:8px;background:var(--surface2);border:1px solid var(--surface3);border-radius:var(--radius);color:var(--text2);font-size:.8rem;cursor:pointer;font-family:inherit}
+/* Main */
+.adm-main{margin-left:var(--adm-sidebar);flex:1;padding:24px;min-height:100vh}
+.adm-header{margin-bottom:20px}
+.adm-header h1{font-size:1.3rem;font-weight:900;margin:0 0 4px}
+.adm-header p{font-size:.8rem;color:var(--text2);margin:0}
+/* Cards */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:24px}
+.stat-card{background:var(--surface1);border:1px solid var(--surface3);border-radius:var(--radius);padding:16px}
+.stat-card .val{font-size:1.8rem;font-weight:900;color:var(--accent);line-height:1}
+.stat-card .lbl{font-size:.72rem;color:var(--text2);margin-top:4px}
+.stat-card.warn .val{color:#e17355}
+/* Table */
+.adm-table-wrap{background:var(--surface1);border:1px solid var(--surface3);border-radius:var(--radius);overflow:hidden;margin-bottom:16px}
+.adm-table{width:100%;border-collapse:collapse;font-size:.82rem}
+.adm-table th{background:var(--surface2);padding:10px 12px;text-align:left;font-weight:700;color:var(--text2);white-space:nowrap}
+.adm-table td{padding:10px 12px;border-top:1px solid var(--surface3);vertical-align:top;line-height:1.5}
+.adm-table tr:hover td{background:var(--surface2)}
+/* Badges */
+.badge-status{display:inline-block;padding:2px 8px;border-radius:99px;font-size:.7rem;font-weight:700}
+.badge-active{background:rgba(0,184,148,.15);color:#00b894}
+.badge-warned{background:rgba(253,203,110,.15);color:#fdcb6e}
+.badge-banned{background:rgba(225,112,85,.15);color:#e17355}
+.badge-pending{background:rgba(108,92,231,.15);color:var(--accent)}
+.badge-reviewed{background:rgba(0,184,148,.15);color:#00b894}
+.badge-actioned{background:rgba(255,255,255,.1);color:var(--text2)}
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:var(--radius);border:none;font-size:.78rem;font-weight:700;cursor:pointer;font-family:inherit;transition:opacity .15s}
+.btn:hover{opacity:.8}
+.btn-sm{padding:4px 8px;font-size:.72rem}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-danger{background:#e17355;color:#fff}
+.btn-warn{background:#fdcb6e;color:#1a1a2e}
+.btn-ghost{background:var(--surface2);border:1px solid var(--surface3);color:var(--text)}
+.btn-success{background:#00b894;color:#fff}
+/* Section */
+.adm-section{display:none}
+.adm-section.active{display:block}
+/* Search / Filter */
+.adm-toolbar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center}
+.adm-toolbar input,.adm-toolbar select{background:var(--surface1);border:1px solid var(--surface3);border-radius:var(--radius);padding:7px 10px;color:var(--text);font-size:.82rem;font-family:inherit;min-width:180px}
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:999;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal-box{background:var(--surface1);border:1px solid var(--surface3);border-radius:12px;padding:24px;max-width:520px;width:100%;max-height:80vh;overflow-y:auto}
+.modal-box h3{margin:0 0 16px;font-size:1rem}
+.modal-box textarea{width:100%;background:var(--surface2);border:1px solid var(--surface3);border-radius:var(--radius);padding:10px;color:var(--text);font-family:inherit;font-size:.85rem;resize:vertical;min-height:80px}
+.modal-box input{width:100%;background:var(--surface2);border:1px solid var(--surface3);border-radius:var(--radius);padding:9px 10px;color:var(--text);font-family:inherit;font-size:.85rem;margin-bottom:8px}
+.modal-actions{display:flex;gap:8px;margin-top:16px;justify-content:flex-end}
+/* Post content */
+.post-content-box{background:var(--surface2);border-radius:var(--radius);padding:10px;font-size:.82rem;line-height:1.7;margin:6px 0;max-height:120px;overflow-y:auto;border:1px solid var(--surface3)}
+/* Empty */
+.empty-msg{text-align:center;padding:40px;color:var(--text2);font-size:.85rem}
+/* Loading */
+.loading{text-align:center;padding:30px;color:var(--text2);font-size:.85rem}
+/* Tab section header */
+.section-title{font-size:1rem;font-weight:800;margin:0 0 16px;display:flex;align-items:center;gap:8px}
+@media(max-width:700px){
+  .adm-sidebar{width:60px}
+  .adm-nav a span,.adm-logo span,.adm-logo small,.adm-signout button span{display:none}
+  .adm-main{margin-left:60px;padding:16px}
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="adm-sidebar">
+  <div class="adm-logo">⚙️ 管理<span>Sinc Admin Dashboard</span></div>
+  <nav class="adm-nav">
+    <a onclick="showSection('overview')" class="active" id="nav-overview"><span>📊</span><span>概要</span></a>
+    <a onclick="showSection('reports')" id="nav-reports"><span>🚨</span><span>通報管理</span><span class="badge" id="badge-reports" style="display:none">0</span></a>
+    <a onclick="showSection('users')" id="nav-users"><span>👥</span><span>ユーザー管理</span></a>
+    <a onclick="showSection('posts')" id="nav-posts"><span>📝</span><span>投稿・スレッド</span></a>
+    <a onclick="showSection('boards')" id="nav-boards"><span>📋</span><span>掲示板管理</span></a>
+    <a onclick="showSection('announce')" id="nav-announce"><span>📢</span><span>お知らせ</span></a>
+    <a onclick="showSection('matching')" id="nav-matching"><span>💘</span><span>マッチング</span></a>
+  </nav>
+  <div class="adm-signout"><button onclick="signOut()"><span>🚪</span> <span>ログアウト</span></button></div>
+</aside>
+
+<!-- Main -->
+<main class="adm-main">
+
+  <!-- 概要 -->
+  <section class="adm-section active" id="section-overview">
+    <div class="adm-header"><h1>概要</h1><p id="overview-updated">読み込み中...</p></div>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="val" id="st-users">-</div><div class="lbl">総ユーザー数</div></div>
+      <div class="stat-card"><div class="val" id="st-users-today">-</div><div class="lbl">今日の新規登録</div></div>
+      <div class="stat-card"><div class="val" id="st-posts">-</div><div class="lbl">総投稿数</div></div>
+      <div class="stat-card"><div class="val" id="st-posts-today">-</div><div class="lbl">今日の投稿数</div></div>
+      <div class="stat-card warn"><div class="val" id="st-reports">-</div><div class="lbl">未処理通報</div></div>
+      <div class="stat-card warn"><div class="val" id="st-banned">-</div><div class="lbl">BANユーザー数</div></div>
+      <div class="stat-card"><div class="val" id="st-matching">-</div><div class="lbl">マッチング解放数</div></div>
+      <div class="stat-card"><div class="val" id="st-threads">-</div><div class="lbl">総スレッド数</div></div>
+    </div>
+    <div class="adm-table-wrap">
+      <table class="adm-table">
+        <thead><tr><th>最新通報（未処理）</th><th>投稿内容（抜粋）</th><th>日時</th><th>操作</th></tr></thead>
+        <tbody id="overview-reports-table"><tr><td colspan="4" class="loading">読み込み中...</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 通報管理 -->
+  <section class="adm-section" id="section-reports">
+    <div class="adm-header"><h1>通報管理</h1></div>
+    <div class="adm-toolbar">
+      <select id="report-filter" onchange="loadReports()">
+        <option value="pending">未処理 (pending)</option>
+        <option value="reviewed">確認済み (reviewed)</option>
+        <option value="actioned">対処済み (actioned)</option>
+        <option value="all">すべて</option>
+      </select>
+      <button class="btn btn-ghost btn-sm" onclick="loadReports()">🔄 更新</button>
+    </div>
+    <div class="adm-table-wrap">
+      <table class="adm-table">
+        <thead><tr><th>通報ID</th><th>通報者</th><th>投稿内容</th><th>理由</th><th>状態</th><th>日時</th><th>操作</th></tr></thead>
+        <tbody id="reports-table"><tr><td colspan="7" class="loading">読み込み中...</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ユーザー管理 -->
+  <section class="adm-section" id="section-users">
+    <div class="adm-header"><h1>ユーザー管理</h1></div>
+    <div class="adm-toolbar">
+      <input type="text" id="user-search" placeholder="display_id / ニックネームで検索" oninput="filterUsers()">
+      <select id="user-status-filter" onchange="loadUsers()">
+        <option value="all">すべて</option>
+        <option value="active">active</option>
+        <option value="warned">warned</option>
+        <option value="banned">banned</option>
+      </select>
+      <button class="btn btn-ghost btn-sm" onclick="loadUsers()">🔄 更新</button>
+    </div>
+    <div class="adm-table-wrap">
+      <table class="adm-table">
+        <thead><tr><th>ID</th><th>ニックネーム</th><th>タイプ</th><th>状態</th><th>違反回数</th><th>登録日</th><th>操作</th></tr></thead>
+        <tbody id="users-table"><tr><td colspan="7" class="loading">読み込み中...</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 投稿・スレッド管理 -->
+  <section class="adm-section" id="section-posts">
+    <div class="adm-header"><h1>投稿・スレッド管理</h1></div>
+    <div style="display:flex;gap:8px;margin-bottom:16px">
+      <button class="btn btn-primary btn-sm" onclick="switchPostTab('posts')" id="ptab-posts">投稿</button>
+      <button class="btn btn-ghost btn-sm" onclick="switchPostTab('threads')" id="ptab-threads">スレッド</button>
+    </div>
+    <!-- 投稿 -->
+    <div id="posts-panel">
+      <div class="adm-toolbar">
+        <select id="posts-filter" onchange="loadPosts()">
+          <option value="active">表示中</option>
+          <option value="deleted">削除済み</option>
+        </select>
+        <button class="btn btn-ghost btn-sm" onclick="loadPosts()">🔄 更新</button>
+      </div>
+      <div class="adm-table-wrap">
+        <table class="adm-table">
+          <thead><tr><th>投稿者</th><th>内容（抜粋）</th><th>スレッド</th><th>日時</th><th>操作</th></tr></thead>
+          <tbody id="posts-table"><tr><td colspan="5" class="loading">読み込み中...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+    <!-- スレッド -->
+    <div id="threads-panel" style="display:none">
+      <div class="adm-toolbar">
+        <button class="btn btn-ghost btn-sm" onclick="loadThreads()">🔄 更新</button>
+      </div>
+      <div class="adm-table-wrap">
+        <table class="adm-table">
+          <thead><tr><th>タイトル</th><th>板</th><th>返信数</th><th>ピン</th><th>ロック</th><th>日時</th><th>操作</th></tr></thead>
+          <tbody id="threads-table"><tr><td colspan="7" class="loading">読み込み中...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- 掲示板管理 -->
+  <section class="adm-section" id="section-boards">
+    <div class="adm-header"><h1>掲示板管理</h1></div>
+    <div class="adm-toolbar">
+      <button class="btn btn-ghost btn-sm" onclick="loadBoards()">🔄 更新</button>
+    </div>
+    <div class="adm-table-wrap">
+      <table class="adm-table">
+        <thead><tr><th>板名</th><th>タイプ</th><th>カテゴリ</th><th>投稿数</th><th>作成者</th><th>操作</th></tr></thead>
+        <tbody id="boards-table"><tr><td colspan="6" class="loading">読み込み中...</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- お知らせ -->
+  <section class="adm-section" id="section-announce">
+    <div class="adm-header"><h1>お知らせ管理</h1></div>
+    <div class="adm-toolbar">
+      <button class="btn btn-primary btn-sm" onclick="openAnnounceModal()">＋ 新規お知らせ</button>
+      <button class="btn btn-ghost btn-sm" onclick="loadAnnouncements()">🔄 更新</button>
+    </div>
+    <div class="adm-table-wrap">
+      <table class="adm-table">
+        <thead><tr><th>タイトル</th><th>内容（抜粋）</th><th>ピン</th><th>日時</th><th>操作</th></tr></thead>
+        <tbody id="announce-table"><tr><td colspan="5" class="loading">読み込み中...</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- マッチング管理 -->
+  <section class="adm-section" id="section-matching">
+    <div class="adm-header"><h1>マッチング管理</h1><p>公安委員会届出完了後に本格運用</p></div>
+    <div style="display:flex;gap:8px;margin-bottom:16px">
+      <button class="btn btn-primary btn-sm" onclick="switchMatchTab('kyc')" id="mtab-kyc">年齢確認待ち</button>
+      <button class="btn btn-ghost btn-sm" onclick="switchMatchTab('unlocked')" id="mtab-unlocked">解放済みユーザー</button>
+    </div>
+    <!-- 年齢確認待ち -->
+    <div id="kyc-panel">
+      <div class="adm-table-wrap">
+        <table class="adm-table">
+          <thead><tr><th>ユーザー</th><th>生年月日</th><th>申請日</th><th>操作</th></tr></thead>
+          <tbody id="kyc-table"><tr><td colspan="4" class="empty-msg">年齢確認待ちユーザーはいません</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+    <!-- 解放済み -->
+    <div id="unlocked-panel" style="display:none">
+      <div class="adm-table-wrap">
+        <table class="adm-table">
+          <thead><tr><th>ユーザー</th><th>タイプ</th><th>解放日</th></tr></thead>
+          <tbody id="unlocked-table"><tr><td colspan="3" class="loading">読み込み中...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- お知らせ作成モーダル -->
+<div class="modal-overlay" id="announce-modal" style="display:none" onclick="closeAnnounceModal(event)">
+  <div class="modal-box">
+    <h3>📢 お知らせを作成</h3>
+    <input type="text" id="ann-title" placeholder="タイトル（100文字以内）" maxlength="100">
+    <textarea id="ann-content" placeholder="内容（2000文字以内）" maxlength="2000"></textarea>
+    <label style="font-size:.8rem;display:flex;align-items:center;gap:6px;margin-top:8px">
+      <input type="checkbox" id="ann-pinned"> ピン留め
+    </label>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeAnnounceModal()">キャンセル</button>
+      <button class="btn btn-primary" onclick="submitAnnouncement()">投稿</button>
+    </div>
+  </div>
+</div>
+
+<!-- ユーザー詳細モーダル -->
+<div class="modal-overlay" id="user-modal" style="display:none" onclick="closeUserModal(event)">
+  <div class="modal-box" id="user-modal-content"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="js/supabase-config.js"></script>
+<script>
+(async () => {
+  // ============================================================
+  // 管理者認証チェック
+  // ============================================================
+  const user = await getCurrentUser();
+  if (!user) { location.href = 'index.html'; return; }
+  const profile = await getMyProfile();
+  if (!profile || !profile.is_admin) {
+    alert('管理者権限がありません');
+    location.href = 'index.html';
+    return;
+  }
+
+  // ============================================================
+  // ナビゲーション
+  // ============================================================
+  window.showSection = function(name) {
+    document.querySelectorAll('.adm-section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.adm-nav a').forEach(a => a.classList.remove('active'));
+    document.getElementById('section-' + name).classList.add('active');
+    document.getElementById('nav-' + name).classList.add('active');
+    const loaders = {
+      overview: loadOverview, reports: loadReports, users: loadUsers,
+      posts: loadPosts, boards: loadBoards, announce: loadAnnouncements,
+      matching: loadKyc
+    };
+    if (loaders[name]) loaders[name]();
+  };
+
+  window.signOut = async function() {
+    await supabase.auth.signOut();
+    location.href = 'index.html';
+  };
+
+  // ============================================================
+  // ヘルパー
+  // ============================================================
+  const fmtDate = d => d ? new Date(d).toLocaleDateString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '-';
+  const trunc = (s, n=40) => s && s.length > n ? s.slice(0,n)+'…' : (s||'');
+  const esc = s => { const d=document.createElement('div'); d.textContent=s; return d.innerHTML; };
+  const todayStart = () => { const d=new Date(); d.setHours(0,0,0,0); return d.toISOString(); };
+
+  function statusBadge(s) {
+    return `<span class="badge-status badge-${s}">${s}</span>`;
+  }
+
+  // ============================================================
+  // 概要
+  // ============================================================
+  async function loadOverview() {
+    document.getElementById('overview-updated').textContent = '最終更新: ' + new Date().toLocaleTimeString('ja-JP');
+    const today = todayStart();
+
+    const [
+      {count:users}, {count:usersToday}, {count:posts},
+      {count:postsToday}, {count:reports}, {count:banned},
+      {count:matching}, {count:threads}
+    ] = await Promise.all([
+      supabase.from('users').select('*',{count:'exact',head:true}),
+      supabase.from('users').select('*',{count:'exact',head:true}).gte('created_at',today),
+      supabase.from('posts').select('*',{count:'exact',head:true}).eq('is_deleted',false),
+      supabase.from('posts').select('*',{count:'exact',head:true}).eq('is_deleted',false).gte('created_at',today),
+      supabase.from('reports').select('*',{count:'exact',head:true}).eq('status','pending'),
+      supabase.from('users').select('*',{count:'exact',head:true}).eq('ban_status','banned'),
+      supabase.from('users').select('*',{count:'exact',head:true}).eq('matching_unlocked',true),
+      supabase.from('threads').select('*',{count:'exact',head:true}),
+    ]);
+
+    document.getElementById('st-users').textContent = users??0;
+    document.getElementById('st-users-today').textContent = '+' + (usersToday??0);
+    document.getElementById('st-posts').textContent = posts??0;
+    document.getElementById('st-posts-today').textContent = '+' + (postsToday??0);
+    document.getElementById('st-reports').textContent = reports??0;
+    document.getElementById('st-banned').textContent = banned??0;
+    document.getElementById('st-matching').textContent = matching??0;
+    document.getElementById('st-threads').textContent = threads??0;
+
+    // バッジ更新
+    const badge = document.getElementById('badge-reports');
+    if (reports > 0) { badge.textContent = reports; badge.style.display=''; }
+    else badge.style.display='none';
+
+    // 最新通報
+    const {data:rpts} = await supabase.from('reports')
+      .select('id,reason,created_at,post_id,reporter_id,posts(content,user_id,users!posts_user_id_fkey(display_id,nickname))')
+      .eq('status','pending').order('created_at',{ascending:false}).limit(5);
+
+    const tb = document.getElementById('overview-reports-table');
+    if (!rpts||!rpts.length) { tb.innerHTML='<tr><td colspan="4" class="empty-msg">未処理通報なし</td></tr>'; return; }
+    tb.innerHTML = rpts.map(r => `
+      <tr>
+        <td><code style="font-size:.75rem">${r.id.slice(0,8)}</code></td>
+        <td><div class="post-content-box">${esc(trunc(r.posts?.content,60))}</div></td>
+        <td style="font-size:.75rem;color:var(--text2)">${fmtDate(r.created_at)}</td>
+        <td><button class="btn btn-danger btn-sm" onclick="quickDeletePost('${r.posts?.user_id||''}','${r.id}','${r.post_id}')">削除+対処</button></td>
+      </tr>`).join('');
+  }
+
+  // ============================================================
+  // 通報管理
+  // ============================================================
+  window.loadReports = async function() {
+    const filter = document.getElementById('report-filter').value;
+    let q = supabase.from('reports')
+      .select('id,reason,status,created_at,reporter_id,post_id,posts(id,content,is_deleted,user_id,users!posts_user_id_fkey(display_id,nickname,ban_status))')
+      .order('created_at',{ascending:false}).limit(100);
+    if (filter !== 'all') q = q.eq('status', filter);
+    const {data} = await q;
+
+    const tb = document.getElementById('reports-table');
+    if (!data||!data.length) { tb.innerHTML='<tr><td colspan="7" class="empty-msg">データなし</td></tr>'; return; }
+    tb.innerHTML = data.map(r => {
+      const p = r.posts;
+      const uid = p?.user_id||'';
+      return `<tr>
+        <td><code style="font-size:.72rem">${r.id.slice(0,8)}</code></td>
+        <td style="font-size:.75rem;color:var(--text2)">${esc(r.reporter_id?.slice(0,8))}</td>
+        <td>
+          ${p?.is_deleted ? '<span style="color:var(--text2);font-size:.72rem">削除済み</span>' : `<div class="post-content-box">${esc(trunc(p?.content,80))}</div>`}
+          <div style="font-size:.7rem;color:var(--text2);margin-top:2px">投稿者: ${esc(p?.users?.nickname||p?.users?.display_id||'-')}</div>
+        </td>
+        <td style="font-size:.78rem">${esc(trunc(r.reason,40))}</td>
+        <td>${statusBadge(r.status)}</td>
+        <td style="font-size:.72rem;color:var(--text2)">${fmtDate(r.created_at)}</td>
+        <td>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            ${r.status==='pending'?`<button class="btn btn-ghost btn-sm" onclick="updateReport('${r.id}','reviewed')">確認済</button>`:''}
+            ${!p?.is_deleted&&p?.id?`<button class="btn btn-danger btn-sm" onclick="deletePost('${p.id}','${r.id}')">投稿削除</button>`:''}
+            <button class="btn btn-warn btn-sm" onclick="warnUser('${uid}')">警告</button>
+            <button class="btn btn-danger btn-sm" onclick="banUser('${uid}')">BAN</button>
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+  };
+
+  window.updateReport = async function(id, status) {
+    await supabase.from('reports').update({status}).eq('id',id);
+    loadReports();
+    showToast('通報ステータスを更新しました');
+  };
+
+  window.deletePost = async function(postId, reportId) {
+    if (!confirm('投稿を削除しますか？')) return;
+    await supabase.from('posts').update({is_deleted:true}).eq('id',postId);
+    if (reportId) await supabase.from('reports').update({status:'actioned'}).eq('id',reportId);
+    loadReports();
+    showToast('投稿を削除しました');
+  };
+
+  window.quickDeletePost = async function(userId, reportId, postId) {
+    if (!confirm('投稿を削除して通報を対処済みにしますか？')) return;
+    await supabase.from('posts').update({is_deleted:true}).eq('id',postId);
+    await supabase.from('reports').update({status:'actioned'}).eq('id',reportId);
+    loadOverview();
+    showToast('対処しました');
+  };
+
+  // ============================================================
+  // ユーザー管理
+  // ============================================================
+  let _allUsers = [];
+  window.loadUsers = async function() {
+    const statusFilter = document.getElementById('user-status-filter').value;
+    let q = supabase.from('users')
+      .select('id,display_id,nickname,type_name,family,ban_status,violation_count,matching_unlocked,is_admin,created_at')
+      .order('created_at',{ascending:false}).limit(200);
+    if (statusFilter !== 'all') q = q.eq('ban_status', statusFilter);
+    const {data} = await q;
+    _allUsers = data||[];
+    renderUsers(_allUsers);
+  };
+
+  window.filterUsers = function() {
+    const q = document.getElementById('user-search').value.toLowerCase();
+    if (!q) { renderUsers(_allUsers); return; }
+    renderUsers(_allUsers.filter(u =>
+      (u.display_id||'').toLowerCase().includes(q) ||
+      (u.nickname||'').toLowerCase().includes(q)
+    ));
+  };
+
+  function renderUsers(data) {
+    const tb = document.getElementById('users-table');
+    if (!data.length) { tb.innerHTML='<tr><td colspan="7" class="empty-msg">データなし</td></tr>'; return; }
+    tb.innerHTML = data.map(u => `<tr>
+      <td><code style="font-size:.75rem">${esc(u.display_id)}</code>${u.is_admin?'<span style="color:var(--accent);font-size:.65rem;margin-left:4px">ADMIN</span>':''}</td>
+      <td>${esc(u.nickname||'-')}</td>
+      <td style="font-size:.75rem;color:var(--text2)">${esc(u.type_name||'-')}</td>
+      <td>${statusBadge(u.ban_status)}</td>
+      <td style="text-align:center">${u.violation_count}</td>
+      <td style="font-size:.72rem;color:var(--text2)">${fmtDate(u.created_at)}</td>
+      <td>
+        <div style="display:flex;gap:4px;flex-wrap:wrap">
+          <button class="btn btn-ghost btn-sm" onclick="openUserModal('${u.id}')">詳細</button>
+          ${u.ban_status!=='warned'?`<button class="btn btn-warn btn-sm" onclick="warnUser('${u.id}')">警告</button>`:''}
+          ${u.ban_status!=='banned'?`<button class="btn btn-danger btn-sm" onclick="banUser('${u.id}')">BAN</button>`:''}
+          ${u.ban_status!=='active'?`<button class="btn btn-success btn-sm" onclick="unbanUser('${u.id}')">解除</button>`:''}
+        </div>
+      </td>
+    </tr>`).join('');
+  }
+
+  window.warnUser = async function(uid) {
+    if (!uid||!confirm('このユーザーに警告を送りますか？')) return;
+    await supabase.from('users').update({ban_status:'warned', violation_count: supabase.rpc ? undefined : undefined})
+      .eq('id',uid);
+    // violation_countをインクリメント
+    await supabase.rpc('increment_violation', {user_id: uid}).catch(() =>
+      supabase.from('users').update({ban_status:'warned'}).eq('id',uid)
+    );
+    showToast('警告しました'); loadUsers();
+  };
+
+  window.banUser = async function(uid) {
+    if (!uid||!confirm('このユーザーをBANしますか？')) return;
+    await supabase.from('users').update({ban_status:'banned'}).eq('id',uid);
+    showToast('BANしました'); loadUsers();
+  };
+
+  window.unbanUser = async function(uid) {
+    if (!uid||!confirm('このユーザーのBANを解除しますか？')) return;
+    await supabase.from('users').update({ban_status:'active'}).eq('id',uid);
+    showToast('BAN解除しました'); loadUsers();
+  };
+
+  window.openUserModal = async function(uid) {
+    const modal = document.getElementById('user-modal');
+    const content = document.getElementById('user-modal-content');
+    content.innerHTML = '<div class="loading">読み込み中...</div>';
+    modal.style.display = 'flex';
+
+    const {data:u} = await supabase.from('users')
+      .select('*').eq('id',uid).single();
+    const {count:pCount} = await supabase.from('posts')
+      .select('*',{count:'exact',head:true}).eq('user_id',uid).eq('is_deleted',false);
+    const {count:tCount} = await supabase.from('threads')
+      .select('*',{count:'exact',head:true}).eq('user_id',uid);
+
+    content.innerHTML = `
+      <h3>👤 ユーザー詳細</h3>
+      <table class="adm-table" style="margin-bottom:16px">
+        <tr><th>display_id</th><td><code>${esc(u.display_id)}</code></td></tr>
+        <tr><th>ニックネーム</th><td>${esc(u.nickname||'-')}</td></tr>
+        <tr><th>タイプ</th><td>${esc(u.type_name||'-')} (#${u.type_number||'-'})</td></tr>
+        <tr><th>ファミリー</th><td>${esc(u.family||'-')}</td></tr>
+        <tr><th>BANステータス</th><td>${statusBadge(u.ban_status)}</td></tr>
+        <tr><th>違反回数</th><td>${u.violation_count}</td></tr>
+        <tr><th>投稿数</th><td>${pCount||0}</td></tr>
+        <tr><th>スレッド数</th><td>${tCount||0}</td></tr>
+        <tr><th>マッチング解放</th><td>${u.matching_unlocked?'✅ 解放済み':'未解放'}</td></tr>
+        <tr><th>管理者</th><td>${u.is_admin?'✅ ADMIN':'-'}</td></tr>
+        <tr><th>登録日</th><td>${fmtDate(u.created_at)}</td></tr>
+        <tr><th>診断完了</th><td>${fmtDate(u.diagnosis_completed_at)}</td></tr>
+      </table>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeUserModal()">閉じる</button>
+        ${!u.matching_unlocked?`<button class="btn btn-success" onclick="toggleMatching('${uid}',true)">マッチング解放</button>`:`<button class="btn btn-warn" onclick="toggleMatching('${uid}',false)">マッチング取消</button>`}
+        ${u.ban_status!=='banned'?`<button class="btn btn-danger" onclick="banUser('${uid}');closeUserModal()">BAN</button>`:`<button class="btn btn-success" onclick="unbanUser('${uid}');closeUserModal()">BAN解除</button>`}
+      </div>`;
+  };
+
+  window.closeUserModal = function(e) {
+    if (!e || e.target === document.getElementById('user-modal'))
+      document.getElementById('user-modal').style.display='none';
+  };
+
+  window.toggleMatching = async function(uid, val) {
+    await supabase.from('users').update({matching_unlocked: val}).eq('id',uid);
+    showToast(val ? 'マッチングを解放しました' : 'マッチングを取り消しました');
+    closeUserModal();
+  };
+
+  // ============================================================
+  // 投稿管理
+  // ============================================================
+  window.switchPostTab = function(tab) {
+    document.getElementById('posts-panel').style.display = tab==='posts'?'':'none';
+    document.getElementById('threads-panel').style.display = tab==='threads'?'':'none';
+    document.getElementById('ptab-posts').className = 'btn btn-sm ' + (tab==='posts'?'btn-primary':'btn-ghost');
+    document.getElementById('ptab-threads').className = 'btn btn-sm ' + (tab==='threads'?'btn-primary':'btn-ghost');
+    if (tab==='posts') loadPosts(); else loadThreads();
+  };
+
+  window.loadPosts = async function() {
+    const isDeleted = document.getElementById('posts-filter').value === 'deleted';
+    const {data} = await supabase.from('posts')
+      .select('id,content,is_deleted,created_at,user_id,thread_id,users!posts_user_id_fkey(display_id,nickname),threads(title)')
+      .eq('is_deleted', isDeleted).order('created_at',{ascending:false}).limit(100);
+
+    const tb = document.getElementById('posts-table');
+    if (!data||!data.length) { tb.innerHTML='<tr><td colspan="5" class="empty-msg">データなし</td></tr>'; return; }
+    tb.innerHTML = data.map(p => `<tr>
+      <td style="font-size:.75rem">${esc(p.users?.nickname||p.users?.display_id||'-')}</td>
+      <td><div class="post-content-box">${esc(trunc(p.content,80))}</div></td>
+      <td style="font-size:.72rem;color:var(--text2)">${esc(trunc(p.threads?.title,30))}</td>
+      <td style="font-size:.72rem;color:var(--text2)">${fmtDate(p.created_at)}</td>
+      <td>
+        ${!isDeleted
+          ? `<button class="btn btn-danger btn-sm" onclick="deletePost('${p.id}')">削除</button>`
+          : `<button class="btn btn-success btn-sm" onclick="restorePost('${p.id}')">復元</button>`
+        }
+      </td>
+    </tr>`).join('');
+  };
+
+  window.restorePost = async function(id) {
+    await supabase.from('posts').update({is_deleted:false}).eq('id',id);
+    showToast('投稿を復元しました'); loadPosts();
+  };
+
+  window.loadThreads = async function() {
+    const {data} = await supabase.from('threads')
+      .select('id,title,reply_count,is_pinned,is_locked,created_at,board_id,user_id,boards(name)')
+      .order('created_at',{ascending:false}).limit(100);
+
+    const tb = document.getElementById('threads-table');
+    if (!data||!data.length) { tb.innerHTML='<tr><td colspan="7" class="empty-msg">データなし</td></tr>'; return; }
+    tb.innerHTML = data.map(t => `<tr>
+      <td>${esc(trunc(t.title,35))}</td>
+      <td style="font-size:.72rem;color:var(--text2)">${esc(trunc(t.boards?.name,20))}</td>
+      <td style="text-align:center">${t.reply_count}</td>
+      <td style="text-align:center">
+        <button class="btn btn-sm ${t.is_pinned?'btn-warn':'btn-ghost'}" onclick="togglePin('${t.id}',${!t.is_pinned})">${t.is_pinned?'📌':'📍'}</button>
+      </td>
+      <td style="text-align:center">
+        <button class="btn btn-sm ${t.is_locked?'btn-warn':'btn-ghost'}" onclick="toggleLock('${t.id}',${!t.is_locked})">${t.is_locked?'🔒':'🔓'}</button>
+      </td>
+      <td style="font-size:.72rem;color:var(--text2)">${fmtDate(t.created_at)}</td>
+      <td><button class="btn btn-danger btn-sm" onclick="deleteThread('${t.id}')">削除</button></td>
+    </tr>`).join('');
+  };
+
+  window.togglePin = async function(id, val) {
+    await supabase.from('threads').update({is_pinned:val}).eq('id',id);
+    loadThreads();
+  };
+  window.toggleLock = async function(id, val) {
+    await supabase.from('threads').update({is_locked:val}).eq('id',id);
+    loadThreads();
+  };
+  window.deleteThread = async function(id) {
+    if (!confirm('スレッドを削除しますか？（関連投稿もすべて削除されます）')) return;
+    await supabase.from('threads').delete().eq('id',id);
+    showToast('スレッドを削除しました'); loadThreads();
+  };
+
+  // ============================================================
+  // 掲示板管理
+  // ============================================================
+  window.loadBoards = async function() {
+    const {data} = await supabase.from('boards')
+      .select('id,name,board_type,post_count,created_by,created_at,board_subcategories(name)')
+      .order('sort_order').limit(200);
+
+    const tb = document.getElementById('boards-table');
+    if (!data||!data.length) { tb.innerHTML='<tr><td colspan="6" class="empty-msg">データなし</td></tr>'; return; }
+    tb.innerHTML = data.map(b => `<tr>
+      <td>${esc(b.name)}</td>
+      <td style="font-size:.75rem">${b.board_type==='family'?'ファミリー':b.board_type==='type'?'タイプ':'ユーザー作成'}</td>
+      <td style="font-size:.72rem;color:var(--text2)">${esc(b.board_subcategories?.name||'-')}</td>
+      <td style="text-align:center">${b.post_count||0}</td>
+      <td style="font-size:.72rem;color:var(--text2)">${b.created_by?'ユーザー':'システム'}</td>
+      <td>
+        ${b.created_by?`<button class="btn btn-danger btn-sm" onclick="deleteBoard('${b.id}')">削除</button>`:'-'}
+      </td>
+    </tr>`).join('');
+  };
+
+  window.deleteBoard = async function(id) {
+    if (!confirm('板を削除しますか？（スレッド・投稿もすべて削除されます）')) return;
+    await supabase.from('boards').delete().eq('id',id);
+    showToast('板を削除しました'); loadBoards();
+  };
+
+  // ============================================================
+  // お知らせ
+  // ============================================================
+  window.loadAnnouncements = async function() {
+    const {data} = await supabase.from('announcements')
+      .select('*').order('created_at',{ascending:false});
+
+    const tb = document.getElementById('announce-table');
+    if (!data||!data.length) { tb.innerHTML='<tr><td colspan="5" class="empty-msg">お知らせなし</td></tr>'; return; }
+    tb.innerHTML = data.map(a => `<tr>
+      <td>${esc(a.title)}</td>
+      <td style="font-size:.78rem">${esc(trunc(a.content,50))}</td>
+      <td style="text-align:center">${a.is_pinned?'📌':'-'}</td>
+      <td style="font-size:.72rem;color:var(--text2)">${fmtDate(a.created_at)}</td>
+      <td>
+        <button class="btn btn-ghost btn-sm" onclick="toggleAnnPin('${a.id}',${!a.is_pinned})">${a.is_pinned?'ピン解除':'ピン留め'}</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteAnn('${a.id}')">削除</button>
+      </td>
+    </tr>`).join('');
+  };
+
+  window.openAnnounceModal = function() {
+    document.getElementById('ann-title').value = '';
+    document.getElementById('ann-content').value = '';
+    document.getElementById('ann-pinned').checked = false;
+    document.getElementById('announce-modal').style.display = 'flex';
+  };
+  window.closeAnnounceModal = function(e) {
+    if (!e || e.target === document.getElementById('announce-modal'))
+      document.getElementById('announce-modal').style.display = 'none';
+  };
+  window.submitAnnouncement = async function() {
+    const title = document.getElementById('ann-title').value.trim();
+    const content = document.getElementById('ann-content').value.trim();
+    if (!title || !content) { showToast('タイトルと内容を入力してください','error'); return; }
+    const {error} = await supabase.from('announcements').insert({
+      admin_id: user.id, title, content,
+      is_pinned: document.getElementById('ann-pinned').checked
+    });
+    if (error) { showToast('投稿エラー: ' + error.message,'error'); return; }
+    closeAnnounceModal();
+    loadAnnouncements();
+    showToast('お知らせを投稿しました');
+  };
+  window.toggleAnnPin = async function(id,val) {
+    await supabase.from('announcements').update({is_pinned:val}).eq('id',id);
+    loadAnnouncements();
+  };
+  window.deleteAnn = async function(id) {
+    if (!confirm('削除しますか？')) return;
+    await supabase.from('announcements').delete().eq('id',id);
+    loadAnnouncements();
+  };
+
+  // ============================================================
+  // マッチング管理
+  // ============================================================
+  window.switchMatchTab = function(tab) {
+    document.getElementById('kyc-panel').style.display = tab==='kyc'?'':'none';
+    document.getElementById('unlocked-panel').style.display = tab==='unlocked'?'':'none';
+    document.getElementById('mtab-kyc').className = 'btn btn-sm ' + (tab==='kyc'?'btn-primary':'btn-ghost');
+    document.getElementById('mtab-unlocked').className = 'btn btn-sm ' + (tab==='unlocked'?'btn-primary':'btn-ghost');
+    if (tab==='unlocked') loadUnlocked();
+  };
+
+  async function loadKyc() {
+    // 年齢確認実装後に拡張（現在はkyc_statusカラム未実装）
+    document.getElementById('kyc-table').innerHTML =
+      '<tr><td colspan="4" class="empty-msg">年齢確認機能実装後に使用可能になります</td></tr>';
+  }
+
+  async function loadUnlocked() {
+    const {data} = await supabase.from('users')
+      .select('id,display_id,nickname,type_name,updated_at')
+      .eq('matching_unlocked',true).order('updated_at',{ascending:false});
+    const tb = document.getElementById('unlocked-table');
+    if (!data||!data.length) { tb.innerHTML='<tr><td colspan="3" class="empty-msg">データなし</td></tr>'; return; }
+    tb.innerHTML = data.map(u => `<tr>
+      <td>${esc(u.nickname||u.display_id||'-')}</td>
+      <td style="font-size:.75rem;color:var(--text2)">${esc(u.type_name||'-')}</td>
+      <td style="font-size:.72rem;color:var(--text2)">${fmtDate(u.updated_at)}</td>
+    </tr>`).join('');
+  }
+
+  // ============================================================
+  // 初期ロード
+  // ============================================================
+  loadOverview();
+})();
+</script>
+</body>
+</html>
