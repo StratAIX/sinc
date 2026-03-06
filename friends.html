@@ -253,7 +253,7 @@
   function renderFriendsList(friends) {
     const el = document.getElementById('friends-list');
     if (friends.length === 0) {
-      el.innerHTML = `<div class="empty-state"><div class="empty-icon">👥</div><div class="empty-text">フレンドがいません<br>IDや招待リンクで友達を追加しましょう</div></div>`;
+      el.innerHTML = `<div class="empty-state"><div class="empty-icon">👥</div><div class="empty-text">フレンドがいません<br>IDや招待リンクでフレンドを追加しましょう</div></div>`;
       return;
     }
     el.innerHTML = friends.map(f => `
