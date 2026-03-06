@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>32タイプ相性マトリクス | Sinc</title>
+<link rel="stylesheet" href="css/common.css">
+<style>
+body { background:#0a0a14; color:#fff; font-family:'Hiragino Kaku Gothic Pro','Meiryo',sans-serif; }
+.page-header { text-align:center; padding:32px 16px 16px; }
+.page-header h1 { font-size:1.3rem; font-weight:700; margin-bottom:6px; }
+.page-header p  { font-size:.8rem; color:rgba(255,255,255,.45); }
+
+/* タイプセレクター */
+.selector-wrap { max-width:600px; margin:0 auto 24px; padding:0 16px; }
+.selector-label { font-size:.78rem; color:rgba(255,255,255,.5); margin-bottom:8px; }
+.selector-row { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+.type-select {
+  flex:1; min-width:180px; padding:10px 14px;
+  background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.15);
+  border-radius:10px; color:#fff; font-size:.88rem;
+  -webkit-appearance:none; cursor:pointer;
+}
+.type-select:focus { outline:none; border-color:rgba(108,92,231,.6); }
+.check-btn {
+  padding:10px 24px; background:linear-gradient(135deg,#6c5ce7,#a29bfe);
+  border:none; border-radius:10px; color:#fff; font-size:.88rem;
+  font-weight:700; cursor:pointer; transition:all .2s; white-space:nowrap;
+}
+.check-btn:hover { transform:translateY(-1px); box-shadow:0 4px 16px rgba(108,92,231,.4); }
+
+/* マトリクス */
+.matrix-wrap { overflow-x:auto; padding:0 8px 24px; -webkit-overflow-scrolling:touch; }
+.matrix-table { border-collapse:collapse; margin:0 auto; }
+.matrix-table td, .matrix-table th {
+  width:28px; height:28px; font-size:.6rem;
+  text-align:center; vertical-align:middle;
+  border:1px solid rgba(255,255,255,.04);
+  cursor:pointer; transition:transform .15s;
+}
+.matrix-table td:hover { transform:scale(1.4); z-index:10; position:relative; }
+.axis-label { background:transparent !important; color:rgba(255,255,255,.35); font-size:.58rem; cursor:default !important; }
+.axis-label:hover { transform:none !important; }
+.type-label {
+  width:36px; min-width:36px; font-size:.58rem; color:rgba(255,255,255,.4);
+  background:transparent; text-align:right; padding-right:4px; white-space:nowrap;
+  cursor:default !important;
+}
+.type-label:hover { transform:none !important; }
+.cell-self { background:rgba(255,255,255,.08) !important; }
+.cell-hl-row { box-shadow:inset 0 0 0 1px rgba(108,92,231,.5); }
+.cell-hl-col { box-shadow:inset 0 0 0 1px rgba(108,92,231,.5); }
+
+/* ファミリー色ラベル行/列 */
+.fam-architects { color:#a29bfe; }
+.fam-mystics    { color:#fd79a8; }
+.fam-commanders { color:#55efc4; }
+.fam-catalysts  { color:#ffeaa7; }
+
+/* 凡例 */
+.legend { display:flex; gap:16px; justify-content:center; flex-wrap:wrap; padding:8px 16px 20px; }
+.legend-item { display:flex; align-items:center; gap:6px; font-size:.72rem; color:rgba(255,255,255,.55); }
+.legend-dot { width:16px; height:16px; border-radius:3px; }
+
+/* モーダル */
+.modal-overlay {
+  display:none; position:fixed; inset:0; background:rgba(0,0,0,.85);
+  z-index:1000; align-items:center; justify-content:center; padding:16px;
+  overflow-y:auto;
+}
+.modal-overlay.open { display:flex; }
+.modal-box {
+  background:#14121f; border:1px solid rgba(255,255,255,.12);
+  border-radius:18px; max-width:560px; width:100%; padding:24px;
+  animation:fadeIn .25s ease;
+}
+@keyframes fadeIn { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:none} }
+.modal-close { float:right; background:none; border:none; color:rgba(255,255,255,.5); font-size:1.4rem; cursor:pointer; line-height:1; }
+.modal-types { display:flex; align-items:center; gap:12px; margin-bottom:20px; flex-wrap:wrap; }
+.modal-type-tag {
+  flex:1; min-width:140px; padding:10px 14px;
+  border-radius:12px; text-align:center;
+}
+.modal-type-tag .t-fam { font-size:.72rem; opacity:.7; margin-bottom:4px; }
+.modal-type-tag .t-nm  { font-size:1rem; font-weight:700; }
+.modal-type-tag .t-en  { font-size:.72rem; opacity:.6; }
+.vs-badge { font-size:1.2rem; color:rgba(255,255,255,.3); flex-shrink:0; }
+
+.score-section { margin-bottom:20px; }
+.score-row { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+.score-label { font-size:.78rem; color:rgba(255,255,255,.5); width:80px; }
+.score-bar-bg { flex:1; height:8px; background:rgba(255,255,255,.1); border-radius:4px; overflow:hidden; }
+.score-bar-fill { height:100%; border-radius:4px; transition:width .5s; }
+.score-val { font-size:.88rem; font-weight:700; width:42px; text-align:right; }
+
+.tier-badge {
+  display:inline-block; padding:6px 18px;
+  border-radius:50px; font-size:.85rem; font-weight:700;
+  margin-bottom:16px;
+}
+.reasons-list { margin-bottom:20px; }
+.reason-item { font-size:.78rem; color:rgba(255,255,255,.55); padding:4px 0; }
+
+.card-preview { text-align:center; margin-bottom:16px; }
+.card-canvas { width:100%; max-width:340px; height:auto; border-radius:12px; display:block; margin:0 auto 12px; }
+.card-btns { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+.card-btn {
+  padding:9px 20px; border-radius:50px; font-size:.82rem; font-weight:600;
+  cursor:pointer; border:none; transition:all .2s;
+}
+.card-btn-dl { background:rgba(255,255,255,.1); color:#fff; }
+.card-btn-dl:hover { background:rgba(108,92,231,.5); }
+.card-btn-x  { background:#000; color:#fff; }
+.card-btn-x:hover { background:#333; }
+</style>
+</head>
+<body>
+<div id="nav-container"></div>
+
+<div class="page-header">
+  <h1>🔮 32タイプ相性マトリクス</h1>
+  <p>あなたのタイプを選ぶと、全32タイプとの相性が一覧で確認できます</p>
+</div>
+
+<!-- タイプ選択 -->
+<div class="selector-wrap">
+  <div class="selector-label">あなたのタイプを選択</div>
+  <div class="selector-row">
+    <select class="type-select" id="myTypeSelect">
+      <option value="">─ タイプを選択 ─</option>
+    </select>
+    <button class="check-btn" onclick="highlightMyType()">相性を見る</button>
+  </div>
+</div>
+
+<!-- 凡例 -->
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:#00b894"></div>運命的（88%+）</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#6c5ce7"></div>最高の相棒（78%+）</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#0984e3"></div>良い相性（68%+）</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#fdcb6e"></div>刺激ある関係（55%+）</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#e17055"></div>成長できる関係（42%+）</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#636e72"></div>正反対の引力</div>
+</div>
+
+<!-- マトリクス -->
+<div class="matrix-wrap">
+  <table class="matrix-table" id="compatMatrix"></table>
+</div>
+
+<!-- 相性詳細モーダル -->
+<div class="modal-overlay" id="compatModal" onclick="closeModal(event)">
+  <div class="modal-box">
+    <button class="modal-close" onclick="document.getElementById('compatModal').classList.remove('open')">✕</button>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="js/supabase-config.js"></script>
+<script src="js/platform.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/compat.js"></script>
+<script src="js/share-card.js"></script>
+<script>
+// ============================================================
+// タイプメタデータ（compat.js の TYPE_DATA と同一）
+// ============================================================
+const TYPE_META = [];
+(function(){
+  const raw = [
+    [1,'静かなる賢者','Architects'],[2,'孤高の開拓者','Architects'],
+    [3,'静かなる守護者','Architects'],[4,'戦略家','Architects'],
+    [5,'影の観察者','Architects'],[6,'闇の設計者','Architects'],
+    [7,'鉄仮面の番人','Architects'],[8,'黒幕','Architects'],
+    [9,'詩人','Mystics'],[10,'魂の創造者','Mystics'],
+    [11,'静かなる癒し手','Mystics'],[12,'情熱の建築家','Mystics'],
+    [13,'漂流者','Mystics'],[14,'深淵の旅人','Mystics'],
+    [15,'影の詩人','Mystics'],[16,'仮面の指揮者','Mystics'],
+    [17,'自由な知恵者','Commanders'],[18,'冒険家','Commanders'],
+    [19,'調停者','Commanders'],[20,'指揮官','Commanders'],
+    [21,'社交の狐','Commanders'],[22,'策士','Commanders'],
+    [23,'鉄壁の外交官','Commanders'],[24,'帝王','Commanders'],
+    [25,'太陽','Catalysts'],[26,'炎の伝道者','Catalysts'],
+    [27,'共感者','Catalysts'],[28,'情熱のリーダー','Catalysts'],
+    [29,'道化師','Catalysts'],[30,'カリスマ','Catalysts'],
+    [31,'舞台の演者','Catalysts'],[32,'仮面の太陽','Catalysts'],
+  ];
+  raw.forEach(([n, nm, fam]) => { TYPE_META[n] = { n, nm, fam }; });
+})();
+
+const FAM_COLOR_HEX = {
+  Architects:'#6c5ce7', Mystics:'#e84393', Commanders:'#00b894', Catalysts:'#fdcb6e'
+};
+
+function scoreToColor(s) {
+  if (s >= 88) return '#00b894';
+  if (s >= 78) return '#6c5ce7';
+  if (s >= 68) return '#0984e3';
+  if (s >= 55) return '#fdcb6e';
+  if (s >= 42) return '#e17055';
+  return '#4a4a6a';
+}
+
+// ============================================================
+// セレクト初期化
+// ============================================================
+function initSelect() {
+  const sel = document.getElementById('myTypeSelect');
+  const groups = {Architects:[], Mystics:[], Commanders:[], Catalysts:[]};
+  for (let n = 1; n <= 32; n++) {
+    const t = TYPE_META[n];
+    if (t) groups[t.fam].push(t);
+  }
+  Object.entries(groups).forEach(([fam, types]) => {
+    const og = document.createElement('optgroup');
+    og.label = fam;
+    types.forEach(t => {
+      const o = document.createElement('option');
+      o.value = t.n;
+      o.textContent = `Type ${String(t.n).padStart(2,'0')} ${t.nm}`;
+      og.appendChild(o);
+    });
+    sel.appendChild(og);
+  });
+
+  // ログイン中ユーザーのタイプを自動選択
+  if (typeof getMyProfile === 'function') {
+    getMyProfile().then(p => {
+      if (p && p.type_number) {
+        sel.value = p.type_number;
+        highlightMyType();
+      }
+    }).catch(() => {});
+  }
+}
+
+// ============================================================
+// マトリクス描画
+// ============================================================
+let selectedType = 0;
+
+function buildMatrix() {
+  const tbl = document.getElementById('compatMatrix');
+  tbl.innerHTML = '';
+
+  const famClass = {Architects:'fam-architects',Mystics:'fam-mystics',Commanders:'fam-commanders',Catalysts:'fam-catalysts'};
+
+  // ヘッダー行（列ラベル）
+  const hRow = tbl.insertRow();
+  const emptyTh = document.createElement('th');
+  emptyTh.className = 'axis-label';
+  hRow.appendChild(emptyTh);
+
+  for (let col = 1; col <= 32; col++) {
+    const th = document.createElement('th');
+    th.className = `axis-label ${famClass[TYPE_META[col].fam]}`;
+    th.textContent = col;
+    th.title = `Type ${col}: ${TYPE_META[col].nm}`;
+    hRow.appendChild(th);
+  }
+
+  // データ行
+  for (let row = 1; row <= 32; row++) {
+    const tr = tbl.insertRow();
+
+    // 行ラベル
+    const labelTd = document.createElement('td');
+    labelTd.className = `type-label ${famClass[TYPE_META[row].fam]}`;
+    labelTd.textContent = `${row}`;
+    labelTd.title = `Type ${row}: ${TYPE_META[row].nm}`;
+    tr.appendChild(labelTd);
+
+    for (let col = 1; col <= 32; col++) {
+      const td = document.createElement('td');
+      td.dataset.row = row;
+      td.dataset.col = col;
+
+      if (row === col) {
+        td.className = 'cell-self';
+        td.textContent = '━';
+        td.style.color = 'rgba(255,255,255,.2)';
+        td.style.cursor = 'default';
+      } else {
+        const s = Compat.score(row, col).friendScore;
+        td.style.background = scoreToColor(s);
+        td.style.opacity = '0.82';
+        td.title = `${TYPE_META[row].nm} × ${TYPE_META[col].nm}: ${s}%`;
+        td.onclick = () => openModal(row, col);
+      }
+      tr.appendChild(td);
+    }
+  }
+}
+
+function highlightMyType() {
+  const sel = document.getElementById('myTypeSelect');
+  selectedType = parseInt(sel.value) || 0;
+  if (!selectedType) return;
+
+  // 全セルのハイライトリセット
+  document.querySelectorAll('#compatMatrix td[data-row], #compatMatrix td[data-col]').forEach(td => {
+    td.style.boxShadow = '';
+  });
+
+  // 選択タイプの行・列をハイライト
+  document.querySelectorAll(`#compatMatrix td[data-row="${selectedType}"]`).forEach(td => {
+    td.style.boxShadow = 'inset 0 0 0 1.5px rgba(255,255,255,0.5)';
+  });
+  document.querySelectorAll(`#compatMatrix td[data-col="${selectedType}"]`).forEach(td => {
+    td.style.boxShadow = 'inset 0 0 0 1.5px rgba(255,255,255,0.5)';
+  });
+}
+
+// ============================================================
+// モーダル表示
+// ============================================================
+function openModal(n1, n2) {
+  const t1 = TYPE_META[n1], t2 = TYPE_META[n2];
+  if (!t1 || !t2) return;
+
+  const scores = Compat.score(n1, n2);
+  const tier   = Compat.tier(scores.friendScore);
+  const f1col  = FAM_COLOR_HEX[t1.fam];
+  const f2col  = FAM_COLOR_HEX[t2.fam];
+
+  const s1 = window.Compat._getTypicalScoresExposed ? window.Compat._getTypicalScoresExposed(n1) : null;
+
+  document.getElementById('modalContent').innerHTML = `
+    <div class="modal-types">
+      <div class="modal-type-tag" style="background:${f1col}18;border:1px solid ${f1col}44">
+        <div class="t-fam" style="color:${f1col}">${t1.fam}</div>
+        <div class="t-nm">Type ${String(n1).padStart(2,'0')} ${t1.nm}</div>
+      </div>
+      <div class="vs-badge">×</div>
+      <div class="modal-type-tag" style="background:${f2col}18;border:1px solid ${f2col}44">
+        <div class="t-fam" style="color:${f2col}">${t2.fam}</div>
+        <div class="t-nm">Type ${String(n2).padStart(2,'0')} ${t2.nm}</div>
+      </div>
+    </div>
+
+    <div style="text-align:center;margin-bottom:16px">
+      <span class="tier-badge" style="background:${tier.color}22;color:${tier.color};border:1px solid ${tier.color}44">
+        ${tier.emoji}  ${tier.label}
+      </span>
+    </div>
+
+    <div class="score-section">
+      <div class="score-row">
+        <div class="score-label">👫 友人相性</div>
+        <div class="score-bar-bg">
+          <div class="score-bar-fill" style="width:${scores.friendScore}%;background:linear-gradient(90deg,${f1col},${f2col})"></div>
+        </div>
+        <div class="score-val" style="color:${tier.color}">${scores.friendScore}%</div>
+      </div>
+      <div class="score-row">
+        <div class="score-label">💕 恋愛相性</div>
+        <div class="score-bar-bg">
+          <div class="score-bar-fill" style="width:${scores.loveScore}%;background:linear-gradient(90deg,${f2col},${f1col})"></div>
+        </div>
+        <div class="score-val" style="color:${tier.color}">${scores.loveScore}%</div>
+      </div>
+    </div>
+
+    <div class="card-preview">
+      <canvas id="modalCompatCanvas" class="card-canvas"></canvas>
+      <div class="card-btns">
+        <button class="card-btn card-btn-dl" onclick="Compat.CompatCard.download(${n1},${n2})">⬇ 画像DL</button>
+        <button class="card-btn card-btn-x"  onclick="Compat.CompatCard.shareToX(${n1},${n2})">𝕏 Xでシェア</button>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('compatModal').classList.add('open');
+
+  // カード描画
+  setTimeout(() => {
+    const cv = document.getElementById('modalCompatCanvas');
+    if (cv) Compat.CompatCard.draw(cv, n1, n2);
+  }, 80);
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('compatModal')) {
+    document.getElementById('compatModal').classList.remove('open');
+  }
+}
+
+// ============================================================
+// 初期化
+// ============================================================
+window.addEventListener('DOMContentLoaded', () => {
+  buildMatrix();
+  initSelect();
+  if (typeof initNavUser === 'function') initNavUser();
+});
+</script>
+</body>
+</html>

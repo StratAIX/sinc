@@ -242,6 +242,8 @@
 <script src="js/nav.js"></script>
 <script src="js/i18n.js"></script>
 <script src="js/matching.js"></script>
+<script src="js/compat.js"></script>
+<script src="js/share-card.js"></script>
 <script>
 (function() {
   let currentMode = 'friend';
@@ -250,6 +252,7 @@
   let allCandidates = [];
   let displayedCandidates = [];
   let selectedUserId = null;
+  let myTypeNum = 0;  // 自分のタイプ番号（相性カード用）
   let reloadCount = 0;        // リロード回数カウンター（3回で広告）
   const AD_INTERVAL = 3;      // 何回ごとに広告を挟むか
   const unlockedUsers = new Set();
@@ -275,6 +278,7 @@
           const lockEl = document.getElementById('legal-lock');
           if (lockEl) lockEl.style.display = 'none';
         }
+        if (profile && profile.type_number) myTypeNum = profile.type_number;
       }
     } catch(e) { /* 無視 */ }
 
@@ -418,6 +422,14 @@
           </div>
         </div>
         ${candidate.bio ? `<div class="match-bio">${escapeHtml(candidate.bio)}</div>` : ''}
+        ${(myTypeNum && candidate.type_number && window.Compat) ? (() => {
+          const cs = Compat.score(myTypeNum, candidate.type_number);
+          const ct = Compat.tier(cs.friendScore);
+          return `<div style="margin:6px 0 2px;font-size:.75rem;color:rgba(255,255,255,.5)">
+            タイプ相性 ${ct.emoji} 友人 ${cs.friendScore}% / 恋愛 ${cs.loveScore}%
+            <button onclick="openCompatModal(${myTypeNum},${candidate.type_number})" style="margin-left:8px;padding:2px 10px;font-size:.72rem;background:rgba(108,92,231,.3);border:1px solid rgba(108,92,231,.5);border-radius:20px;color:#a29bfe;cursor:pointer">相性カード</button>
+          </div>`;
+        })() : ''}
         <div class="match-action">
           ${isUnlocked
             ? `<a href="chat.html?user=${candidate.id}" class="btn btn-primary">💬 チャットを開く</a>`
@@ -628,6 +640,44 @@
   // ============================================================
   init();
 })();
+</script>
+<!-- 相性カードモーダル -->
+<div id="compatCardModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:2000;align-items:center;justify-content:center;padding:16px;overflow-y:auto" onclick="if(event.target===this)this.style.display='none'">
+  <div style="background:#14121f;border:1px solid rgba(255,255,255,.12);border-radius:18px;max-width:420px;width:100%;padding:24px">
+    <button onclick="document.getElementById('compatCardModal').style.display='none'" style="float:right;background:none;border:none;color:rgba(255,255,255,.5);font-size:1.4rem;cursor:pointer;line-height:1">✕</button>
+    <div id="compatCardModalContent"></div>
+  </div>
+</div>
+<script>
+function openCompatModal(n1, n2) {
+  if (!window.Compat) return;
+  const scores = Compat.score(n1, n2);
+  const tier   = Compat.tier(scores.friendScore);
+  const d1 = Compat.typeData(n1), d2 = Compat.typeData(n2);
+  const FAM_COL = {Architects:'#6c5ce7',Mystics:'#e84393',Commanders:'#00b894',Catalysts:'#e0a800'};
+  document.getElementById('compatCardModalContent').innerHTML = `
+    <div style="text-align:center;margin-bottom:12px">
+      <div style="font-size:.8rem;color:rgba(255,255,255,.4);margin-bottom:6px">タイプ相性カード</div>
+      <div style="display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap">
+        <span style="padding:6px 14px;border-radius:8px;background:${FAM_COL[d1.fam]}22;border:1px solid ${FAM_COL[d1.fam]}44;font-size:.82rem;font-weight:700">${d1.nm}</span>
+        <span style="color:rgba(255,255,255,.3)">×</span>
+        <span style="padding:6px 14px;border-radius:8px;background:${FAM_COL[d2.fam]}22;border:1px solid ${FAM_COL[d2.fam]}44;font-size:.82rem;font-weight:700">${d2.nm}</span>
+      </div>
+      <div style="margin-top:10px;font-size:.85rem;color:${tier.color}">${tier.emoji} ${tier.label}</div>
+      <div style="font-size:.78rem;color:rgba(255,255,255,.4);margin-top:4px">友人 ${scores.friendScore}%  /  恋愛 ${scores.loveScore}%</div>
+    </div>
+    <canvas id="compatModalCanvas" style="width:100%;border-radius:12px;display:block;margin:0 auto 12px"></canvas>
+    <div style="display:flex;gap:8px;justify-content:center">
+      <button onclick="Compat.CompatCard.download(${n1},${n2})" style="padding:8px 18px;border-radius:50px;background:rgba(255,255,255,.1);color:#fff;border:none;font-size:.8rem;cursor:pointer">⬇ DL</button>
+      <button onclick="Compat.CompatCard.shareToX(${n1},${n2})" style="padding:8px 18px;border-radius:50px;background:#000;color:#fff;border:none;font-size:.8rem;cursor:pointer">𝕏 シェア</button>
+    </div>
+  `;
+  document.getElementById('compatCardModal').style.display = 'flex';
+  setTimeout(() => {
+    const cv = document.getElementById('compatModalCanvas');
+    if (cv) Compat.CompatCard.draw(cv, n1, n2);
+  }, 80);
+}
 </script>
 </body>
 </html>
