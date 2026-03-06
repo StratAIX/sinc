@@ -24,7 +24,7 @@ const PRODUCTS = {
     iosId:         'net.strataix.sinc.matching_unlock',
     androidId:     'net.strataix.sinc.matching_unlock',
     type:          'non_consumable',
-    stripePriceId: 'price_XXXXXXXXXXXXXXXX', // 本番では Stripe Dashboard で発行した Price ID に差し替え
+    stripePriceId: 'price_1T7sVdRHoUKXAVpRKHwkK8Jq',
     label:         'マッチング機能解放パス',
     amount:        990,
   },
@@ -33,8 +33,8 @@ const PRODUCTS = {
     iosId:         'net.strataix.sinc.matching_proposal',
     androidId:     'net.strataix.sinc.matching_proposal',
     type:          'consumable', // 打診は都度課金（消耗品）
-    stripePriceId: 'price_YYYYYYYYYYYYYYYY', // 本番では Stripe Dashboard で発行した Price ID に差し替え
-    label:         'マッチング打診',
+    stripePriceId: 'price_1T7sWDRHoUKXAVpRJR8RxV3e',
+    label:         'つながり希望',
     amount:        990,
   },
 };

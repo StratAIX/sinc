@@ -392,12 +392,18 @@ async function init() {
   }
 
   // Stripe からの支払い完了リダイレクト確認
-  const stripeResult = Payment.checkStripeReturn();
-  if (stripeResult === 'success') {
-    await finalizeUnlockAfterPayment();
+  // ★ URLパラメータは表示制御のみに使用。実際の解放はDBのWebhook結果で判定。
+  const params = new URLSearchParams(location.search);
+  const paymentStatus = params.get('payment');
+  const sessionId = params.get('session_id');
+  // URLパラメータをクリア（再読込時の誤動作防止）
+  history.replaceState({}, '', location.pathname);
+
+  if (paymentStatus === 'success' && sessionId) {
+    await finalizeUnlockAfterPayment(sessionId);
     return;
   }
-  if (stripeResult === 'cancel') {
+  if (paymentStatus === 'cancel') {
     // Step4 に戻す（ユーザーがキャンセルした）
     buildDateSelects();
     showStep(4);
@@ -647,20 +653,63 @@ async function completeUnlock(paymentMethod) {
 }
 
 // Stripe 決済完了後の処理（リダイレクト復帰時）
-async function finalizeUnlockAfterPayment() {
+// ★ セキュリティ: URLパラメータを信頼せず、DBのpayment_sessionsを確認する
+//　 実際のmatching_unlocked更新はStripe Webhook（サーバー側）が行う
+async function finalizeUnlockAfterPayment(sessionId) {
   buildDateSelects();
   const user = await requireAuth();
   if (!user) return;
   myUserId = user.id;
-  try {
-    await completeUnlock('stripe');
-  } catch(e) {
-    // Step4 を表示してエラー
-    showStep(4);
-    const s = document.getElementById('step4-status');
-    s.className = 'status-msg error';
-    s.textContent = '解放処理エラー: ' + (e.message || e);
-  }
+
+  showStep(4);
+  const s = document.getElementById('step4-status');
+  s.className = 'status-msg';
+  s.textContent = '決済を確認中...';
+
+  // Webhookの処理を最大10秒待機してDBを確認
+  const MAX_WAIT = 10000;
+  const INTERVAL = 1500;
+  const start = Date.now();
+
+  const poll = async () => {
+    // まずmatching_unlockedを確認（Webhookが処理済みなら即true）
+    const { data: profile } = await supabase
+      .from('users').select('matching_unlocked').eq('id', user.id).single();
+
+    if (profile?.matching_unlocked) {
+      // Webhookで解放済み → 完了画面へ
+      showStep(5);
+      const desc = document.getElementById('step5-desc');
+      if (desc) desc.textContent = 'マッチング候補の閲覧と女性への打診ができます。\n打診１回あたり¥990です（別途購入）。';
+      return;
+    }
+
+    // payment_sessionsでセッション状態を確認
+    const { data: session } = await supabase
+      .from('payment_sessions')
+      .select('status')
+      .eq('stripe_session_id', sessionId)
+      .eq('user_id', user.id)
+      .single();
+
+    if (session?.status === 'completed') {
+      // Webhookは完了だがusersが未更新の場合（ごく稀）
+      showStep(5);
+      return;
+    }
+
+    if (Date.now() - start < MAX_WAIT) {
+      // まだ待機中
+      s.textContent = '決済を確認中... しばらくお待ちください';
+      setTimeout(poll, INTERVAL);
+    } else {
+      // タイムアウト → エラー表示（実際には決済完了しているのでページ再読込で解決）
+      s.className = 'status-msg error';
+      s.textContent = '確認に時間がかかっています。ページを再読み込みするか、しばらく後にプロフィールページをご確認ください。';
+    }
+  };
+
+  await poll();
 }
 
 document.getElementById('purchase-btn-male').addEventListener('click', () => doUnlock(false));
