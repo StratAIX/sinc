@@ -88,6 +88,9 @@
 </head>
 <body>
 
+<!-- バナー広告（上部） -->
+<div id="matching-banner-ad" style="padding:8px 16px 0"></div>
+
 <div class="page" id="page">
   <div class="container">
     <div class="matching-header">
@@ -165,10 +168,20 @@
         <span>¥990（税込）</span>
       </div>
     </div>
-    <div class="payment-note">
-      ※ テストモードのため実際の決済は発生しません<br>
-      ※ 本番ではApp Store / Google Play のアプリ内課金で処理されます<br>
+    <div id="payment-method-note" class="payment-note">
       ※ 相手がOKした場合のみチャットが解放されます
+    </div>
+
+    <!-- ポイント支払いオプション -->
+    <div id="point-pay-option" style="margin-top:12px;padding:12px;background:rgba(108,92,231,.08);border:1px solid rgba(108,92,231,.25);border-radius:10px;display:none">
+      <div style="font-size:.78rem;font-weight:700;margin-bottom:4px">または ポイントで打診</div>
+      <div style="font-size:.72rem;color:rgba(255,255,255,.5);margin-bottom:8px">残高: <span id="modal-pt-balance">---</span> pt</div>
+      <button id="point-pay-btn"
+        style="width:100%;padding:10px;background:linear-gradient(135deg,#00b894,#00cec9);
+          color:#fff;border:none;border-radius:8px;font-size:.85rem;font-weight:700;
+          cursor:pointer;font-family:inherit">
+        ⭐ 100pt で打診する
+      </button>
     </div>
 
     <div id="payment-target" style="display:none"></div>
@@ -222,6 +235,9 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="js/supabase-config.js"></script>
+<script src="js/platform.js"></script>
+<script src="js/payment.js"></script>
+<script src="js/ads.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/nav.js"></script>
 <script src="js/i18n.js"></script>
@@ -251,11 +267,11 @@
       myScores = {P1:45,P2:55,P3:60,P4:40,P5:50,P6:65,P7:55,P8:48,P9:42,P10:58,P11:52,P12:45,P13:55,P14:48,P15:50};
     }
 
-    // matching_enabled チェック: 解放済みならロックバナーを非表示
+    // matching_unlocked チェック: 解放済みならロックバナーを非表示
     try {
       if (typeof getMyProfile === 'function') {
         const profile = await getMyProfile();
-        if (profile && profile.matching_enabled) {
+        if (profile && profile.matching_unlocked) {
           const lockEl = document.getElementById('legal-lock');
           if (lockEl) lockEl.style.display = 'none';
         }
@@ -265,6 +281,11 @@
     updateReloadCounter();
     loadCandidates();
     initNavUser();
+
+    // バナー広告初期化
+    if (typeof Ads !== 'undefined') {
+      Ads.showBanner('matching-banner-ad', null);
+    }
   }
 
   // DBから診断スコアを取得
@@ -360,7 +381,7 @@
     const emoji = typeof getTypeEmoji === 'function' ? getTypeEmoji(candidate.type_number) : '👤';
     const scoreEmoji = score >= 95 ? '🔥' : score >= 90 ? '✨' : score >= 85 ? '💫' : '⭐';
 
-    // 課金ボタンの内容（matching_enabled が false の場合はアンロックCTAへ）
+    // 課金ボタンの内容（matching_unlocked が false の場合はアンロックCTAへ）
     const actionHtml = `
       <a href="matching-unlock.html" class="btn btn-primary match-unlock-btn" style="display:block;width:100%;text-align:center">
         🔓 マッチングを解放して打診する
@@ -473,9 +494,9 @@
   });
 
   // ============================================================
-  // 課金確認モーダル（将来用）
+  // 課金確認モーダル
   // ============================================================
-  function showPaymentModal(userId) {
+  async function showPaymentModal(userId) {
     const user = displayedCandidates.find(c => c.id === userId);
     if (!user) return;
     document.getElementById('payment-target').innerHTML = `
@@ -484,6 +505,29 @@
       </div>
     `;
     document.getElementById('payment-target').style.display = 'block';
+
+    // 決済手段の注記をプラットフォーム別に更新
+    const note = document.getElementById('payment-method-note');
+    if (note) {
+      const p = window.Platform ? window.Platform.get() : 'web';
+      if (p === 'ios') {
+        note.innerHTML = '※ App Store のアプリ内課金で処理されます<br>※ 相手がOKした場合のみチャットが解放されます';
+      } else if (p === 'android') {
+        note.innerHTML = '※ Google Play のアプリ内課金で処理されます<br>※ 相手がOKした場合のみチャットが解放されます';
+      } else {
+        note.innerHTML = '※ クレジットカード決済（Stripe）で処理されます<br>※ 相手がOKした場合のみチャットが解放されます';
+      }
+    }
+
+    // ポイント残高確認 → オプション表示
+    if (typeof Ads !== 'undefined') {
+      const bal = await Ads.Points.getBalance();
+      const ptOpt = document.getElementById('point-pay-option');
+      const ptBal = document.getElementById('modal-pt-balance');
+      if (ptBal) ptBal.textContent = bal;
+      if (ptOpt) ptOpt.style.display = bal >= 100 ? 'block' : 'none';
+    }
+
     document.getElementById('payment-modal').classList.add('show');
   }
 
@@ -496,16 +540,50 @@
     }
   });
 
-  document.getElementById('payment-confirm').addEventListener('click', () => {
+  // 通常課金（Stripe / IAP）
+  document.getElementById('payment-confirm').addEventListener('click', async () => {
     const btn = document.getElementById('payment-confirm');
     btn.disabled = true; btn.textContent = '処理中...';
-    setTimeout(() => {
-      document.getElementById('payment-modal').classList.remove('show');
-      btn.disabled = false; btn.textContent = '💳 購入する';
-      unlockedUsers.add(selectedUserId);
-      showMatchSuccess(selectedUserId);
-    }, 1500);
+    try {
+      if (typeof Payment !== 'undefined') {
+        const result = await Payment.purchase('matching_proposal', { target_user_id: selectedUserId });
+        // Web(Stripe): リダイレクト → ここには戻らない
+        if (result && result.status === 'purchased') {
+          await finalizeProposal('native');
+        }
+      } else {
+        // フォールバック（モック）
+        await finalizeProposal('mock');
+      }
+    } catch(e) {
+      showToast('決済エラー: ' + (e.message || e), 'error');
+      btn.disabled = false; btn.textContent = '💳 打診する（¥990）';
+    }
   });
+
+  // ポイント支払い
+  document.getElementById('point-pay-btn').addEventListener('click', async () => {
+    const btn = document.getElementById('point-pay-btn');
+    btn.disabled = true; btn.textContent = '処理中...';
+    try {
+      const ok = await Ads.Points.spend(100, 'matching', null);
+      if (!ok) {
+        showToast('ポイントが不足しています', 'error');
+        btn.disabled = false; btn.textContent = '⭐ 100pt で打診する';
+        return;
+      }
+      await finalizeProposal('points');
+    } catch(e) {
+      showToast('エラー: ' + (e.message || e), 'error');
+      btn.disabled = false; btn.textContent = '⭐ 100pt で打診する';
+    }
+  });
+
+  async function finalizeProposal(method) {
+    document.getElementById('payment-modal').classList.remove('show');
+    unlockedUsers.add(selectedUserId);
+    showMatchSuccess(selectedUserId);
+  }
 
   // ============================================================
   // マッチ成立モーダル

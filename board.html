@@ -204,6 +204,9 @@
 </head>
 <body>
 
+<!-- バナー広告（上部） -->
+<div id="board-banner-ad" style="padding:8px 16px 0"></div>
+
 <div class="page" id="page">
   <div class="container">
 
@@ -404,6 +407,8 @@
 <!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="js/supabase-config.js"></script>
+<script src="js/platform.js"></script>
+<script src="js/ads.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/nav.js"></script>
 <script src="js/i18n.js"></script>
@@ -455,6 +460,11 @@
 
       renderTopView();
       showView('view-top');
+
+      // バナー広告初期化
+      if (typeof Ads !== 'undefined') {
+        Ads.showBanner('board-banner-ad', null);
+      }
     } catch (err) {
       showToast('読み込みに失敗しました: ' + err.message, 'error');
     } finally {
@@ -946,9 +956,22 @@
     submitBtn.textContent = '作成中...';
 
     try {
+      // ポイント消費（3pt）: 残高不足でも作成は可能（任意消費）
+      if (typeof Ads !== 'undefined') {
+        const spent = await Ads.Points.spend(3, 'board_create', null);
+        if (!spent) {
+          // ポイント不足 → 消費せずに作成（任意なので継続）
+        }
+      }
+
       const thread = await Board.createThread(currentBoardId, title, content);
       createThreadModal.classList.remove('show');
       showToast('スレッドを作成しました！', 'success');
+
+      // スレッド遷移時にインタースティシャル広告
+      if (typeof Ads !== 'undefined') {
+        await Ads.showInterstitial();
+      }
       window.location.href = `thread.html?id=${thread.id}`;
     } catch (err) {
       errorEl.textContent = err.message;

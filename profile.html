@@ -354,6 +354,27 @@
     <!-- 統計 -->
     <div class="profile-stats" id="profile-stats"></div>
 
+    <!-- ポイント残高 -->
+    <div class="profile-section" id="points-section" style="display:none">
+      <div class="section-title">⭐ ポイント残高</div>
+      <div class="card" style="display:flex;align-items:center;gap:16px;padding:16px">
+        <div style="font-size:2rem;font-weight:900;background:linear-gradient(135deg,#fdcb6e,#e17055);-webkit-background-clip:text;-webkit-text-fill-color:transparent" id="profile-pt-balance">---</div>
+        <div style="flex:1">
+          <div style="font-size:.8rem;font-weight:700;margin-bottom:4px">pt</div>
+          <div style="font-size:.72rem;color:var(--text2);line-height:1.6">動画広告の視聴でポイントが貯まります。<br>スレ立て（3pt）・マッチング打診（100pt）に使えます。</div>
+        </div>
+        <button id="profile-reward-btn" onclick="profileWatchRewardedVideo()"
+          style="padding:8px 14px;background:linear-gradient(135deg,#6c5ce7,#fd79a8);
+            color:#fff;border:none;border-radius:50px;font-size:.78rem;font-weight:700;
+            cursor:pointer;white-space:nowrap;font-family:inherit">
+          ▶ 動画 +5pt
+        </button>
+      </div>
+    </div>
+
+    <!-- バナー広告 -->
+    <div id="profile-banner-ad" style="margin-bottom:16px"></div>
+
     <!-- 診断履歴 -->
     <div class="profile-section" id="history-section" style="display:none">
       <div class="section-title" data-i18n="profile.history_title">診断履歴（直近3回）</div>
@@ -499,6 +520,8 @@
 <!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="js/supabase-config.js"></script>
+<script src="js/platform.js"></script>
+<script src="js/ads.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/nav.js"></script>
 <script src="js/i18n.js"></script>
@@ -670,12 +693,31 @@
     // 本人確認バナー
     renderVerifyBanner(profile.age_verified);
 
+    // ポイント残高表示 + 広告バナー
+    renderPointsSection();
+
     // 診断履歴
     renderDiagnosisHistory(profile.diagnosis_history);
 
     // 診断スコア
     if (profile.diagnosis_scores) {
       renderScores(profile.diagnosis_scores);
+    }
+  }
+
+  // --- ポイント残高 + 広告バナー ---
+  async function renderPointsSection() {
+    const section = document.getElementById('points-section');
+    if (section) section.style.display = 'block';
+
+    if (typeof Ads !== 'undefined') {
+      // ポイント残高
+      const bal = await Ads.Points.getBalance();
+      const balEl = document.getElementById('profile-pt-balance');
+      if (balEl) balEl.textContent = bal;
+
+      // バナー広告
+      Ads.showBanner('profile-banner-ad', null);
     }
   }
 
@@ -1153,6 +1195,27 @@
 
   init();
 })();
+
+// リワード動画（プロフィール画面）
+async function profileWatchRewardedVideo() {
+  const btn = document.getElementById('profile-reward-btn');
+  if (!btn || btn.disabled) return;
+  btn.disabled = true;
+  btn.textContent = '読み込み中...';
+  if (typeof Ads === 'undefined') {
+    btn.disabled = false; btn.textContent = '▶ 動画 +5pt'; return;
+  }
+  await Ads.showRewardedVideo(5,
+    (newBal) => {
+      btn.textContent = '✅ 受け取り済み';
+      const balEl = document.getElementById('profile-pt-balance');
+      if (balEl && newBal != null) balEl.textContent = newBal;
+    },
+    () => {
+      btn.disabled = false; btn.textContent = '▶ 動画 +5pt';
+    }
+  );
+}
 </script>
 </body>
 </html>

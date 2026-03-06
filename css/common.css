@@ -586,6 +586,32 @@ textarea.form-input{
 }
 
 /* ============================================================
+   広告コンテナ共通スタイル
+   ============================================================ */
+[id$="-banner-ad"],
+[id$="-ad"] {
+  min-height: 0;
+  transition: min-height .3s;
+}
+[id$="-banner-ad"]:not(:empty),
+[id$="-ad"]:not(:empty) {
+  min-height: 60px;
+}
+/* AdSense/プレースホルダー共通 */
+.ad-placeholder {
+  background: rgba(255,255,255,.03);
+  border: 1px dashed rgba(255,255,255,.08);
+  border-radius: 8px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .68rem;
+  color: rgba(255,255,255,.15);
+  letter-spacing: .05em;
+}
+
+/* ============================================================
    デスクトップ サイドバーレイアウト
    モバイル（<768px）: 下部タブバーを維持（Capacitorアプリ最適）
    デスクトップ（≥768px）: 左サイドバー（Twitter/Claude型）

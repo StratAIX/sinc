@@ -1,195 +1,115 @@
-# GitHub Pages テスト公開ガイド（初心者向け）
+# GitHub Pages 公開ガイド（GitHub Desktop 版）
 
-## 前提
-- GitHubアカウントを持っている（持っていなければ https://github.com で無料登録）
-- Git のインストールは不要（ブラウザだけで完結します）
-
----
-
-## ステップ 1: リポジトリを作成する
-
-1. https://github.com にログイン
-2. 右上の「＋」ボタン → 「New repository」をクリック
-3. 以下を入力:
-   - **Repository name**: `doppelganger`（好きな名前でOK）
-   - **Description**: 空欄でOK
-   - **Public / Private**:
-     - `Public` → 誰でもURLでアクセスできる（無料）
-     - `Private` → 自分だけ（GitHub Pages は Pro $4/月 が必要）
-   - **Add a README file**: チェックを入れる ✅
-4. 「Create repository」をクリック
+## 現在の環境（2026-03-02 確定）
+- **GitHubユーザー**: StratAIX
+- **リポジトリ**: `https://github.com/StratAIX/sinc`（Public）
+- **ローカルクローン**: `C:\Users\hondo\OneDrive\ドキュメント\PJドッペルゲンガー\github`
+- **GitHub Pages URL**: `https://strataix.github.io/sinc/`
+- **カスタムドメイン**: `sinc.strataix.net`（CNAME設定済み）
 
 ---
 
-## ステップ 2: フォルダ付きでファイルをアップロードする
+## GitHub Desktop でのプッシュ手順
 
-### ⚠️ 重要: GitHubのWeb UIは「フォルダごとアップロード」に対応しています
+### 毎回のファイル更新フロー
 
-1. 作成したリポジトリのページで「Add file」→「Upload files」をクリック
-
-2. **エクスプローラー（ファイルマネージャー）を開いて、以下のファイルとフォルダをまとめて選択し、ブラウザの画面にドラッグ＆ドロップ**:
-
-   ```
-   アップロードするもの（全部まとめてドラッグ）:
-
-   📄 doppelganger-diagnosis.index.html
-   📄 index.html
-   📄 board.html
-   📄 thread.html
-   📄 profile.html
-   📄 types.html
-   📁 css/        ← フォルダごとドラッグ
-   📁 js/         ← フォルダごとドラッグ
-   📁 sql/        ← フォルダごとドラッグ（任意）
-   📁 docs/       ← フォルダごとドラッグ（任意）
-   ```
-
-   ### ドラッグ＆ドロップの手順（画像で説明）:
-
-   ```
-   ┌─ エクスプローラー ──────────────┐     ┌─ ブラウザ（GitHub）──────┐
-   │                                │     │                         │
-   │  📄 doppelganger-diag...html   │     │  Drag files here to     │
-   │  📄 index.html                 │ ──→ │  add them to your       │
-   │  📄 board.html                 │     │  repository             │
-   │  📄 thread.html                │     │                         │
-   │  📄 profile.html               │     │  Or choose your files   │
-   │  📄 types.html                 │     │                         │
-   │  📁 css                        │     │                         │
-   │  📁 js                         │     │                         │
-   │  📁 sql                        │     │                         │
-   │  📁 docs                       │     │                         │
-   │                                │     │                         │
-   └────────────────────────────────┘     └─────────────────────────┘
-
-   ※ Ctrl+A で全選択してからドラッグすると楽です
-   ※ ただし CLAUDE.md、work/、1,gemini/、2.Claude/、.claude/ は
-     アップロード不要です（個人メモなので）
-   ```
-
-3. ファイルが読み込まれると、一覧が表示される
-   - `css/common.css` 、 `js/auth.js` のようにフォルダ付きで表示されればOK
-
-4. 下部の「Commit changes」に適当なメッセージを入力（例: 「初回アップロード」）
-
-5. 「Commit changes」ボタンをクリック
-
-6. **アップロード完了を確認**: リポジトリのトップページに戻ると、こんな構成になっているはず:
-   ```
-   📁 css/
-   📁 docs/
-   📁 js/
-   📁 sql/
-   📄 README.md
-   📄 board.html
-   📄 doppelganger-diagnosis.index.html
-   📄 index.html
-   📄 profile.html
-   📄 thread.html
-   📄 types.html
-   ```
+1. **GitHub Desktop を開く**
+2. 左側の「Changes」タブに変更ファイルが表示されていることを確認
+3. 左下の「Summary」欄にコミットメッセージを入力
+   - 例: `feat: 課金・広告・ポイントシステム実装`
+4. **「Commit to main」** ボタンをクリック
+5. 右上の **「Push origin」** ボタンをクリック
+6. GitHub の `StratAIX/sinc` リポジトリを確認し、ファイルが更新されていればOK
 
 ---
 
-## ステップ 3: GitHub Pages を有効にする
+## GitHub Pages の設定確認（初回のみ）
 
-1. リポジトリページの上部タブから「Settings」をクリック
-2. 左のサイドバーから「Pages」をクリック
-3. **Build and deployment** の設定:
-   - **Source**: 「Deploy from a branch」を選択
-   - **Branch**: 「main」を選択、フォルダは「/ (root)」のまま
-4. 「Save」をクリック
-5. **1〜2分待つ**（デプロイに少し時間がかかります）
+1. `https://github.com/StratAIX/sinc` を開く
+2. 上部タブ「Settings」→ 左サイドバー「Pages」をクリック
+3. **Build and deployment** を確認:
+   - **Source**: 「Deploy from a branch」
+   - **Branch**: 「main」、フォルダ「/ (root)」
+4. **Custom domain** 欄に `sinc.strataix.net` と入力して「Save」
+   - ⚠️ DNS 伝播まで最大48時間かかる場合がある
+5. `Enforce HTTPS` にチェックを入れる（ある場合）
 
 ---
 
-## ステップ 4: テストサイトにアクセスする
+## 各ページURL
 
-### あなたのサイトURL:
+| ページ | GitHub Pages URL | カスタムドメイン |
+|-------|-----------------|--------------|
+| ログイン | `https://strataix.github.io/sinc/` | `https://sinc.strataix.net/` |
+| 性格診断 | `.../doppelganger-diagnosis.index.html` | 同左 |
+| 掲示板 | `.../board.html` | 同左 |
+| マッチング | `.../matching.html` | 同左 |
+| 32タイプ一覧 | `.../types.html` | 同左 |
+
+---
+
+## アップロードが必要なファイル一覧（全量プッシュ時）
+
 ```
-https://あなたのGitHubユーザー名.github.io/doppelganger/
+【HTMLページ】
+index.html
+doppelganger-diagnosis.index.html
+board.html
+thread.html
+matching.html
+matching-unlock.html
+profile.html
+friends.html
+chat.html
+user-profile.html
+types.html
+CNAME
+
+【フォルダ】
+css/         → common.css
+js/          → supabase-config.js, auth.js, nav.js, i18n.js,
+               diagnosis-en.js, board.js, matching.js,
+               platform.js, payment.js, ads.js,
+               moderation.js, avatar.js
+sql/         → schema.sql, add-board-features.sql,
+               add-friends-dms.sql, add-matching-features.sql,
+               add-matching-unlock.sql, add-payment-method.sql,
+               add-username-history.sql
+docs/        → このファイル群
 ```
 
-### 各ページのURL:
-| ページ | URL |
-|--------|-----|
-| 性格診断 | `https://ユーザー名.github.io/doppelganger/doppelganger-diagnosis.index.html` |
-| 32タイプ一覧 | `https://ユーザー名.github.io/doppelganger/types.html` |
-| ログイン画面（UI確認のみ） | `https://ユーザー名.github.io/doppelganger/index.html` |
-
-### 確認方法:
-- Settings → Pages のページに緑のバナーで「Your site is live at ...」と表示されたらOK
-- 表示されない場合は1〜2分待ってからページを更新（F5）
+⚠️ **アップロード不要なもの**:
+- `.git/` フォルダ
+- `CLAUDE.md`（開発者メモ）
+- `.claude/` フォルダ
 
 ---
 
-## ステップ 5: テストする
+## Supabase 設定（デプロイ後に必要）
 
-### まずこの順番でチェック:
-
-**① 診断を開く**
-- 上記の診断URLをブラウザで開く
-- トップ画面が表示されるか確認
-
-**② 数問だけ回答してブラウザを閉じる**
-- 10問くらい答えたらタブを閉じる
-- 同じURLをもう一度開く
-- 「途中から再開しますか？」バナーが出るか確認
-
-**③ 全136問回答して結果を見る**
-- 結果ページにタイプ名、レーダーチャート等が表示されるか
-- SNSシェアボタンが動作するか（Xボタンを押してツイート画面が開くか）
-- シェア文言に GitHub Pages の URL が含まれているか
-
-**④ 32タイプ一覧を開く**
-- 結果ページの「📖 全32タイプ一覧を見る」をクリック
-- 一覧ページに遷移して、自分のタイプがハイライトされるか
+1. `js/supabase-config.js` の `SUPABASE_URL` と `SUPABASE_ANON_KEY` を本番値に設定
+2. Supabase Dashboard で `sql/` 内のSQLを順番に実行:
+   - `schema.sql` → `add-board-features.sql` → `add-friends-dms.sql`
+   - `add-matching-features.sql` → `add-matching-unlock.sql`
+   - `add-payment-method.sql`（★最新・未実行）
+3. Supabase の Authentication → URL Configuration で `sinc.strataix.net` を許可
 
 ---
 
-## ファイルを更新したいとき
+## Stripe / AdMob 設定（本番リリース時）
 
-1. リポジトリページで更新したいファイルをクリック
-2. 右上の「✏️」（鉛筆アイコン）をクリック
-3. 内容を編集 → 「Commit changes」
-
-### または、ファイルを丸ごと差し替える場合:
-1. 「Add file」→「Upload files」
-2. 同じ名前のファイルをアップロードすると上書きされる
-3. 「Commit changes」
+- `js/payment.js`: `stripePriceId` の `price_XXXX` を本番Price IDに差し替え
+- `js/ads.js`: `AD_IDS` のテスト用IDを本番AdMob IDに差し替え
+- `js/ads.js`: `data-ad-client` の `ca-pub-XXXX` を本番AdSense Publisher IDに差し替え
+- Supabase Edge Functions に `create-checkout-session` をデプロイ
 
 ---
 
 ## よくあるトラブル
 
-### 「404 Not Found」が出る
-- GitHub Pages が有効になっていない → ステップ 3 を確認
-- URLのリポジトリ名が間違っている → 大文字小文字に注意
-- デプロイがまだ完了していない → 2〜3分待ってからF5
-
-### ページは開くがデザインが崩れている
-- `css/` フォルダがアップロードされていない → リポジトリに `css/common.css` があるか確認
-- フォルダ構造がずれている（例: `css/` が `css/css/` になっている等）
-
-### シェアボタンを押しても何も起きない
-- ブラウザのポップアップブロックが動作している → 許可する
-- `file://` で開いている（GitHub Pages のURLで開いているか確認）
-
-### 途中セーブが効かない
-- ブラウザの設定で localStorage がブロックされている
-- シークレットモード（プライベートブラウジング）で開いている → 通常モードで開く
-
----
-
-## スマホでテストする
-
-GitHub Pages の URL はスマホのブラウザでもそのままアクセスできます:
-
-1. PC のブラウザで URL をコピー
-2. 自分にLINEやメールでURLを送る
-3. スマホで開く
-
-スマホでチェックすべきポイント:
-- 画面が崩れていないか（レスポンシブ対応の確認）
-- ボタンが押しやすいサイズか
-- シェアボタンが動作するか（特にInstagram）
+| 症状 | 原因 | 対処 |
+|-----|------|------|
+| 404 Not Found | Pages未有効化 / デプロイ中 | Settings→Pages確認・2分待つ |
+| デザイン崩れ | `css/` フォルダ未プッシュ | GitHub上でcssfォルダの存在確認 |
+| ログイン不可 | Supabase URL未設定 | `supabase-config.js` 確認 |
+| カスタムドメイン不可 | DNS未伝播 | 最大48時間待つ |

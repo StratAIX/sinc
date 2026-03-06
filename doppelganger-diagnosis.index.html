@@ -1026,7 +1026,7 @@ function startDiagnosis(){show('questionScreen');renderQ()}
 // QUESTION RENDERING
 // ============================================================
 function renderQ(){
-const q=Q[cur];
+const q=getQForLang(cur);
 document.getElementById('qCat').textContent=q.cat;
 document.getElementById('qText').textContent=q.text;
 document.getElementById('labelA').textContent=q.a;
@@ -1160,7 +1160,7 @@ function prevQ(){if(cur>0){cur--;renderQ()}}
 function showAnalyzing(){
 clearSave();
 show('analyzeScreen');
-const steps=['15次元のP変数を計算中...','5つの軸を判定中...','矛盾の指紋を検出中...','関係性スタイルを分析中...','32タイプを照合中...','あなたのパターンを描画中...'];
+const steps=getAnalyzingSteps();
 let i=0;
 const el=document.getElementById('analyzeStep');
 const iv=setInterval(()=>{if(i<steps.length){el.textContent=steps[i];i++}else{clearInterval(iv);showResult()}},700);
@@ -1264,6 +1264,9 @@ const labels={
     md:'嫌なことがあったとき、一旦距離を置きつつも頭の中ではずっと考え続けていませんか？',
     sm:'時々、問題に直面すべきか距離を置くべきか迷うことがあるかもしれません。'}
 };
+if(typeof I18n!=='undefined'&&I18n.getLang()==='en'&&typeof getContradictionLabelsEN==='function'){
+  Object.assign(labels,getContradictionLabelsEN());
+}
 const result=[];
 for(const key in raw){
   const arr=raw[key];
@@ -1539,7 +1542,7 @@ function showResult(){
 const{scores,raw}=calcScores();
 const axes=determineAxes(scores);
 const code=[axes.C.l,axes.E.l,axes.M.l,axes.S.l,axes.D.l].join('-');
-const t=TYPES[code];
+const t=getTypeForLang(code);
 const contras=detectContradictions(raw,scores);
 
 const fColors={Architects:'#6c5ce7',Mystics:'#e84393',Commanders:'#00b894',Catalysts:'#fdcb6e'};
@@ -1636,6 +1639,18 @@ ${buildSpectrumHTML(scores)}
 <button class="pscores-toggle" onclick="document.getElementById('psd').classList.toggle('show')">P変数 数値詳細</button>
 <div id="psd" class="pscores-detail">${bars}</div>
 
+<div id="diag-reward-section" style="margin:20px 0;padding:16px;background:rgba(108,92,231,.08);border:1px solid rgba(108,92,231,.25);border-radius:12px;text-align:center">
+  <div style="font-size:.8rem;font-weight:700;margin-bottom:4px">📺 動画広告を視聴してポイントGET</div>
+  <div style="font-size:.72rem;color:rgba(255,255,255,.5);margin-bottom:12px">視聴完了で +5pt — スレ立て・マッチングに使えます</div>
+  <div id="diag-pt-balance" style="font-size:.78rem;color:rgba(255,255,255,.4);margin-bottom:10px">残高: 読み込み中...</div>
+  <button id="diag-reward-btn" onclick="diagWatchRewardedVideo()"
+    style="padding:10px 24px;background:linear-gradient(135deg,#6c5ce7,#fd79a8);color:#fff;border:none;
+      border-radius:50px;font-size:.85rem;font-weight:700;cursor:pointer;font-family:inherit">
+    ▶ 動画を見て +5pt
+  </button>
+</div>
+<div id="diag-banner-ad" style="margin-bottom:16px"></div>
+
 <div class="share-section">
   <div class="share-title">診断結果をシェア</div>
   <div class="share-buttons">
@@ -1668,6 +1683,17 @@ window._shareData={n:t.n,nm:t.nm,en:t.en,fam:t.fam,c:t.c,d:t.d,code:code};
 
 show('resultScreen');
 setTimeout(()=>drawRadar('radarChart',scores),100);
+
+// 広告・ポイント初期化
+setTimeout(()=>{
+  if(typeof Ads!=='undefined'){
+    Ads.showBanner('diag-banner-ad',null);
+    Ads.Points.getBalance().then(bal=>{
+      const el=document.getElementById('diag-pt-balance');
+      if(el) el.textContent='残高: '+bal+' pt';
+    });
+  }
+},200);
 
 // 診断結果をSupabaseに保存し、完了したらボタンを有効化
 window._diagnosisSavePromise=(async()=>{
@@ -1740,6 +1766,32 @@ function goToBoard(){
 }
 
 function retry(){cur=0;ans.fill(null);usedQuoteIdx=[];clearSave();show('startScreen')}
+
+// リワード動画（診断結果画面）
+async function diagWatchRewardedVideo(){
+  const btn=document.getElementById('diag-reward-btn');
+  if(!btn||btn.disabled)return;
+  btn.disabled=true;
+  btn.textContent='読み込み中...';
+  if(typeof Ads==='undefined'){
+    btn.disabled=false; btn.textContent='▶ 動画を見て +5pt'; return;
+  }
+  await Ads.showRewardedVideo(5,
+    (newBal)=>{
+      // 視聴完了
+      btn.textContent='✅ 受け取り済み';
+      const ptEl=document.getElementById('diag-pt-balance');
+      if(ptEl&&newBal!=null) ptEl.textContent='残高: '+newBal+' pt';
+      // 24時間は再表示しない（LocalStorageで管理）
+      const next=Date.now()+24*60*60*1000;
+      try{localStorage.setItem('_diagRewardNext',next);}catch(e){}
+    },
+    ()=>{
+      // スキップ
+      btn.disabled=false; btn.textContent='▶ 動画を見て +5pt';
+    }
+  );
+}
 
 // ============================================================
 // SNS SHARE
@@ -1938,7 +1990,10 @@ function startFresh(){
 <!-- Supabase SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="js/supabase-config.js"></script>
+<script src="js/platform.js"></script>
+<script src="js/ads.js"></script>
 <script src="js/nav.js"></script>
 <script src="js/i18n.js"></script>
+<script src="js/diagnosis-en.js"></script>
 </body>
 </html>

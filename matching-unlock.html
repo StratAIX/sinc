@@ -304,8 +304,8 @@
             <li>打診→女性がOKでチャット解放</li>
           </ul>
         </div>
-        <div style="font-size:.72rem;color:var(--text2);text-align:center;margin-bottom:14px;line-height:1.7">
-          ※ App Store / Google Play のアプリ内課金で処理されます<br>
+        <div id="payment-method-note" style="font-size:.72rem;color:var(--text2);text-align:center;margin-bottom:14px;line-height:1.7">
+          ※ クレジットカード決済（Stripe）で処理されます<br>
           ※ 購入は取り消せません。利用規約をご確認ください
         </div>
         <button class="btn btn-primary btn-block" id="purchase-btn-male" style="background:linear-gradient(135deg,var(--accent),var(--pink))">
@@ -365,6 +365,8 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="js/supabase-config.js"></script>
+<script src="js/platform.js"></script>
+<script src="js/payment.js"></script>
 <script src="js/nav.js"></script>
 <script>
 (function() {
@@ -384,13 +386,45 @@ async function init() {
 
   // 既にunlock済みなら直接マッチング画面へ
   const profile = await getMyProfile();
-  if (profile && profile.matching_enabled) {
+  if (profile && profile.matching_unlocked) {
     location.href = 'matching.html';
+    return;
+  }
+
+  // Stripe からの支払い完了リダイレクト確認
+  const stripeResult = Payment.checkStripeReturn();
+  if (stripeResult === 'success') {
+    await finalizeUnlockAfterPayment();
+    return;
+  }
+  if (stripeResult === 'cancel') {
+    // Step4 に戻す（ユーザーがキャンセルした）
+    buildDateSelects();
+    showStep(4);
+    const s = document.getElementById('step4-status');
+    s.className = 'status-msg error';
+    s.textContent = '決済がキャンセルされました。再度お試しください。';
     return;
   }
 
   // 生年月日セレクトを生成
   buildDateSelects();
+
+  // 決済手段の注記をプラットフォーム別に更新
+  updatePaymentNote();
+}
+
+function updatePaymentNote() {
+  const note = document.getElementById('payment-method-note');
+  if (!note) return;
+  const p = window.Platform ? window.Platform.get() : 'web';
+  if (p === 'ios') {
+    note.innerHTML = '※ App Store のアプリ内課金で処理されます<br>※ 購入は取り消せません。利用規約をご確認ください';
+  } else if (p === 'android') {
+    note.innerHTML = '※ Google Play のアプリ内課金で処理されます<br>※ 購入は取り消せません。利用規約をご確認ください';
+  } else {
+    note.innerHTML = '※ クレジットカード決済（Stripe）で処理されます<br>※ 購入は取り消せません。利用規約をご確認ください';
+  }
 }
 
 function buildDateSelects() {
@@ -522,7 +556,42 @@ function updateStep3Btn() {
 document.getElementById('kyc-age-check').addEventListener('change', updateStep3Btn);
 document.getElementById('kyc-real-check').addEventListener('change', updateStep3Btn);
 document.getElementById('step3-back').addEventListener('click', () => showStep(2));
-document.getElementById('step3-next').addEventListener('click', () => showStep(4));
+document.getElementById('step3-next').addEventListener('click', async () => {
+  // Step3→4: プロフィール情報を DB に先保存する
+  const btn = document.getElementById('step3-next');
+  const status = document.getElementById('step3-status');
+  btn.disabled = true;
+  btn.textContent = '保存中...';
+  status.className = 'status-msg';
+  status.textContent = '';
+  try {
+    await saveProfileToDB();
+    showStep(4);
+  } catch(e) {
+    status.className = 'status-msg error';
+    status.textContent = 'プロフィール保存エラー: ' + (e.message || e);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '同意して次へ →';
+    updateStep3Btn(); // 再チェック
+  }
+});
+
+async function saveProfileToDB() {
+  const y    = parseInt(document.getElementById('birth-year').value);
+  const m    = parseInt(document.getElementById('birth-month').value);
+  const d    = parseInt(document.getElementById('birth-day').value);
+  const pref = document.getElementById('prefecture-select').value;
+  const birthdate = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+
+  const { error } = await supabase.from('users').update({
+    gender:     selectedGender === 'male' ? 'male' : 'female',
+    birthdate:  birthdate,
+    prefecture: pref,
+    age_verified: true,
+  }).eq('id', myUserId);
+  if (error) throw error;
+}
 
 // ============================================================
 // STEP 4: 購入
@@ -540,36 +609,57 @@ async function doUnlock(isFree) {
   status.textContent = '';
 
   try {
-    const y = parseInt(document.getElementById('birth-year').value);
-    const m = parseInt(document.getElementById('birth-month').value);
-    const d = parseInt(document.getElementById('birth-day').value);
-    const pref = document.getElementById('prefecture-select').value;
-
-    const birthdate = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-
-    // DBにプロフィール情報 + matching_enabled を保存
-    const { error } = await supabase.from('users').update({
-      gender: selectedGender === 'male' ? 'male' : 'female',
-      birthdate: birthdate,
-      prefecture: pref,
-      age_verified: true,
-      matching_enabled: true,
-    }).eq('id', myUserId);
-
-    if (error) throw error;
-
-    // 購入完了の説明文（性別別）
-    const desc = isFree
-      ? '男性からの打診を受け取ることができます。\nOKした相手とチャットで話しましょう。'
-      : 'マッチング候補の閲覧と女性への打診ができます。\n打診１回あたり¥990です（別途購入）。';
-    document.getElementById('step5-desc').textContent = desc;
-
-    showStep(5);
+    if (isFree) {
+      // 女性: 無料で即解放
+      await completeUnlock('free');
+    } else {
+      // 男性: プラットフォーム別課金
+      const result = await Payment.purchase('matching_unlock', {
+        user_id: myUserId,
+      });
+      // Web(Stripe): リダイレクトするのでここには戻らない
+      // Native(IAP): purchased が返ってくる
+      if (result && result.status === 'purchased') {
+        await completeUnlock(window.Platform.isIOS() ? 'apple' : 'google');
+      }
+    }
   } catch (e) {
     status.className = 'status-msg error';
     status.textContent = '処理中にエラーが発生しました: ' + (e.message || e);
     btn.disabled = false;
     btn.textContent = isFree ? '機能を解放する（無料）' : '¥990 で購入する';
+  }
+}
+
+async function completeUnlock(paymentMethod) {
+  // matching_unlocked = true + payment_method を保存
+  const { error } = await supabase.from('users').update({
+    matching_unlocked: true,
+    payment_method:    paymentMethod,
+  }).eq('id', myUserId);
+  if (error) throw error;
+
+  const desc = paymentMethod === 'free'
+    ? '男性からの打診を受け取ることができます。\nOKした相手とチャットで話しましょう。'
+    : 'マッチング候補の閲覧と女性への打診ができます。\n打診１回あたり¥990です（別途購入）。';
+  document.getElementById('step5-desc').textContent = desc;
+  showStep(5);
+}
+
+// Stripe 決済完了後の処理（リダイレクト復帰時）
+async function finalizeUnlockAfterPayment() {
+  buildDateSelects();
+  const user = await requireAuth();
+  if (!user) return;
+  myUserId = user.id;
+  try {
+    await completeUnlock('stripe');
+  } catch(e) {
+    // Step4 を表示してエラー
+    showStep(4);
+    const s = document.getElementById('step4-status');
+    s.className = 'status-msg error';
+    s.textContent = '解放処理エラー: ' + (e.message || e);
   }
 }
 
