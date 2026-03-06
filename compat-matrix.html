@@ -133,14 +133,17 @@ body { background:#0a0a14; color:#fff; font-family:'Hiragino Kaku Gothic Pro','M
   </div>
 </div>
 
-<!-- 凡例 -->
-<div class="legend">
-  <div class="legend-item"><div class="legend-dot" style="background:#00b894"></div>運命的（88%+）</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#6c5ce7"></div>最高の相棒（78%+）</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#0984e3"></div>良い相性（68%+）</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#fdcb6e"></div>刺激ある関係（55%+）</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#e17055"></div>成長できる関係（42%+）</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#636e72"></div>正反対の引力</div>
+<!-- 凡例：グラデーション帯 -->
+<div style="max-width:600px;margin:0 auto 20px;padding:0 16px">
+  <div style="height:14px;border-radius:7px;background:linear-gradient(90deg,rgb(220,50,80),rgb(225,112,85),rgb(253,203,110),rgb(9,132,227),rgb(108,92,231),rgb(0,184,148),rgb(0,230,180))"></div>
+  <div style="display:flex;justify-content:space-between;margin-top:5px;font-size:.65rem;color:rgba(255,255,255,.4)">
+    <span>15% 正反対の引力</span>
+    <span>42% 成長できる</span>
+    <span>55% 刺激ある</span>
+    <span>68% 良い相性</span>
+    <span>78% 最高の相棒</span>
+    <span>88%+ 運命的</span>
+  </div>
 </div>
 
 <!-- マトリクス -->
@@ -194,12 +197,22 @@ const FAM_COLOR_HEX = {
 };
 
 function scoreToColor(s) {
-  if (s >= 88) return '#00b894';
-  if (s >= 78) return '#6c5ce7';
-  if (s >= 68) return '#0984e3';
-  if (s >= 55) return '#fdcb6e';
-  if (s >= 42) return '#e17055';
-  return '#4a4a6a';
+  const stops = [
+    [15,  220, 50,  80 ],
+    [42,  225, 112, 85 ],
+    [55,  253, 203, 110],
+    [68,  9,   132, 227],
+    [78,  108, 92,  231],
+    [88,  0,   184, 148],
+    [99,  0,   230, 180],
+  ];
+  s = Math.max(15, Math.min(99, s));
+  let lo = stops[0], hi = stops[stops.length - 1];
+  for (let i = 0; i < stops.length - 1; i++) {
+    if (s >= stops[i][0] && s <= stops[i + 1][0]) { lo = stops[i]; hi = stops[i + 1]; break; }
+  }
+  const t = (s - lo[0]) / (hi[0] - lo[0]);
+  return `rgb(${Math.round(lo[1]+(hi[1]-lo[1])*t)},${Math.round(lo[2]+(hi[2]-lo[2])*t)},${Math.round(lo[3]+(hi[3]-lo[3])*t)})`;
 }
 
 // ============================================================
@@ -284,8 +297,11 @@ function buildMatrix() {
       } else {
         const s = Compat.score(row, col).friendScore;
         td.style.background = scoreToColor(s);
-        td.style.opacity = '0.82';
-        td.title = `${TYPE_META[row].nm} × ${TYPE_META[col].nm}: ${s}%`;
+        td.style.color = s >= 55 ? 'rgba(255,255,255,.85)' : 'rgba(255,255,255,.7)';
+        td.style.fontSize = '.52rem';
+        td.style.fontWeight = '700';
+        td.textContent = s;
+        td.title = `${TYPE_META[row].nm} × ${TYPE_META[col].nm}: 友人${s}%`;
         td.onclick = () => openModal(row, col);
       }
       tr.appendChild(td);

@@ -24,7 +24,7 @@
   --radius:16px;--radius-lg:28px;
 }
 html{scroll-behavior:smooth}
-body{font-family:'Inter','Noto Sans JP','Hiragino Sans',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;-webkit-font-smoothing:antialiased}
+body{font-family:'Inter','Noto Sans JP','Hiragino Sans',sans-serif;background:var(--bg);color:var(--text);line-height:1.6;overflow-x:hidden;-webkit-font-smoothing:antialiased}
 
 /* NAV */
 nav{
@@ -177,7 +177,7 @@ section{padding:100px 24px}
 }
 .section-title{
   font-size:clamp(1.9rem,4vw,3rem);font-weight:900;
-  line-height:1.2;letter-spacing:-.03em;margin-bottom:16px;
+  line-height:1.25;letter-spacing:-.03em;margin-bottom:16px;
 }
 .section-sub{
   font-size:1rem;color:var(--text2);line-height:1.75;
@@ -650,15 +650,15 @@ footer{
     </div>
     <div class="compat-demo reveal">
       <div class="compat-card">
-        <div class="compat-type-icon">&#127757;</div>
-        <div class="compat-type-name">世界設計者</div>
-        <div class="compat-type-en">ARCHITECT</div>
+        <div class="compat-type-icon">🦉</div>
+        <div class="compat-type-name">静かなる賢者</div>
+        <div class="compat-type-en">The Quiet Sage</div>
       </div>
       <div class="compat-vs">VS</div>
       <div class="compat-card">
-        <div class="compat-type-icon">&#128261;</div>
-        <div class="compat-type-name">夢想詩人</div>
-        <div class="compat-type-en">DREAMER</div>
+        <div class="compat-type-icon">☀️</div>
+        <div class="compat-type-name">太陽</div>
+        <div class="compat-type-en">The Sun</div>
       </div>
     </div>
     <div class="compat-result reveal">
@@ -701,14 +701,14 @@ footer{
           <div class="mock-header-dot" style="background:#ff5f57"></div>
           <div class="mock-header-dot" style="background:#ffbd2e"></div>
           <div class="mock-header-dot" style="background:#28c840"></div>
-          <div class="mock-title">世界設計者 コミュニティ</div>
+          <div class="mock-title">静かなる賢者 コミュニティ</div>
         </div>
         <div class="mock-posts">
           <div class="mock-post">
             <div class="mock-post-meta">
               <div class="mock-avatar">な</div>
               <span class="mock-user">なな</span>
-              <span class="mock-type-badge">世界設計者</span>
+              <span class="mock-type-badge">静かなる賢者</span>
             </div>
             <div class="mock-text">同タイプの人と話したら「それな」が止まらなかった。こういう場所ずっと探してた</div>
             <div class="mock-reactions"><span class="mock-reaction">&#10084; 24</span><span class="mock-reaction">&#128172; 8</span></div>
@@ -717,7 +717,7 @@ footer{
             <div class="mock-post-meta">
               <div class="mock-avatar" style="background:linear-gradient(135deg,#06b6d4,#0ea5e9)">ゆ</div>
               <span class="mock-user">ゆいな</span>
-              <span class="mock-type-badge">夢想詩人</span>
+              <span class="mock-type-badge">詩人</span>
             </div>
             <div class="mock-text">他のSNSだと「変わってる」って言われることが、ここだと普通に通じる。なんか安心する</div>
             <div class="mock-reactions"><span class="mock-reaction">&#10084; 41</span><span class="mock-reaction">&#128172; 15</span></div>
@@ -726,7 +726,7 @@ footer{
             <div class="mock-post-meta">
               <div class="mock-avatar" style="background:linear-gradient(135deg,#10b981,#059669)">り</div>
               <span class="mock-user">りお</span>
-              <span class="mock-type-badge">革命指揮官</span>
+              <span class="mock-type-badge">指揮官</span>
             </div>
             <div class="mock-text">相性スコアが高かった人とフレンドになったら、マジで話が合いすぎてやばい</div>
             <div class="mock-reactions"><span class="mock-reaction">&#10084; 67</span><span class="mock-reaction">&#128172; 22</span></div>
@@ -744,8 +744,8 @@ footer{
         <div class="community-point reveal">
           <div class="cp-icon">&#128170;</div>
           <div>
-            <div class="cp-title">投稿するだけでポイントが貯まる</div>
-            <div class="cp-desc">スレッド作成・レスポンスでポイント獲得。貯めたポイントでマッチング打診などのプレミアム機能と交換できます。</div>
+            <div class="cp-title">動画広告でポイントが貯まる</div>
+            <div class="cp-desc">動画広告を視聴するとポイント獲得。貯めたポイントはマッチング打診などのプレミアム機能に使えます。</div>
           </div>
         </div>
         <div class="community-point reveal">
@@ -841,39 +841,40 @@ footer{
 
 <script>
 // 32タイプデータ（簡易版）
+// compat.js / compat-matrix.html の TYPE_DATA と一致させること
 const TYPES = [
-  {n:1,nm:'世界設計者',en:'Architect',fam:'architect'},
-  {n:2,nm:'探求詩人',en:'Explorer',fam:'mystic'},
-  {n:3,nm:'夢想詩人',en:'Dreamer',fam:'mystic'},
-  {n:4,nm:'理念守護者',en:'Guardian',fam:'architect'},
-  {n:5,nm:'革命指揮官',en:'Commander',fam:'commander'},
-  {n:6,nm:'共感の癒し手',en:'Healer',fam:'catalyst'},
-  {n:7,nm:'炎の先駆者',en:'Pioneer',fam:'commander'},
-  {n:8,nm:'静観の哲学者',en:'Philosopher',fam:'mystic'},
-  {n:9,nm:'縁の結び手',en:'Connector',fam:'catalyst'},
-  {n:10,nm:'知識の番人',en:'Keeper',fam:'architect'},
-  {n:11,nm:'鋼鉄の戦略家',en:'Strategist',fam:'commander'},
-  {n:12,nm:'自由の旅人',en:'Wanderer',fam:'mystic'},
-  {n:13,nm:'現実の職人',en:'Craftsman',fam:'architect'},
-  {n:14,nm:'信念の騎士',en:'Knight',fam:'commander'},
-  {n:15,nm:'調和の媒介者',en:'Mediator',fam:'catalyst'},
-  {n:16,nm:'変革の触媒',en:'Catalyst',fam:'catalyst'},
-  {n:17,nm:'光明の提唱者',en:'Advocate',fam:'catalyst'},
-  {n:18,nm:'影の賢者',en:'Sage',fam:'mystic'},
-  {n:19,nm:'不屈の探検家',en:'Adventurer',fam:'commander'},
-  {n:20,nm:'秩序の守護者',en:'Sentinel',fam:'architect'},
-  {n:21,nm:'沈黙の革命家',en:'Rebel',fam:'commander'},
-  {n:22,nm:'星の観測者',en:'Observer',fam:'mystic'},
-  {n:23,nm:'大地の養育者',en:'Nurturer',fam:'catalyst'},
-  {n:24,nm:'炎の弁論家',en:'Debater',fam:'commander'},
-  {n:25,nm:'風の吟遊詩人',en:'Bard',fam:'mystic'},
-  {n:26,nm:'礎の建設者',en:'Builder',fam:'architect'},
-  {n:27,nm:'時代の先見者',en:'Visionary',fam:'mystic'},
-  {n:28,nm:'魂の鍛冶師',en:'Smith',fam:'commander'},
-  {n:29,nm:'霧の神託者',en:'Oracle',fam:'mystic'},
-  {n:30,nm:'大陸の開拓者',en:'Frontiersman',fam:'architect'},
-  {n:31,nm:'境界の守り人',en:'Warden',fam:'architect'},
-  {n:32,nm:'永遠の求道者',en:'Seeker',fam:'catalyst'},
+  {n:1, nm:'静かなる賢者',   en:'The Quiet Sage',          fam:'architect'},
+  {n:2, nm:'孤高の開拓者',   en:'The Lone Pioneer',        fam:'architect'},
+  {n:3, nm:'静かなる守護者', en:'The Silent Guardian',     fam:'architect'},
+  {n:4, nm:'戦略家',         en:'The Strategist',          fam:'architect'},
+  {n:5, nm:'影の観察者',     en:'The Shadow Observer',     fam:'architect'},
+  {n:6, nm:'闇の設計者',     en:'The Phantom Architect',   fam:'architect'},
+  {n:7, nm:'鉄仮面の番人',   en:'The Iron Sentinel',       fam:'architect'},
+  {n:8, nm:'黒幕',           en:'The Mastermind',          fam:'architect'},
+  {n:9, nm:'詩人',           en:'The Poet',                fam:'mystic'},
+  {n:10,nm:'魂の創造者',     en:'The Soul Creator',        fam:'mystic'},
+  {n:11,nm:'静かなる癒し手', en:'The Gentle Healer',       fam:'mystic'},
+  {n:12,nm:'情熱の建築家',   en:'The Passionate Builder',  fam:'mystic'},
+  {n:13,nm:'漂流者',         en:'The Drifter',             fam:'mystic'},
+  {n:14,nm:'深淵の旅人',     en:'The Abyss Walker',        fam:'mystic'},
+  {n:15,nm:'影の詩人',       en:'The Shadow Poet',         fam:'mystic'},
+  {n:16,nm:'仮面の指揮者',   en:'The Masked Conductor',    fam:'mystic'},
+  {n:17,nm:'自由な知恵者',   en:'The Free Thinker',        fam:'commander'},
+  {n:18,nm:'冒険家',         en:'The Adventurer',          fam:'commander'},
+  {n:19,nm:'調停者',         en:'The Mediator',            fam:'commander'},
+  {n:20,nm:'指揮官',         en:'The Commander',           fam:'commander'},
+  {n:21,nm:'社交の狐',       en:'The Social Fox',          fam:'commander'},
+  {n:22,nm:'策士',           en:'The Tactician',           fam:'commander'},
+  {n:23,nm:'鉄壁の外交官',   en:'The Iron Diplomat',       fam:'commander'},
+  {n:24,nm:'帝王',           en:'The Emperor',             fam:'commander'},
+  {n:25,nm:'太陽',           en:'The Sun',                 fam:'catalyst'},
+  {n:26,nm:'炎の伝道者',     en:'The Firestarter',         fam:'catalyst'},
+  {n:27,nm:'共感者',         en:'The Empath',              fam:'catalyst'},
+  {n:28,nm:'情熱のリーダー', en:'The Passionate Leader',   fam:'catalyst'},
+  {n:29,nm:'道化師',         en:'The Trickster',           fam:'catalyst'},
+  {n:30,nm:'カリスマ',       en:'The Charisma',            fam:'catalyst'},
+  {n:31,nm:'舞台の演者',     en:'The Performer',           fam:'catalyst'},
+  {n:32,nm:'仮面の太陽',     en:'The Masked Sun',          fam:'catalyst'},
 ];
 
 const FAM_LABELS = {architect:'Architect',mystic:'Mystic',commander:'Commander',catalyst:'Catalyst'};

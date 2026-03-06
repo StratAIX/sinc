@@ -3,6 +3,47 @@
 // テストモード: サンプルユーザーで動作確認可能
 // ============================================================
 
+// ============================================================
+// 中間選択バイアス補正（全体の標準偏差が低い場合に偏差を拡張）
+// ============================================================
+function stretchScores(scores) {
+  const vals = [];
+  for (let i = 1; i <= 15; i++) vals.push(scores['P' + i] || 50);
+  const variance = vals.reduce((a, v) => a + Math.pow(v - 50, 2), 0) / vals.length;
+  const stdDev = Math.sqrt(variance);
+  // stdDev < 18 → 中間に偏っている → 最大2.5倍まで拡張
+  const factor = stdDev < 18 ? Math.min(2.5, 18 / Math.max(stdDev, 3)) : 1.0;
+  const result = {};
+  for (let i = 1; i <= 15; i++) {
+    const key = 'P' + i;
+    const v = scores[key] || 50;
+    result[key] = Math.min(99, Math.max(1, Math.round(50 + (v - 50) * factor)));
+  }
+  return result;
+}
+
+// ============================================================
+// スコア → グラデーションカラー（15〜99%の連続グラデーション）
+// ============================================================
+function compatGradientColor(score) {
+  const stops = [
+    [15,  220, 50,  80 ],   // 赤ピンク（正反対の引力）
+    [42,  225, 112, 85 ],   // オレンジ（成長できる関係）
+    [55,  253, 203, 110],   // イエロー（刺激ある関係）
+    [68,  9,   132, 227],   // ブルー（良い相性）
+    [78,  108, 92,  231],   // パープル（最高の相棒）
+    [88,  0,   184, 148],   // グリーン（運命的）
+    [99,  0,   230, 180],   // ブライトグリーン
+  ];
+  score = Math.max(15, Math.min(99, score));
+  let lo = stops[0], hi = stops[stops.length - 1];
+  for (let i = 0; i < stops.length - 1; i++) {
+    if (score >= stops[i][0] && score <= stops[i + 1][0]) { lo = stops[i]; hi = stops[i + 1]; break; }
+  }
+  const t = (score - lo[0]) / (hi[0] - lo[0]);
+  return `rgb(${Math.round(lo[1]+(hi[1]-lo[1])*t)},${Math.round(lo[2]+(hi[2]-lo[2])*t)},${Math.round(lo[3]+(hi[3]-lo[3])*t)})`;
+}
+
 const Matching = {
   // ============================================================
   // サンプルユーザー（テスト用・架空データ）
@@ -44,65 +85,60 @@ const Matching = {
 
   // ============================================================
   // 相性スコア計算（友人マッチング）
+  // 設計思想：似た人ほど最高の友達 → P1-P12全類似度が主軸
   // ============================================================
   calcFriendScore(myScores, otherScores) {
-    // P変数類似度（P1-P12）
+    const s1 = stretchScores(myScores);
+    const s2 = stretchScores(otherScores);
+
+    // P1-P12 全般類似度（主軸：75%）
     let similarity = 0;
     for (let i = 1; i <= 12; i++) {
-      const key = 'P' + i;
-      const diff = Math.abs((myScores[key] || 50) - (otherScores[key] || 50));
-      similarity += (100 - diff);
+      similarity += 100 - Math.abs((s1['P' + i] || 50) - (s2['P' + i] || 50));
     }
-    similarity = similarity / 12; // 0-100
+    similarity /= 12;
 
-    // P13 対話構造の相性（同じスタイル同士が心地よい）
-    const p13diff = Math.abs((myScores.P13 || 50) - (otherScores.P13 || 50));
-    const p13compat = 100 - p13diff;
+    // P13 対話スタイル一致（25%）：話し方が似ているほど心地よい
+    const p13compat = 100 - Math.abs((s1.P13 || 50) - (s2.P13 || 50));
 
-    // 総合スコア
-    const score = Math.round(
-      0.55 * similarity +
-      0.20 * p13compat +
-      0.25 * (70 + Math.random() * 20) // 趣味重複（テスト用ランダム）
-    );
-
-    return Math.min(99, Math.max(30, score));
+    const score = Math.round(0.75 * similarity + 0.25 * p13compat);
+    return Math.min(99, Math.max(15, score));
   },
 
   // ============================================================
   // 相性スコア計算（恋人マッチング）
+  // 設計思想：基本は類似、ただしP4（意思決定）は補完が理想
   // ============================================================
   calcLoveScore(myScores, otherScores) {
-    // P変数類似度
+    const s1 = stretchScores(myScores);
+    const s2 = stretchScores(otherScores);
+
+    // P1-P12 全般類似度（40%）
     let similarity = 0;
     for (let i = 1; i <= 12; i++) {
-      const key = 'P' + i;
-      const diff = Math.abs((myScores[key] || 50) - (otherScores[key] || 50));
-      similarity += (100 - diff);
+      similarity += 100 - Math.abs((s1['P' + i] || 50) - (s2['P' + i] || 50));
     }
-    similarity = similarity / 12;
+    similarity /= 12;
 
-    // P4 補完性（リーダー×フォロワー）
-    const p4sum = (myScores.P4 || 50) + (otherScores.P4 || 50);
+    // P4 補完性（20%）：リーダー×フォロワーが理想
+    // P4A=80(決める)+P4B=20(任せる) → |100-100|=0 → compat=100
+    // P4A=80+P4B=80(両者リーダー) → |160-100|=60 → compat=40
+    const p4sum = (s1.P4 || 50) + (s2.P4 || 50);
     const p4compat = 100 - Math.abs(p4sum - 100);
 
-    // P14 愛着表現の一致
-    const p14diff = Math.abs((myScores.P14 || 50) - (otherScores.P14 || 50));
-    const p14compat = 100 - p14diff;
+    // P14 愛着表現の一致（25%）
+    const p14compat = 100 - Math.abs((s1.P14 || 50) - (s2.P14 || 50));
 
-    // P15 葛藤対処の相性
-    const p15diff = Math.abs((myScores.P15 || 50) - (otherScores.P15 || 50));
-    const p15compat = 100 - p15diff * 0.8;
+    // P15 葛藤対処の一致（15%）
+    const p15compat = 100 - Math.abs((s1.P15 || 50) - (s2.P15 || 50)) * 0.8;
 
     const score = Math.round(
-      0.30 * similarity +
-      0.15 * p4compat +
-      0.20 * p14compat +
-      0.15 * p15compat +
-      0.20 * (65 + Math.random() * 25)
+      0.40 * similarity +
+      0.20 * p4compat +
+      0.25 * p14compat +
+      0.15 * p15compat
     );
-
-    return Math.min(99, Math.max(25, score));
+    return Math.min(99, Math.max(15, score));
   },
 
   // ============================================================
@@ -122,41 +158,40 @@ const Matching = {
   // スコアに応じたラベルと色
   // ============================================================
   getScoreLabel(score) {
-    if (score >= 85) return { label: '最高の相性', color: '#00b894', emoji: '💎' };
-    if (score >= 70) return { label: '良い相性', color: '#6c5ce7', emoji: '✨' };
-    if (score >= 55) return { label: 'まあまあ', color: '#fdcb6e', emoji: '🌙' };
-    return { label: '発展途上', color: '#e17055', emoji: '🌱' };
+    const color = compatGradientColor(score);
+    let label, emoji;
+    if      (score >= 88) { label = '運命的な相性';   emoji = '💎'; }
+    else if (score >= 78) { label = '最高の相棒';     emoji = '✨'; }
+    else if (score >= 68) { label = '良い相性';       emoji = '💙'; }
+    else if (score >= 55) { label = '刺激ある関係';   emoji = '⚡'; }
+    else if (score >= 42) { label = '成長できる関係'; emoji = '🌱'; }
+    else                  { label = '正反対の引力';   emoji = '🌀'; }
+    return { label, color, emoji };
   },
 
   // ============================================================
   // 相性の理由を生成
   // ============================================================
   getCompatReason(myScores, otherScores, mode) {
+    const s1 = stretchScores(myScores);
+    const s2 = stretchScores(otherScores);
     const reasons = [];
 
     // P3 対人距離
-    const p3diff = Math.abs((myScores.P3 || 50) - (otherScores.P3 || 50));
-    if (p3diff < 15) reasons.push('距離感が似ていて心地よい関係を築けそう');
-
+    if (Math.abs((s1.P3||50) - (s2.P3||50)) < 22) reasons.push('距離感が似ていて自然体でいられる');
     // P7 覚醒動機
-    const p7diff = Math.abs((myScores.P7 || 50) - (otherScores.P7 || 50));
-    if (p7diff < 20) reasons.push('物事への熱量が近く、テンポが合う');
-
-    // P13 対話構造
-    const p13diff = Math.abs((myScores.P13 || 50) - (otherScores.P13 || 50));
-    if (p13diff < 20) reasons.push('会話のスタイルが似ていて話しやすい');
+    if (Math.abs((s1.P7||50) - (s2.P7||50)) < 28) reasons.push('物事への熱量が近くテンポが合う');
+    // P13 対話スタイル
+    if (Math.abs((s1.P13||50) - (s2.P13||50)) < 28) reasons.push('会話スタイルが合って話しやすい');
 
     if (mode === 'love') {
       // P14 愛着表現
-      const p14diff = Math.abs((myScores.P14 || 50) - (otherScores.P14 || 50));
-      if (p14diff < 20) reasons.push('愛情表現の形が似ていてすれ違いが少ない');
-
+      if (Math.abs((s1.P14||50) - (s2.P14||50)) < 28) reasons.push('愛情表現の形が似ていてすれ違いが少ない');
       // P4 補完性
-      const p4sum = (myScores.P4 || 50) + (otherScores.P4 || 50);
-      if (Math.abs(p4sum - 100) < 20) reasons.push('リーダーとサポーターのバランスが良い');
+      if (Math.abs(((s1.P4||50) + (s2.P4||50)) - 100) < 28) reasons.push('リーダーとサポーターのバランスが良い');
     }
 
-    if (reasons.length === 0) reasons.push('異なる視点を持ち、お互いに刺激を与え合える');
+    if (reasons.length === 0) reasons.push('異なる視点が互いを豊かにする');
     return reasons.slice(0, 3);
   },
 

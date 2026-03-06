@@ -78,15 +78,16 @@
   // アーキタイプ P-スコア（matching.js の SAMPLE_USERS から転記）
   // タイプ番号 → P1-P15 の典型値
   // ============================================================
+  // ×1.4 ストレッチ済み（元値から 50+(v-50)*1.4 で変換、1-99クランプ）
   const ARCHETYPE_SCORES = {
-    1:  {P1:22,P2:28,P3:78,P4:28,P5:45,P6:82,P7:35,P8:30,P9:42,P10:55,P11:25,P12:32,P13:35,P14:28,P15:38},
-    3:  {P1:20,P2:35,P3:72,P4:38,P5:60,P6:55,P7:30,P8:25,P9:78,P10:22,P11:28,P12:65,P13:42,P14:58,P15:45},
-    9:  {P1:35,P2:72,P3:68,P4:30,P5:55,P6:62,P7:78,P8:70,P9:25,P10:65,P11:72,P12:58,P13:68,P14:72,P15:35},
-    11: {P1:28,P2:68,P3:62,P4:25,P5:42,P6:55,P7:45,P8:58,P9:72,P10:30,P11:65,P12:75,P13:78,P14:80,P15:42},
-    14: {P1:70,P2:68,P3:75,P4:42,P5:72,P6:78,P7:65,P8:82,P9:30,P10:80,P11:35,P12:42,P13:55,P14:38,P15:28},
-    20: {P1:55,P2:25,P3:35,P4:82,P5:48,P6:30,P7:72,P8:35,P9:80,P10:65,P11:45,P12:38,P13:30,P14:42,P15:72},
-    25: {P1:42,P2:65,P3:28,P4:58,P5:35,P6:20,P7:82,P8:55,P9:45,P10:72,P11:80,P12:68,P13:75,P14:82,P15:62},
-    26: {P1:48,P2:58,P3:32,P4:68,P5:38,P6:22,P7:88,P8:62,P9:35,P10:78,P11:82,P12:55,P13:65,P14:72,P15:58},
+    1:  {P1:11,P2:19,P3:89,P4:19,P5:43,P6:95,P7:29,P8:22,P9:39,P10:57,P11:15,P12:25,P13:29,P14:19,P15:33},
+    3:  {P1: 8,P2:29,P3:81,P4:33,P5:64,P6:57,P7:22,P8:15,P9:89,P10:11,P11:19,P12:71,P13:39,P14:61,P15:43},
+    9:  {P1:29,P2:81,P3:75,P4:22,P5:57,P6:67,P7:89,P8:78,P9:15,P10:71,P11:81,P12:61,P13:75,P14:81,P15:29},
+    11: {P1:19,P2:75,P3:67,P4:15,P5:39,P6:57,P7:43,P8:61,P9:81,P10:22,P11:71,P12:85,P13:89,P14:92,P15:39},
+    14: {P1:78,P2:75,P3:85,P4:39,P5:81,P6:89,P7:71,P8:95,P9:22,P10:92,P11:29,P12:39,P13:57,P14:33,P15:19},
+    20: {P1:57,P2:15,P3:29,P4:95,P5:47,P6:22,P7:81,P8:29,P9:92,P10:71,P11:43,P12:33,P13:22,P14:39,P15:81},
+    25: {P1:39,P2:71,P3:19,P4:61,P5:29,P6: 8,P7:95,P8:57,P9:43,P10:81,P11:92,P12:75,P13:85,P14:95,P15:67},
+    26: {P1:47,P2:61,P3:25,P4:75,P5:33,P6:11,P7:99,P8:67,P9:29,P10:89,P11:95,P12:57,P13:71,P14:81,P15:61},
   };
   const ARCHETYPE_KEYS = Object.keys(ARCHETYPE_SCORES).map(Number);
 
@@ -141,34 +142,62 @@
   // matching.js の calcFriendScore / calcLoveScore と同一係数
   // ランダム成分のみ各レンジの中央値（固定値）に置換
   // ============================================================
+  // ============================================================
+  // スコア → グラデーションカラー（matching.js と同一）
+  // ============================================================
+  function gradientColor(score) {
+    const stops = [
+      [15,  220, 50,  80 ],
+      [42,  225, 112, 85 ],
+      [55,  253, 203, 110],
+      [68,  9,   132, 227],
+      [78,  108, 92,  231],
+      [88,  0,   184, 148],
+      [99,  0,   230, 180],
+    ];
+    score = Math.max(15, Math.min(99, score));
+    let lo = stops[0], hi = stops[stops.length - 1];
+    for (let i = 0; i < stops.length - 1; i++) {
+      if (score >= stops[i][0] && score <= stops[i + 1][0]) { lo = stops[i]; hi = stops[i + 1]; break; }
+    }
+    const t = (score - lo[0]) / (hi[0] - lo[0]);
+    return `rgb(${Math.round(lo[1]+(hi[1]-lo[1])*t)},${Math.round(lo[2]+(hi[2]-lo[2])*t)},${Math.round(lo[3]+(hi[3]-lo[3])*t)})`;
+  }
+
   function calcScores(n1, n2) {
     const s1 = getTypicalScores(n1);
     const s2 = getTypicalScores(n2);
+    const ax1 = getAxes(n1);
+    const ax2 = getAxes(n2);
 
-    // --- 友人相性（calcFriendScore 準拠）---
-    // 0.55 × P1-P12類似度 + 0.20 × P13類似度 + 0.25 × 80（趣味ランダム中央値）
+    // P1-P12 類似度（共通）
     let sim = 0;
     for (let i = 1; i <= 12; i++) {
       sim += 100 - Math.abs((s1['P'+i]||50) - (s2['P'+i]||50));
     }
     sim /= 12;
     const p13c = 100 - Math.abs((s1.P13||50) - (s2.P13||50));
-    const friendRaw = 0.55 * sim + 0.20 * p13c + 0.25 * 80;
-    const friendScore = Math.min(99, Math.max(30, Math.round(friendRaw)));
 
-    // --- 恋愛相性（calcLoveScore 準拠）---
-    // 0.30×P1-P12類似 + 0.15×P4補完 + 0.20×P14一致 + 0.15×P15一致 + 0.20×77（ランダム中央値）
-    let sim2 = 0;
-    for (let i = 1; i <= 12; i++) {
-      sim2 += 100 - Math.abs((s1['P'+i]||50) - (s2['P'+i]||50));
-    }
-    sim2 /= 12;
-    const p4sum   = (s1.P4||50) + (s2.P4||50);
-    const p4c     = 100 - Math.abs(p4sum - 100);
-    const p14c    = 100 - Math.abs((s1.P14||50) - (s2.P14||50));
-    const p15c    = 100 - Math.abs((s1.P15||50) - (s2.P15||50)) * 0.8;
-    const loveRaw = 0.30 * sim2 + 0.15 * p4c + 0.20 * p14c + 0.15 * p15c + 0.20 * 77;
-    const loveScore = Math.min(99, Math.max(25, Math.round(loveRaw)));
+    // --- 友人相性 ---
+    // 軸一致数（0〜5）→ axisChem（0,20,40,60,80,100）
+    // 似た人ほど良い友達という設計思想を軸レベルで実現
+    const matchCount = ['c','e','m','s','d'].filter(a => ax1[a] === ax2[a]).length;
+    const axisChem = matchCount * 20;
+    const friendRaw = 0.55 * sim + 0.20 * p13c + 0.25 * axisChem;
+    const friendScore = Math.min(99, Math.max(15, Math.round(friendRaw)));
+
+    // --- 恋愛相性 ---
+    // D軸（Flow=0/Drive=1）が逆だと意思決定の補完になる
+    // → 「行き先を2人とも決めたがる」を避ける設計
+    const dComplement = ax1.d !== ax2.d ? 1 : 0;
+    const otherMatch = ['c','e','m','s'].filter(a => ax1[a] === ax2[a]).length;
+    const loveAxisChem = otherMatch * 15 + dComplement * 40; // max:60+40=100
+    const p4sum = (s1.P4||50) + (s2.P4||50);
+    const p4c   = 100 - Math.abs(p4sum - 100);
+    const p14c  = 100 - Math.abs((s1.P14||50) - (s2.P14||50));
+    const p15c  = 100 - Math.abs((s1.P15||50) - (s2.P15||50)) * 0.8;
+    const loveRaw = 0.30 * sim + 0.15 * p4c + 0.20 * p14c + 0.15 * p15c + 0.20 * loveAxisChem;
+    const loveScore = Math.min(99, Math.max(15, Math.round(loveRaw)));
 
     return { friendScore, loveScore };
   }
@@ -177,12 +206,13 @@
   // スコアからティアを返す（matching.js の getScoreLabel と整合）
   // ============================================================
   function getTier(score) {
-    if (score >= 88) return { label:'運命的な相性', short:'運命', emoji:'💎', color:'#ffeaa7' };
-    if (score >= 78) return { label:'最高の相棒',   short:'最高', emoji:'✨', color:'#a29bfe' };
-    if (score >= 68) return { label:'良い相性',     short:'良い', emoji:'💙', color:'#55efc4' };
-    if (score >= 55) return { label:'刺激ある関係', short:'刺激', emoji:'⚡', color:'#fdcb6e' };
-    if (score >= 42) return { label:'成長できる関係',short:'成長', emoji:'🌱', color:'#81ecec' };
-    return              { label:'正反対の引力',     short:'引力', emoji:'🌀', color:'#fd79a8' };
+    const color = gradientColor(score);
+    if (score >= 88) return { label:'運命的な相性',   short:'運命', emoji:'💎', color };
+    if (score >= 78) return { label:'最高の相棒',     short:'最高', emoji:'✨', color };
+    if (score >= 68) return { label:'良い相性',       short:'良い', emoji:'💙', color };
+    if (score >= 55) return { label:'刺激ある関係',   short:'刺激', emoji:'⚡', color };
+    if (score >= 42) return { label:'成長できる関係', short:'成長', emoji:'🌱', color };
+    return                   { label:'正反対の引力',  short:'引力', emoji:'🌀', color };
   }
 
   // ============================================================
@@ -445,11 +475,11 @@
     const p14d = Math.abs((s1.P14||50) - (s2.P14||50));
     const p4s  = (s1.P4||50) + (s2.P4||50);
 
-    if (p3d  < 18) reasons.push('距離感が近く、自然体でいられる');
-    if (p7d  < 22) reasons.push('熱量が似ていてテンポが合う');
-    if (p13d < 22) reasons.push('会話スタイルが合って話しやすい');
-    if (p14d < 22) reasons.push('愛情表現の形が似ていてすれ違いが少ない');
-    if (Math.abs(p4s - 100) < 24) reasons.push('リーダーとサポーターのバランスが良い');
+    if (p3d  < 26) reasons.push('距離感が近く、自然体でいられる');
+    if (p7d  < 31) reasons.push('熱量が似ていてテンポが合う');
+    if (p13d < 31) reasons.push('会話スタイルが合って話しやすい');
+    if (p14d < 31) reasons.push('愛情表現の形が似ていてすれ違いが少ない');
+    if (Math.abs(p4s - 100) < 34) reasons.push('リーダーとサポーターのバランスが良い');
     if (reasons.length === 0) reasons.push('異なる視点が互いを豊かにする');
     return reasons;
   }
