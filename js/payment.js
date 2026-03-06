@@ -15,23 +15,27 @@
 
 // ============================================================
 // 商品定義
+// type: 'non_consumable' = 一度購入で永続（機能解放）
+//       'consumable'     = 都度購入（打診など）
 // ============================================================
 const PRODUCTS = {
   matching_unlock: {
-    id:          'matching_unlock',
-    iosId:       'jp.doppelganger.matching_unlock',
-    androidId:   'jp.doppelganger.matching_unlock',
+    id:            'matching_unlock',
+    iosId:         'net.strataix.sinc.matching_unlock',
+    androidId:     'net.strataix.sinc.matching_unlock',
+    type:          'non_consumable',
     stripePriceId: 'price_XXXXXXXXXXXXXXXX', // 本番では Stripe Dashboard で発行した Price ID に差し替え
-    label:       'マッチング機能解放パス',
-    amount:      990,
+    label:         'マッチング機能解放パス',
+    amount:        990,
   },
   matching_proposal: {
-    id:          'matching_proposal',
-    iosId:       'jp.doppelganger.matching_proposal',
-    androidId:   'jp.doppelganger.matching_proposal',
+    id:            'matching_proposal',
+    iosId:         'net.strataix.sinc.matching_proposal',
+    androidId:     'net.strataix.sinc.matching_proposal',
+    type:          'consumable', // 打診は都度課金（消耗品）
     stripePriceId: 'price_YYYYYYYYYYYYYYYY', // 本番では Stripe Dashboard で発行した Price ID に差し替え
-    label:       'マッチング打診',
-    amount:      990,
+    label:         'マッチング打診',
+    amount:        990,
   },
 };
 
@@ -76,11 +80,18 @@ async function initStore(productIds) {
     const { store, ProductType, Platform: P } = window.CdvPurchase;
     const platform = window.Platform.isIOS() ? P.APPLE_APPSTORE : P.GOOGLE_PLAY;
 
-    const registrations = productIds.map(pid => ({
-      id:       pid,
-      type:     ProductType.NON_CONSUMABLE,
-      platform: platform,
-    }));
+    // 商品IDから定義を逆引きして正しいタイプを設定
+    // matching_unlock = NON_CONSUMABLE（一度購入で永続）
+    // matching_proposal = CONSUMABLE（都度購入）
+    const registrations = productIds.map(pid => {
+      const product = Object.values(PRODUCTS).find(p =>
+        p.iosId === pid || p.androidId === pid
+      );
+      const type = (product && product.type === 'non_consumable')
+        ? ProductType.NON_CONSUMABLE
+        : ProductType.CONSUMABLE;
+      return { id: pid, type, platform };
+    });
 
     store.register(registrations);
 
