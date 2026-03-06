@@ -201,6 +201,17 @@ canvas#radarChart{max-width:320px;width:100%;height:auto}
 .share-btn.insta-btn{background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)}
 .share-btn.copy-btn{background:var(--surface3);color:var(--text2)}
 .share-btn.copy-btn:hover{color:var(--text)}
+
+/* === Share Card Preview === */
+.share-card-wrap{margin:20px auto 4px;max-width:520px;text-align:center}
+.share-card-label{font-size:.78rem;color:var(--text2);margin-bottom:10px;letter-spacing:.08em}
+.share-card-canvas{width:100%;max-width:480px;height:auto;border-radius:14px;display:block;margin:0 auto 14px;box-shadow:0 6px 28px rgba(0,0,0,.5)}
+.share-card-btns{display:flex;gap:10px;justify-content:center;margin-bottom:8px;flex-wrap:wrap}
+.share-card-dl{padding:10px 22px;background:var(--surface3);color:var(--text);border:none;border-radius:50px;font-size:.82rem;font-weight:600;cursor:pointer;transition:all .3s;-webkit-appearance:none;touch-action:manipulation}
+.share-card-dl:hover{background:var(--accent);color:#fff;transform:translateY(-2px)}
+.share-card-x{padding:10px 22px;background:#000;color:#fff;border:none;border-radius:50px;font-size:.82rem;font-weight:600;cursor:pointer;transition:all .3s;-webkit-appearance:none;touch-action:manipulation}
+.share-card-x:hover{background:#333;transform:translateY(-2px)}
+.share-card-hint{font-size:.72rem;color:var(--text2);opacity:.65;margin-top:4px}
 .share-btn svg{width:16px;height:16px;fill:currentColor}
 
 /* === Types Link Button === */
@@ -1669,6 +1680,15 @@ ${buildSpectrumHTML(scores)}
     <button class="share-btn copy-btn" onclick="copyShareText()">📋 コピー</button>
   </div>
 </div>
+<div class="share-card-wrap">
+  <div class="share-card-label">📱 シェアカードを作成・保存</div>
+  <canvas id="shareCardCanvas" class="share-card-canvas"></canvas>
+  <div class="share-card-btns">
+    <button class="share-card-dl" onclick="downloadShareCard()">⬇ 画像をダウンロード</button>
+    <button class="share-card-x" onclick="shareCardToX()">𝕏 Xでシェア</button>
+  </div>
+  <div class="share-card-hint">DLしてInstagram / X / LINEに投稿しよう！</div>
+</div>
 
 <a href="types.html?type=${t.n}" class="types-link-btn">📖 全32タイプ一覧を見る</a>
 <div style="margin:20px 0 8px;padding:14px 16px;background:rgba(122,122,158,.07);border:1px solid rgba(122,122,158,.2);border-radius:10px;font-size:.72rem;color:var(--text2);line-height:1.7;text-align:center">
@@ -1683,6 +1703,10 @@ window._shareData={n:t.n,nm:t.nm,en:t.en,fam:t.fam,c:t.c,d:t.d,code:code};
 
 show('resultScreen');
 setTimeout(()=>drawRadar('radarChart',scores),100);
+setTimeout(()=>{
+  const sc=document.getElementById('shareCardCanvas');
+  if(sc&&window.ShareCard&&window._shareData)ShareCard.draw(sc,window._shareData);
+},250);
 
 // 広告・ポイント初期化
 setTimeout(()=>{
@@ -1833,6 +1857,13 @@ function shareToInstagram(){
   }).catch(()=>{
     prompt('以下のテキストをコピーしてInstagramに投稿してください:',text);
   });
+}
+
+function downloadShareCard(){
+  if(window.ShareCard&&window._shareData)ShareCard.download(window._shareData);
+}
+function shareCardToX(){
+  if(window.ShareCard&&window._shareData)ShareCard.shareToX(window._shareData);
 }
 
 function copyShareText(){
@@ -1995,5 +2026,6 @@ function startFresh(){
 <script src="js/nav.js"></script>
 <script src="js/i18n.js"></script>
 <script src="js/diagnosis-en.js"></script>
+<script src="js/share-card.js"></script>
 </body>
 </html>
