@@ -329,7 +329,7 @@ careers:[{job:'Freelance Creative / Artist',why:"Freedom of movement, freedom of
 d:'An abyss walker — driven by deep feeling toward destinations others can\'t imagine',
 s:"You are motivated by things that most people never encounter in themselves — a profound restlessness, an ache for meaning that ordinary achievement doesn't satisfy, a drive to go further than is comfortable or sensible. This makes you capable of extraordinary things, because you're willing to go where most people turn back.",
 w:"The same depth that drives you can pull you under. Without structure or grounding, your intensity can turn inward destructively. You can become lost in your own complexity, mistaking suffering for depth and mistaking people who are simply lighter for being shallow.",
-b:'Going to the absolute depths of whatever experience or understanding you're pursuing',
+b:'Going to the absolute depths of whatever experience or understanding you\'re pursuing',
 c:'"I\'d rather feel everything than feel nothing."',
 q:'"There has to be more than this."',
 soul:"You are one of the few people alive who takes the question of existence seriously enough to actually live by your answer, whatever the cost. That's a form of courage most people never develop. The risk is losing yourself in the search — mistaking the descent for the destination. The goal is not the abyss. The goal is what you bring back from it.",
