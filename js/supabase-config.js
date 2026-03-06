@@ -1,5 +1,5 @@
 // ============================================================
-// Doppelganger - Supabase 接続設定
+// Sinc - Supabase 接続設定
 // ============================================================
 
 const SUPABASE_URL = 'https://ddabcnvxdheuyeqelffx.supabase.co';

@@ -1,40 +1,44 @@
 /* ============================================================
-   Doppelganger 共通スタイル
-   診断ページと同じダークUIテーマを踏襲
+   Sinc 共通スタイル
+   ライトモードデフォルト / ダークモードは [data-theme="dark"]
    ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Noto+Sans+JP:wght@400;500;700;900&display=swap');
 
 /* --- リセット & CSS変数 --- */
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
-  --bg:#0a0a0f;
-  --surface:#12121e;
-  --surface2:#1a1a2e;
-  --surface3:#242440;
+  /* ライトモード（デフォルト） */
+  --bg:#ffffff;
+  --surface:#f7f9fb;
+  --surface2:#eff3f4;
+  --surface3:#dce3e8;
   --accent:#6c5ce7;
-  --accent2:#a29bfe;
+  --accent2:#5a4bd1;
   --pink:#e84393;
-  --text:#e8e8ef;
-  --text2:#7a7a9e;
-  --success:#00b894;
-  --warning:#fdcb6e;
-  --danger:#e17055;
+  --text:#0f1419;
+  --text2:#536471;
+  --success:#00a86b;
+  --warning:#d97706;
+  --danger:#c0392b;
   --radius:14px;
-  --shadow:0 8px 32px rgba(0,0,0,.5);
+  --shadow:0 4px 24px rgba(0,0,0,.08);
   /* ファミリーカラー */
   --fam-architects:108,92,231;
   --fam-mystics:232,67,147;
-  --fam-commanders:0,184,148;
-  --fam-catalysts:253,203,110;
+  --fam-commanders:0,168,107;
+  --fam-catalysts:217,119,6;
 }
 html,body{
   height:100%;
-  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+  font-family:'Inter','Noto Sans JP',-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
   background:var(--bg);
   color:var(--text);
   overflow-x:hidden;
   -webkit-tap-highlight-color:transparent;
   -webkit-text-size-adjust:100%;
   touch-action:manipulation;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
 }
 a{color:var(--accent2);text-decoration:none;transition:color .2s}
 a:hover{color:var(--accent)}
@@ -599,15 +603,15 @@ textarea.form-input{
 }
 /* AdSense/プレースホルダー共通 */
 .ad-placeholder {
-  background: rgba(255,255,255,.03);
-  border: 1px dashed rgba(255,255,255,.08);
+  background: var(--surface2);
+  border: 1px dashed var(--surface3);
   border-radius: 8px;
   height: 60px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: .68rem;
-  color: rgba(255,255,255,.15);
+  color: var(--text2);
   letter-spacing: .05em;
 }
 
@@ -779,36 +783,46 @@ textarea.form-input{
 }
 
 /* ============================================================
-   ライトモード（Twitter/X ライクなホワイトテーマ）
+   ダークモード
    ============================================================ */
-:root[data-theme="light"],
-html[data-theme="light"],
-body[data-theme="light"],
-[data-theme="light"]{
-  --bg:#ffffff;
-  --surface:#f7f9f9;
-  --surface2:#eff3f4;
-  --surface3:#cfd9de;
+:root[data-theme="dark"],
+html[data-theme="dark"],
+body[data-theme="dark"],
+[data-theme="dark"]{
+  --bg:#0a0a0f;
+  --surface:#12121e;
+  --surface2:#1a1a2e;
+  --surface3:#242440;
   --accent:#6c5ce7;
-  --accent2:#5a4bd1;
+  --accent2:#a29bfe;
   --pink:#e84393;
-  --text:#0f1419;
-  --text2:#536471;
-  --shadow:0 8px 32px rgba(0,0,0,.12);
+  --text:#e8e8ef;
+  --text2:#7a7a9e;
+  --success:#00b894;
+  --warning:#fdcb6e;
+  --danger:#e17055;
+  --shadow:0 8px 32px rgba(0,0,0,.5);
+  --fam-commanders:0,184,148;
+  --fam-catalysts:253,203,110;
 }
-html[data-theme="light"],
-body[data-theme="light"]{
+html[data-theme="dark"],
+body[data-theme="dark"]{
   background:var(--bg);
   color:var(--text);
 }
-[data-theme="light"] a{color:var(--accent)}
-[data-theme="light"] a:hover{color:var(--accent2)}
-[data-theme="light"] .sb-logo-text{
-  background:linear-gradient(135deg,var(--accent),#a29bfe);
+[data-theme="dark"] a{color:var(--accent2)}
+[data-theme="dark"] a:hover{color:var(--accent)}
+[data-theme="dark"] .sb-logo-text{
+  background:linear-gradient(135deg,var(--accent),var(--accent2),#fd79a8);
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;
 }
-[data-theme="light"] .modal-overlay{background:rgba(0,0,0,.4)}
-[data-theme="light"] .toast{background:var(--surface);box-shadow:0 4px 20px rgba(0,0,0,.15)}
+[data-theme="dark"] .modal-overlay{background:rgba(0,0,0,.7)}
+[data-theme="dark"] .toast{background:var(--surface2);box-shadow:var(--shadow)}
+[data-theme="dark"] .ad-placeholder{
+  background:rgba(255,255,255,.03);
+  border-color:rgba(255,255,255,.08);
+  color:rgba(255,255,255,.15);
+}
 
 /* テーマトグルボタン（サイドバー内） */
 .sb-theme-btn{
@@ -864,59 +878,25 @@ body[data-theme="light"]{
 @media(min-width:768px){.lang-toggle-mobile{display:none}}
 
 /* ============================================================
-   ライトモード: カラーコントラスト修正
+   ダークモード: カラーコントラスト修正
    ============================================================ */
 
-/* テストバナー: 黄色テキスト → 濃い琥珀色で視認性確保 */
-[data-theme="light"] .test-banner{
-  background:rgba(180,130,0,.07);
-  border-color:rgba(180,130,0,.25);
-  color:#8a6300;
+/* テストバナー */
+[data-theme="dark"] .test-banner{
+  background:rgba(253,203,110,.07);
+  border-color:rgba(253,203,110,.25);
+  color:#fdcb6e;
 }
 
-/* マッチングロック背景: 淡いグラデ → ニュートラルなsurface2 */
-[data-theme="light"] .legal-lock{
-  background:var(--surface2);
-  border-color:rgba(108,92,231,.2);
-}
+/* バッジ */
+[data-theme="dark"] .badge{font-weight:700;opacity:1}
 
-/* 警告色（warning）をテキストとして使う要素の明度調整 */
-[data-theme="light"] .notice-box{
-  background:rgba(108,92,231,.06);
-  border-color:rgba(108,92,231,.2);
-  color:var(--text);
-}
-
-/* 診断ページ系: グラデ背景の上のテキスト */
-[data-theme="light"] .score-label{color:var(--text2)}
-[data-theme="light"] .rank-label{color:var(--text2)}
-
-/* バッジ: ダーク向けの明るい色をlight用に調整 */
-[data-theme="light"] .badge{
-  font-weight:700;
-  opacity:1;
-}
-
-/* マッチングページ: モードタブ inactive状態の文字をより濃く */
-[data-theme="light"] .mode-tab:not(.active){color:var(--text)}
-[data-theme="light"] .dist-tab:not(.active){color:var(--text);border-color:var(--surface3)}
+/* マッチングページタブ */
+[data-theme="dark"] .mode-tab:not(.active){color:var(--text2)}
+[data-theme="dark"] .dist-tab:not(.active){color:var(--text2);border-color:var(--surface3)}
 
 /* スコアバーのラベル文字 */
-[data-theme="light"] .match-score-label{color:rgba(255,255,255,.8)}
+[data-theme="dark"] .match-score-label{color:rgba(255,255,255,.8)}
 
-/* マッチカードのbio背景 */
-[data-theme="light"] .match-bio{background:var(--surface2);color:var(--text2)}
-
-/* リロードボタン */
-[data-theme="light"] .reload-btn{color:var(--text)}
-[data-theme="light"] .reload-count{color:var(--text2)}
-
-/* フレンド・チャット系のステータスバッジ */
-[data-theme="light"] .status-online{color:#00a86b}
-
-/* 掲示板: おすすめチップ */
-[data-theme="light"] .recommend-chip{color:var(--text)}
-[data-theme="light"] .recommend-chip:hover{color:var(--accent)}
-
-/* サブカテゴリー矢印 */
-[data-theme="light"] .subcategory-arrow{color:var(--text2)}
+/* ステータスバッジ */
+[data-theme="dark"] .status-online{color:#00b894}

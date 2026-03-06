@@ -1,5 +1,5 @@
 // ============================================================
-// Doppelganger - 共通ナビゲーション
+// Sinc - 共通ナビゲーション
 // モバイル（<768px）: 下部タブバー（各ページに記述）
 // デスクトップ（≥768px）: 左サイドバー（このファイルで生成）
 // ============================================================
@@ -53,7 +53,7 @@
 
     aside.innerHTML = `
       <div class="sidebar-logo">
-        <div class="sb-logo-text">Doppelganger</div>
+        <div class="sb-logo-text">Sinc</div>
         <div class="sb-logo-sub" data-i18n="app.tagline">あなたの本当の自分</div>
       </div>
 
@@ -110,7 +110,7 @@
           <a href="legal/terms.html" class="sb-legal-link" data-i18n="footer.terms">利用規約</a>
           <a href="legal/tokusho.html" class="sb-legal-link" data-i18n="footer.tokusho">特定商取引法</a>
         </div>
-        <div class="sb-copyright">© 2026 Doppelganger</div>
+        <div class="sb-copyright">© 2026 StratAI</div>
       </div>
     `;
     return aside;
@@ -130,7 +130,7 @@
           <a href="legal/tokusho.html" data-i18n="footer.tokusho_full">特定商取引法に基づく表示</a>
         </div>
         <p class="page-footer-disclaimer" data-i18n="footer.disclaimer">本サービスの性格分析は娯楽・自己理解を目的とするものであり、医学的・心理学的診断ではありません。</p>
-        <p class="page-footer-copy">© 2026 Doppelganger</p>
+        <p class="page-footer-copy">© 2026 StratAI</p>
       </div>
     `;
     return footer;

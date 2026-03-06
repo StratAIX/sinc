@@ -1,5 +1,5 @@
 // ============================================================
-// Doppelganger - Diagnosis English Translations
+// Sinc - Diagnosis English Translations
 // Contains: 136 questions, 32 types, UI strings
 // Usage: loaded after i18n.js; helpers accessed via window
 // ============================================================

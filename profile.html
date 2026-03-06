@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Doppelganger - マイページ</title>
+<title>Sinc - マイページ</title>
 <script>!function(){var t=localStorage.getItem('theme');if(t)document.documentElement.setAttribute('data-theme',t)}();</script>
 <link rel="stylesheet" href="css/common.css">
 <style>
@@ -438,7 +438,7 @@
     <button class="logout-btn" id="logout-btn" data-i18n="nav.logout">ログアウト</button>
 
     <div class="text-center mt-16 text-xs text-muted">
-      Doppelganger v1.0
+      Sinc v1.0
     </div>
   </div>
 </div>
@@ -548,7 +548,7 @@
     { id: 10, name: 'テクノロジー',           icon: '💻' },
     { id: 11, name: 'オフ会・イベント',       icon: '🎉' },
     { id: 12, name: 'お悩み・サポート',       icon: '🤝' },
-    { id: 13, name: 'Doppelganger',          icon: '🔮' },
+    { id: 13, name: 'Sinc',          icon: '🔮' },
   ];
 
   const params = new URLSearchParams(window.location.search);
@@ -1139,14 +1139,14 @@
       return;
     }
 
-    const shareText = `Doppelganger 性格診断の結果\n\n` +
+    const shareText = `Sinc 性格診断の結果\n\n` +
       `🎭 Type ${profile.type_number}: ${profile.type_name}\n` +
       `📦 ${profile.family} Family\n\n` +
       `あなたも自分の「精神の設計図」を見てみませんか？`;
 
     if (navigator.share) {
       try {
-        await navigator.share({ title: 'Doppelganger 診断結果', text: shareText });
+        await navigator.share({ title: 'Sinc 診断結果', text: shareText });
       } catch (e) {}
     } else {
       try {
