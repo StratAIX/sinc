@@ -171,9 +171,12 @@
       if (typeof getMyProfile !== 'function') return;
       const profile = await getMyProfile();
       if (!profile) {
-        // 未ログイン時、ゲストアクセス可能ページではナビバーを非表示
+        // 未ログイン時、ゲストアクセス可能ページではサイドバー・ナビバーを非表示
         const page = getCurrentPage();
         if (page === 'doppelganger-diagnosis.index.html' || page === 'compat-matrix.html') {
+          const sidebar = document.getElementById('main-sidebar');
+          if (sidebar) sidebar.style.display = 'none';
+          document.body.classList.remove('has-sidebar');
           document.querySelectorAll('.nav-bar').forEach(function(el){ el.style.display = 'none'; });
         }
         return;
