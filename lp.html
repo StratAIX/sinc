@@ -204,14 +204,14 @@ section{padding:100px 24px}
   background:linear-gradient(90deg,var(--purple),var(--pink));
 }
 .how-step:hover{transform:translateY(-8px);box-shadow:0 24px 60px rgba(124,58,237,.15)}
+.step-header{display:flex;align-items:center;gap:16px;margin-bottom:20px}
 .step-num{
-  width:48px;height:48px;border-radius:50%;
+  width:48px;height:48px;border-radius:50%;flex-shrink:0;
   background:linear-gradient(135deg,var(--purple),var(--pink));
   color:#fff;font-size:1.3rem;font-weight:900;
   display:flex;align-items:center;justify-content:center;
-  margin-bottom:20px;
 }
-.step-icon{font-size:2rem;margin-bottom:16px}
+.step-icon{font-size:2rem}
 .step-title{font-size:1.15rem;font-weight:800;margin-bottom:10px}
 .step-desc{font-size:.88rem;color:var(--text2);line-height:1.7}
 
@@ -254,9 +254,29 @@ section{padding:100px 24px}
   cursor:pointer;
   transition:transform .2s,box-shadow .2s;
   border:1px solid rgba(124,58,237,.12);
-  text-decoration:none;color:inherit;
+  user-select:none;
 }
 .type-chip:hover{transform:translateY(-4px);box-shadow:0 12px 32px rgba(124,58,237,.2)}
+/* タイプ説明ポップアップ */
+#typePopup{
+  position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(12px);
+  background:#fff;border:1px solid #ede9fe;border-radius:14px;
+  padding:14px 20px;max-width:320px;width:90%;
+  box-shadow:0 12px 40px rgba(124,58,237,.2);
+  font-size:.85rem;color:var(--text);text-align:center;
+  opacity:0;pointer-events:none;
+  transition:opacity .2s,transform .2s;z-index:999;
+}
+#typePopup.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
+#typePopup .popup-name{font-weight:800;font-size:.95rem;margin-bottom:4px}
+#typePopup .popup-en{font-size:.72rem;color:var(--text2);margin-bottom:8px}
+#typePopup .popup-desc{color:var(--text2);line-height:1.55}
+#typePopup .popup-cta{
+  display:inline-block;margin-top:10px;
+  background:linear-gradient(135deg,var(--purple),var(--pink));
+  color:#fff;font-size:.78rem;font-weight:700;
+  padding:7px 20px;border-radius:50px;text-decoration:none;
+}
 .type-chip-fam{
   font-size:.65rem;font-weight:700;letter-spacing:.08em;
   padding:3px 8px;border-radius:50px;margin-bottom:8px;display:inline-block;
@@ -487,7 +507,6 @@ footer{
     <a href="#how">使い方</a>
     <a href="#features">機能</a>
     <a href="#types">32タイプ</a>
-    <a href="shinkatsu.html">就活生向け</a>
     <a href="index.html" class="nav-cta">無料ではじめる</a>
   </div>
 </nav>
@@ -522,7 +541,7 @@ footer{
         どんなサービス？
       </a>
     </div>
-    <p class="hero-note">診断・コミュニティ無料 · 登録30秒 · 約10分で完了<br><span style="font-size:.7rem;opacity:.7">※一部プレミアム機能は有料</span></p>
+    <p class="hero-note">診断・コミュニティ無料 · 登録30秒 · 15〜30分で完了<br><span style="font-size:.7rem;opacity:.7">※一部プレミアム機能は有料</span></p>
   </div>
   <div class="hero-scroll">SCROLL</div>
 </section>
@@ -539,7 +558,7 @@ footer{
       <div class="stat-label">個性豊かなタイプ</div>
     </div>
     <div class="stat-item">
-      <div class="stat-num">10分</div>
+      <div class="stat-num">15〜30分</div>
       <div class="stat-label">診断完了まで</div>
     </div>
     <div class="stat-item">
@@ -559,20 +578,17 @@ footer{
     </div>
     <div class="how-steps">
       <div class="how-step reveal">
-        <div class="step-num">1</div>
-        <div class="step-icon">&#128221;</div>
+        <div class="step-header"><div class="step-num">1</div><div class="step-icon">&#128221;</div></div>
         <div class="step-title">136問に答える</div>
-        <div class="step-desc">自分の行動・思考・感情のパターンについて答えるだけ。約10分で完了。正解はなく、直感で答えてOKです。</div>
+        <div class="step-desc">自分の行動・思考・感情のパターンについて答えるだけ。15〜30分で完了。正解はなく、直感で答えてOKです。</div>
       </div>
       <div class="how-step reveal">
-        <div class="step-num">2</div>
-        <div class="step-icon">🔮</div>
+        <div class="step-header"><div class="step-num">2</div><div class="step-icon">🔮</div></div>
         <div class="step-title">32タイプに分類される</div>
         <div class="step-desc">5つの軸スコアをもとに、あなただけのタイプが判明。歴史上の人物と同じタイプかもしれない。</div>
       </div>
       <div class="how-step reveal">
-        <div class="step-num">3</div>
-        <div class="step-icon">&#128101;</div>
+        <div class="step-header"><div class="step-num">3</div><div class="step-icon">&#128101;</div></div>
         <div class="step-title">つながりが生まれる</div>
         <div class="step-desc">あなたのタイプのコミュニティに参加。相性スコアで相手との相性を確認し、気になる人にマッチング打診できます。</div>
       </div>
@@ -797,7 +813,7 @@ footer{
 <section class="cta-section">
   <div class="cta-inner">
     <h2 class="cta-title">自分のタイプ、<br>知らないままでいい？</h2>
-    <p class="cta-sub">136問・無料・10分。診断後すぐにコミュニティへ。</p>
+    <p class="cta-sub">136問・無料・15〜30分。診断後すぐにコミュニティへ。</p>
     <a href="doppelganger-diagnosis.index.html" class="cta-btn">
       今すぐ無料で診断する
     </a>
@@ -829,10 +845,18 @@ footer{
       </div>
     </div>
     <div class="footer-bottom">
-      <span class="footer-copy">© 2026 StratAI. All rights reserved.</span>
+      <span class="footer-copy">© 2026 StratAIX. All rights reserved.</span>
     </div>
   </div>
 </footer>
+
+<!-- タイプ説明ポップアップ -->
+<div id="typePopup" onclick="hideTypePopup()">
+  <div class="popup-name"></div>
+  <div class="popup-en"></div>
+  <div class="popup-desc"></div>
+  <a href="doppelganger-diagnosis.index.html" class="popup-cta">自分のタイプを診断する →</a>
+</div>
 
 <!-- FLOATING CTA -->
 <a href="doppelganger-diagnosis.index.html" class="floating-cta" id="floatingCta">
@@ -843,51 +867,66 @@ footer{
 // 32タイプデータ（簡易版）
 // compat.js / compat-matrix.html の TYPE_DATA と一致させること
 const TYPES = [
-  {n:1, nm:'静かなる賢者',   en:'The Quiet Sage',          fam:'architect'},
-  {n:2, nm:'孤高の開拓者',   en:'The Lone Pioneer',        fam:'architect'},
-  {n:3, nm:'静かなる守護者', en:'The Silent Guardian',     fam:'architect'},
-  {n:4, nm:'戦略家',         en:'The Strategist',          fam:'architect'},
-  {n:5, nm:'影の観察者',     en:'The Shadow Observer',     fam:'architect'},
-  {n:6, nm:'闇の設計者',     en:'The Phantom Architect',   fam:'architect'},
-  {n:7, nm:'鉄仮面の番人',   en:'The Iron Sentinel',       fam:'architect'},
-  {n:8, nm:'黒幕',           en:'The Mastermind',          fam:'architect'},
-  {n:9, nm:'詩人',           en:'The Poet',                fam:'mystic'},
-  {n:10,nm:'魂の創造者',     en:'The Soul Creator',        fam:'mystic'},
-  {n:11,nm:'静かなる癒し手', en:'The Gentle Healer',       fam:'mystic'},
-  {n:12,nm:'情熱の建築家',   en:'The Passionate Builder',  fam:'mystic'},
-  {n:13,nm:'漂流者',         en:'The Drifter',             fam:'mystic'},
-  {n:14,nm:'深淵の旅人',     en:'The Abyss Walker',        fam:'mystic'},
-  {n:15,nm:'影の詩人',       en:'The Shadow Poet',         fam:'mystic'},
-  {n:16,nm:'仮面の指揮者',   en:'The Masked Conductor',    fam:'mystic'},
-  {n:17,nm:'自由な知恵者',   en:'The Free Thinker',        fam:'commander'},
-  {n:18,nm:'冒険家',         en:'The Adventurer',          fam:'commander'},
-  {n:19,nm:'調停者',         en:'The Mediator',            fam:'commander'},
-  {n:20,nm:'指揮官',         en:'The Commander',           fam:'commander'},
-  {n:21,nm:'社交の狐',       en:'The Social Fox',          fam:'commander'},
-  {n:22,nm:'策士',           en:'The Tactician',           fam:'commander'},
-  {n:23,nm:'鉄壁の外交官',   en:'The Iron Diplomat',       fam:'commander'},
-  {n:24,nm:'帝王',           en:'The Emperor',             fam:'commander'},
-  {n:25,nm:'太陽',           en:'The Sun',                 fam:'catalyst'},
-  {n:26,nm:'炎の伝道者',     en:'The Firestarter',         fam:'catalyst'},
-  {n:27,nm:'共感者',         en:'The Empath',              fam:'catalyst'},
-  {n:28,nm:'情熱のリーダー', en:'The Passionate Leader',   fam:'catalyst'},
-  {n:29,nm:'道化師',         en:'The Trickster',           fam:'catalyst'},
-  {n:30,nm:'カリスマ',       en:'The Charisma',            fam:'catalyst'},
-  {n:31,nm:'舞台の演者',     en:'The Performer',           fam:'catalyst'},
-  {n:32,nm:'仮面の太陽',     en:'The Masked Sun',          fam:'catalyst'},
+  {n:1, nm:'静かなる賢者',   en:'The Quiet Sage',          fam:'architect', d:'知識を愛し、自由に思索する穏やかな知性'},
+  {n:2, nm:'孤高の開拓者',   en:'The Lone Pioneer',        fam:'architect', d:'一人で新しい道を切り拓く、論理的な冒険者'},
+  {n:3, nm:'静かなる守護者', en:'The Silent Guardian',     fam:'architect', d:'計画的で誠実。少数の大切な人を静かに守る'},
+  {n:4, nm:'戦略家',         en:'The Strategist',          fam:'architect', d:'合理的に世界を構造化し、計画的に目標を達成する'},
+  {n:5, nm:'影の観察者',     en:'The Shadow Observer',     fam:'architect', d:'静かに世界を観察し、本質を見抜く隠れた知性'},
+  {n:6, nm:'闇の設計者',     en:'The Phantom Architect',   fam:'architect', d:'仮面の裏で自由に設計図を描く、見えない推進者'},
+  {n:7, nm:'鉄仮面の番人',   en:'The Iron Sentinel',       fam:'architect', d:'感情を見せず、規律正しく体系を守る'},
+  {n:8, nm:'黒幕',           en:'The Mastermind',          fam:'architect', d:'冷静沈着。裏で戦略を練り、確実に目標を遂行する'},
+  {n:9, nm:'詩人',           en:'The Poet',                fam:'mystic',    d:'感受性豊かで自由。魂のままに漂い、世界に美を見出す'},
+  {n:10,nm:'魂の創造者',     en:'The Soul Creator',        fam:'mystic',    d:'内なる情熱を形にする。自由で独創的な表現者'},
+  {n:11,nm:'静かなる癒し手', en:'The Gentle Healer',       fam:'mystic',    d:'穏やかで計画的。深い共感力で人の痛みに寄り添う'},
+  {n:12,nm:'情熱の建築家',   en:'The Passionate Builder',  fam:'mystic',    d:'感情を燃料に、秩序ある世界を一つずつ築き上げる'},
+  {n:13,nm:'漂流者',         en:'The Drifter',             fam:'mystic',    d:'内面の嵐を隠し、風の向くままに漂う旅人'},
+  {n:14,nm:'深淵の旅人',     en:'The Abyss Walker',        fam:'mystic',    d:'仮面の下に深い感情を隠し、未知の領域へ踏み込む'},
+  {n:15,nm:'影の詩人',       en:'The Shadow Poet',         fam:'mystic',    d:'表には出さない感性で、世界を静かに記録する'},
+  {n:16,nm:'仮面の指揮者',   en:'The Masked Conductor',    fam:'mystic',    d:'穏やかな仮面の奥に、感情の嵐と揺るがない信念を隠し持つリーダー'},
+  {n:17,nm:'自由な知恵者',   en:'The Free Thinker',        fam:'commander', d:'社交的で合理的。縛られずに知識を共有する自由人'},
+  {n:18,nm:'冒険家',         en:'The Adventurer',          fam:'commander', d:'人を巻き込んで未知の世界へ突き進む、行動派の知性'},
+  {n:19,nm:'調停者',         en:'The Mediator',            fam:'commander', d:'公正で社交的。秩序を重んじ、人と人との間を繋ぐ'},
+  {n:20,nm:'指揮官',         en:'The Commander',           fam:'commander', d:'合理的に人を率い、秩序をもって組織を目標へ導く'},
+  {n:21,nm:'社交の狐',       en:'The Social Fox',          fam:'commander', d:'人当たりよく、本心を見せない。自由に泳ぐ社交の達人'},
+  {n:22,nm:'策士',           en:'The Tactician',           fam:'commander', d:'仮面を使い分け、自由に戦略を実行する知的ハンター'},
+  {n:23,nm:'鉄壁の外交官',   en:'The Iron Diplomat',       fam:'commander', d:'完璧な社交仮面と規律で、組織の秩序を守る'},
+  {n:24,nm:'帝王',           en:'The Emperor',             fam:'commander', d:'社交力と戦略を武器に、人と組織を圧倒的に率いる'},
+  {n:25,nm:'太陽',           en:'The Sun',                 fam:'catalyst',  d:'感情豊かで開放的。自由に輝き、周囲を照らす存在'},
+  {n:26,nm:'炎の伝道者',     en:'The Firestarter',         fam:'catalyst',  d:'情熱で人を動かし、新しいムーブメントを起こす'},
+  {n:27,nm:'共感者',         en:'The Empath',              fam:'catalyst',  d:'人の感情を受け止め、秩序ある形で支える優しき柱'},
+  {n:28,nm:'情熱のリーダー', en:'The Passionate Leader',   fam:'catalyst',  d:'感情と計画性を武器に、人の心を掴んでチームを導く'},
+  {n:29,nm:'道化師',         en:'The Trickster',           fam:'catalyst',  d:'笑いの仮面の下に、繊細な感情を隠す自由人'},
+  {n:30,nm:'カリスマ',       en:'The Charisma',            fam:'catalyst',  d:'感性と仮面を武器に、自由に人々を魅了し導く'},
+  {n:31,nm:'舞台の演者',     en:'The Performer',           fam:'catalyst',  d:'計画的に感情を演出し、完璧な「場」を作り上げる'},
+  {n:32,nm:'仮面の太陽',     en:'The Masked Sun',          fam:'catalyst',  d:'華やかな仮面の裏に、情熱と戦略と孤独を抱えるリーダー'},
 ];
 
 const FAM_LABELS = {architect:'Architect',mystic:'Mystic',commander:'Commander',catalyst:'Catalyst'};
 
+// タイプ説明ポップアップ
+let _popupTimer;
+function showTypePopup(t, el) {
+  clearTimeout(_popupTimer);
+  const p = document.getElementById('typePopup');
+  p.querySelector('.popup-name').textContent = t.nm;
+  p.querySelector('.popup-en').textContent = t.en;
+  p.querySelector('.popup-desc').textContent = t.d;
+  p.classList.add('show');
+  _popupTimer = setTimeout(hideTypePopup, 4000);
+}
+function hideTypePopup() {
+  document.getElementById('typePopup').classList.remove('show');
+}
+
 function renderTypes(){
   const grid = document.getElementById('typesGrid');
   if(!grid) return;
-  grid.innerHTML = TYPES.map(t=>`
-    <a href="doppelganger-diagnosis.index.html" class="type-chip">
+  grid.innerHTML = TYPES.map((t,i)=>`
+    <div class="type-chip" onclick="showTypePopup(TYPES[${i}],this)">
       <span class="type-chip-fam fam-${t.fam}">${FAM_LABELS[t.fam]}</span>
       <div class="type-chip-name">${t.nm}</div>
       <div class="type-chip-en">${t.en}</div>
-    </a>
+    </div>
   `).join('');
 }
 

@@ -474,7 +474,7 @@
 
     ctx.fillStyle = 'rgba(255,255,255,0.25)';
     ctx.font = `300 17px 'Helvetica Neue','Arial',sans-serif`;
-    ctx.fillText('by StratAI', W / 2, 818);
+    ctx.fillText('by StratAIX', W / 2, 818);
 
     ctx.fillStyle = tier.color + 'bb';
     ctx.font = `400 19px 'Hiragino Kaku Gothic Pro','Meiryo',sans-serif`;
