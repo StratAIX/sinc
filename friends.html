@@ -479,6 +479,7 @@ function openFriendCompatModal(n1, n2) {
     <div style="display:flex;gap:8px;justify-content:center">
       <button onclick="Compat.CompatCard.download(${n1},${n2})" style="padding:8px 18px;border-radius:50px;background:rgba(255,255,255,.1);color:#fff;border:none;font-size:.8rem;cursor:pointer">⬇ 画像DL</button>
       <button onclick="Compat.CompatCard.shareToX(${n1},${n2})" style="padding:8px 18px;border-radius:50px;background:#000;color:#fff;border:none;font-size:.8rem;cursor:pointer">𝕏 Xでシェア</button>
+      <button onclick="Compat.CompatCard.shareToInsta(${n1},${n2})" style="padding:8px 18px;border-radius:50px;background:linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);color:#fff;border:none;font-size:.8rem;cursor:pointer">📸 Instaシェア</button>
     </div>
   `;
   document.getElementById('friendCompatModal').style.display = 'flex';
