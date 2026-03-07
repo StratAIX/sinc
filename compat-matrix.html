@@ -112,6 +112,8 @@ body { background:#0a0a14; color:#fff; font-family:'Hiragino Kaku Gothic Pro','M
 .card-btn-dl:hover { background:rgba(108,92,231,.5); }
 .card-btn-x  { background:#000; color:#fff; }
 .card-btn-x:hover { background:#333; }
+.card-btn-insta { background:linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888); color:#fff; }
+.card-btn-insta:hover { opacity:.85; }
 </style>
 </head>
 <body>
@@ -135,14 +137,14 @@ body { background:#0a0a14; color:#fff; font-family:'Hiragino Kaku Gothic Pro','M
 
 <!-- 凡例：グラデーション帯 -->
 <div style="max-width:600px;margin:0 auto 20px;padding:0 16px">
-  <div style="height:14px;border-radius:7px;background:linear-gradient(90deg,rgb(220,50,80),rgb(225,112,85),rgb(253,203,110),rgb(9,132,227),rgb(108,92,231),rgb(0,184,148),rgb(0,230,180))"></div>
-  <div style="display:flex;justify-content:space-between;margin-top:5px;font-size:.65rem;color:rgba(255,255,255,.4)">
-    <span>15% 正反対の引力</span>
-    <span>42% 成長できる</span>
-    <span>55% 刺激ある</span>
-    <span>68% 良い相性</span>
-    <span>78% 最高の相棒</span>
-    <span>88%+ 運命的</span>
+  <div style="height:14px;border-radius:7px;background:linear-gradient(90deg,rgb(220,50,80) 0%,rgb(230,90,60) 6%,rgb(235,160,70) 30%,rgb(253,210,100) 54%,rgb(9,132,227) 77%,rgb(108,92,231) 89%,rgb(0,200,155) 95%,rgb(0,230,180) 100%)"></div>
+  <div style="display:flex;justify-content:space-between;margin-top:5px;font-size:.6rem;color:rgba(255,255,255,.4)">
+    <span>〜20% 正反対の引力</span>
+    <span>40% 刺激ある</span>
+    <span>60% いい相性</span>
+    <span>80% 親友</span>
+    <span>90% 最高の相棒</span>
+    <span>95%+ 運命的</span>
   </div>
 </div>
 
@@ -199,11 +201,12 @@ const FAM_COLOR_HEX = {
 function scoreToColor(s) {
   const stops = [
     [15,  220, 50,  80 ],
-    [42,  225, 112, 85 ],
-    [55,  253, 203, 110],
-    [68,  9,   132, 227],
-    [78,  108, 92,  231],
-    [88,  0,   184, 148],
+    [20,  230, 90,  60 ],
+    [40,  235, 160, 70 ],
+    [60,  253, 210, 100],
+    [80,  9,   132, 227],
+    [90,  108, 92,  231],
+    [95,  0,   200, 155],
     [99,  0,   230, 180],
   ];
   s = Math.max(15, Math.min(99, s));
@@ -289,20 +292,19 @@ function buildMatrix() {
       td.dataset.row = row;
       td.dataset.col = col;
 
+      const s = Compat.score(row, col).friendScore;
+      td.style.background = scoreToColor(s);
+      td.style.color = 'rgba(255,255,255,.9)';
+      td.style.fontSize = '.52rem';
+      td.style.fontWeight = '700';
+      td.textContent = s;
+      td.onclick = () => openModal(row, col);
       if (row === col) {
-        td.className = 'cell-self';
-        td.textContent = '━';
-        td.style.color = 'rgba(255,255,255,.2)';
-        td.style.cursor = 'default';
+        td.title = `${TYPE_META[row].nm}（同タイプ）: 友人${s}%`;
+        td.style.outline = '2px solid rgba(255,255,255,.5)';
+        td.style.outlineOffset = '-1px';
       } else {
-        const s = Compat.score(row, col).friendScore;
-        td.style.background = scoreToColor(s);
-        td.style.color = s >= 55 ? 'rgba(255,255,255,.85)' : 'rgba(255,255,255,.7)';
-        td.style.fontSize = '.52rem';
-        td.style.fontWeight = '700';
-        td.textContent = s;
         td.title = `${TYPE_META[row].nm} × ${TYPE_META[col].nm}: 友人${s}%`;
-        td.onclick = () => openModal(row, col);
       }
       tr.appendChild(td);
     }
@@ -383,6 +385,7 @@ function openModal(n1, n2) {
       <div class="card-btns">
         <button class="card-btn card-btn-dl" onclick="Compat.CompatCard.download(${n1},${n2})">⬇ 画像DL</button>
         <button class="card-btn card-btn-x"  onclick="Compat.CompatCard.shareToX(${n1},${n2})">𝕏 Xでシェア</button>
+        <button class="card-btn card-btn-insta" onclick="Compat.CompatCard.shareToInsta(${n1},${n2})">📸 Instaシェア</button>
       </div>
     </div>
   `;

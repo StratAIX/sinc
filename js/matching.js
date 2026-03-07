@@ -28,12 +28,13 @@ function stretchScores(scores) {
 function compatGradientColor(score) {
   const stops = [
     [15,  220, 50,  80 ],   // 赤ピンク（正反対の引力）
-    [42,  225, 112, 85 ],   // オレンジ（成長できる関係）
-    [55,  253, 203, 110],   // イエロー（刺激ある関係）
-    [68,  9,   132, 227],   // ブルー（良い相性）
-    [78,  108, 92,  231],   // パープル（最高の相棒）
-    [88,  0,   184, 148],   // グリーン（運命的）
-    [99,  0,   230, 180],   // ブライトグリーン
+    [20,  230, 90,  60 ],   // 赤オレンジ（正反対→成長境界）
+    [40,  235, 160, 70 ],   // オレンジ（成長できる）
+    [60,  253, 210, 100],   // イエロー（刺激→いい相性境界）
+    [80,  9,   132, 227],   // ブルー（いい相性→親友境界）
+    [90,  108, 92,  231],   // パープル（親友→最高の相棒境界）
+    [95,  0,   200, 155],   // グリーン（最高の相棒→運命的境界）
+    [99,  0,   230, 180],   // ブライトグリーン（運命的）
   ];
   score = Math.max(15, Math.min(99, score));
   let lo = stops[0], hi = stops[stops.length - 1];
@@ -85,40 +86,48 @@ const Matching = {
 
   // ============================================================
   // 相性スコア計算（友人マッチング）
-  // 設計思想：似た人ほど最高の友達 → P1-P12全類似度が主軸
+  // 設計思想：性格が似ているほど良い友達
+  //   ただし P4（意思決定スタイル）だけは補完が理想
+  //   決める人×任せる人 = 摩擦なし / 決める人×決める人 = 衝突
   // ============================================================
   calcFriendScore(myScores, otherScores) {
     const s1 = stretchScores(myScores);
     const s2 = stretchScores(otherScores);
 
-    // P1-P12 全般類似度（主軸：75%）
+    // P1-P12（P4除く・11次元）類似度
     let similarity = 0;
     for (let i = 1; i <= 12; i++) {
+      if (i === 4) continue;  // P4は補完が理想なので除外
       similarity += 100 - Math.abs((s1['P' + i] || 50) - (s2['P' + i] || 50));
     }
-    similarity /= 12;
+    similarity /= 11;
 
-    // P13 対話スタイル一致（25%）：話し方が似ているほど心地よい
+    // P13 対話スタイル一致：話し方が似ているほど心地よい
     const p13compat = 100 - Math.abs((s1.P13 || 50) - (s2.P13 || 50));
 
-    const score = Math.round(0.75 * similarity + 0.25 * p13compat);
+    // P4 補完スコア：決める人×任せる人=100、両者決める=低スコア
+    const p4sum = (s1.P4 || 50) + (s2.P4 || 50);
+    const p4c = 100 - Math.abs(p4sum - 100);
+
+    const score = Math.round(0.70 * similarity + 0.15 * p13compat + 0.15 * p4c);
     return Math.min(99, Math.max(15, score));
   },
 
   // ============================================================
   // 相性スコア計算（恋人マッチング）
-  // 設計思想：基本は類似、ただしP4（意思決定）は補完が理想
+  // 設計思想：基本は類似、P4（意思決定）は補完が理想
   // ============================================================
   calcLoveScore(myScores, otherScores) {
     const s1 = stretchScores(myScores);
     const s2 = stretchScores(otherScores);
 
-    // P1-P12 全般類似度（40%）
+    // P1-P12（P4除く・11次元）類似度
     let similarity = 0;
     for (let i = 1; i <= 12; i++) {
+      if (i === 4) continue;  // P4は補完が理想なので除外
       similarity += 100 - Math.abs((s1['P' + i] || 50) - (s2['P' + i] || 50));
     }
-    similarity /= 12;
+    similarity /= 11;
 
     // P4 補完性（20%）：リーダー×フォロワーが理想
     // P4A=80(決める)+P4B=20(任せる) → |100-100|=0 → compat=100
@@ -160,11 +169,12 @@ const Matching = {
   getScoreLabel(score) {
     const color = compatGradientColor(score);
     let label, emoji;
-    if      (score >= 88) { label = '運命的な相性';   emoji = '💎'; }
-    else if (score >= 78) { label = '最高の相棒';     emoji = '✨'; }
-    else if (score >= 68) { label = '良い相性';       emoji = '💙'; }
-    else if (score >= 55) { label = '刺激ある関係';   emoji = '⚡'; }
-    else if (score >= 42) { label = '成長できる関係'; emoji = '🌱'; }
+    if      (score >= 95) { label = '運命的な相性';   emoji = '💎'; }
+    else if (score >= 90) { label = '最高の相棒';     emoji = '✨'; }
+    else if (score >= 80) { label = '親友クラス';     emoji = '🌟'; }
+    else if (score >= 60) { label = 'いい相性';       emoji = '💙'; }
+    else if (score >= 40) { label = '刺激ある関係';   emoji = '⚡'; }
+    else if (score >= 20) { label = '成長できる関係'; emoji = '🌱'; }
     else                  { label = '正反対の引力';   emoji = '🌀'; }
     return { label, color, emoji };
   },
@@ -175,24 +185,85 @@ const Matching = {
   getCompatReason(myScores, otherScores, mode) {
     const s1 = stretchScores(myScores);
     const s2 = stretchScores(otherScores);
-    const reasons = [];
+    const pool = []; // { text, pri }
 
-    // P3 対人距離
-    if (Math.abs((s1.P3||50) - (s2.P3||50)) < 22) reasons.push('距離感が似ていて自然体でいられる');
-    // P7 覚醒動機
-    if (Math.abs((s1.P7||50) - (s2.P7||50)) < 28) reasons.push('物事への熱量が近くテンポが合う');
-    // P13 対話スタイル
-    if (Math.abs((s1.P13||50) - (s2.P13||50)) < 28) reasons.push('会話スタイルが合って話しやすい');
-
-    if (mode === 'love') {
-      // P14 愛着表現
-      if (Math.abs((s1.P14||50) - (s2.P14||50)) < 28) reasons.push('愛情表現の形が似ていてすれ違いが少ない');
-      // P4 補完性
-      if (Math.abs(((s1.P4||50) + (s2.P4||50)) - 100) < 28) reasons.push('リーダーとサポーターのバランスが良い');
+    // ─── P4 補完（決断スタイル）最優先チェック ───
+    const p4a = s1.P4||50, p4b = s2.P4||50;
+    const p4comp = Math.abs((p4a + p4b) - 100);
+    if (p4comp < 32 && Math.abs(p4a - p4b) > 18) {
+      pool.push({
+        text: p4a > p4b
+          ? 'あなたがリードし相手がサポートする、息の合った役割分担'
+          : '相手のリードにうまく乗り、あなたが力強く支えるバランス',
+        pri: 100 - p4comp
+      });
+    } else if (p4a > 65 && p4b > 65) {
+      pool.push({ text: 'お互い意見をぶつけ合いながら最良の答えへ向かえる', pri: 60 });
+    } else if (p4a < 40 && p4b < 40) {
+      pool.push({ text: 'どちらも流れに乗るタイプで、強制し合わない穏やかな関係', pri: 55 });
     }
 
-    if (reasons.length === 0) reasons.push('異なる視点が互いを豊かにする');
-    return reasons.slice(0, 3);
+    // ─── 各次元を評価：極端な類似 or 大きな差異のみ拾う ───
+    const dims = [
+      { k:'P1',  loLo:'二人とも内省的で、深い思考を静かに共有できる',
+                 hiHi:'二人とも社交的で、一緒にいると場が活気づく',
+                 diff:'内省の深みと社交のエネルギーが互いの世界を広げ合う' },
+      { k:'P3',  loLo:'お互い程よい距離を保ち、息苦しさのない関係',
+                 hiHi:'二人とも深くつながることを大切にするスタンスが一致',
+                 diff: null },
+      { k:'P6',  loLo:'直感で動くタイプ同士、一緒だと予想外の展開が楽しい',
+                 hiHi:'計画的に動くスタイルが合い、物事をスムーズに進めやすい',
+                 diff:'計画力と即興力が組み合わさり、行動のバランスが取れる' },
+      { k:'P7',  loLo:'穏やかなペースが一致し、焦らず信頼を育てられる',
+                 hiHi:'二人の情熱と熱量が共鳴し、自然と前のめりになれる',
+                 diff:'情熱と冷静さが互いの衝動と判断をうまく補い合う' },
+      { k:'P8',  loLo:'慎重に考えてから動くスタンスが共通で、安心感がある',
+                 hiHi:'挑戦を楽しむ姿勢が一致し、一緒に飛び込んでいける',
+                 diff: null },
+      { k:'P9',  loLo:'新しいものへの好奇心が似ていて、一緒に未知を探求できる',
+                 hiHi:'大切なものを守る価値観が一致し、信頼の土台が安定している',
+                 diff: null },
+      { k:'P10', loLo:'言葉より行動で気持ちを示すスタイルが一致している',
+                 hiHi:'感情を豊かに伝え合えるので、気持ちが素直に伝わりやすい',
+                 diff: null },
+      { k:'P13', loLo:'ストレートに本音を語り合える、遠慮のない関係',
+                 hiHi:'言葉を丁寧に選ぶスタイルが合い、会話が穏やかに積み重なる',
+                 diff: null },
+    ];
+
+    for (const d of dims) {
+      const a = s1[d.k]||50, b = s2[d.k]||50;
+      const absDiff = Math.abs(a - b), avg = (a + b) / 2;
+      if (absDiff < 22) {
+        // 両者が似ており、かつ平均が極端なときのみ拾う
+        const notability = Math.max(Math.abs(avg - 50), 1) * (22 - absDiff) / 22;
+        if (avg < 38 && d.loLo) pool.push({ text: d.loLo, pri: notability + 20 });
+        else if (avg > 62 && d.hiHi) pool.push({ text: d.hiHi, pri: notability + 20 });
+      } else if (absDiff > 42 && d.diff) {
+        pool.push({ text: d.diff, pri: absDiff });
+      }
+    }
+
+    if (mode === 'love') {
+      const p14a = s1.P14||50, p14b = s2.P14||50;
+      const p14avg = (p14a + p14b) / 2, p14d = Math.abs(p14a - p14b);
+      if (p14d < 22) {
+        if (p14avg < 38) pool.push({ text: 'さりげない気遣いで愛情を示すスタイルが共鳴する', pri: 40 });
+        else if (p14avg > 62) pool.push({ text: '愛情を積極的に伝え合え、気持ちがストレートに届く', pri: 40 });
+      }
+      const p15avg = ((s1.P15||50) + (s2.P15||50)) / 2, p15d = Math.abs((s1.P15||50) - (s2.P15||50));
+      if (p15d < 22 && p15avg > 62) pool.push({ text: '対立も正面から受け止め、より深い絆を築ける', pri: 35 });
+    }
+
+    pool.sort((a, b) => b.pri - a.pri);
+    const reasons = [];
+    const seen = new Set();
+    for (const c of pool) {
+      if (reasons.length >= 3) break;
+      if (!seen.has(c.text)) { reasons.push(c.text); seen.add(c.text); }
+    }
+    if (reasons.length === 0) reasons.push('異なる個性が互いの視野を広げ合う関係');
+    return reasons;
   },
 
   // ============================================================

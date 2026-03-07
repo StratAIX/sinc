@@ -147,13 +147,14 @@
   // ============================================================
   function gradientColor(score) {
     const stops = [
-      [15,  220, 50,  80 ],
-      [42,  225, 112, 85 ],
-      [55,  253, 203, 110],
-      [68,  9,   132, 227],
-      [78,  108, 92,  231],
-      [88,  0,   184, 148],
-      [99,  0,   230, 180],
+      [15,  220, 50,  80 ],   // 赤ピンク（正反対の引力）
+      [20,  230, 90,  60 ],   // 赤オレンジ（正反対→成長境界）
+      [40,  235, 160, 70 ],   // オレンジ（成長できる）
+      [60,  253, 210, 100],   // イエロー（刺激→いい相性境界）
+      [80,  9,   132, 227],   // ブルー（いい相性→親友境界）
+      [90,  108, 92,  231],   // パープル（親友→最高の相棒境界）
+      [95,  0,   200, 155],   // グリーン（最高の相棒→運命的境界）
+      [99,  0,   230, 180],   // ブライトグリーン（運命的）
     ];
     score = Math.max(15, Math.min(99, score));
     let lo = stops[0], hi = stops[stops.length - 1];
@@ -170,33 +171,50 @@
     const ax1 = getAxes(n1);
     const ax2 = getAxes(n2);
 
-    // P1-P12 類似度（共通）
+    // P1-P12 類似度（P4除く・11次元）
+    // P4（意思決定スタイル）は「補完が良い」次元なので別途計算
     let sim = 0;
     for (let i = 1; i <= 12; i++) {
+      if (i === 4) continue;
       sim += 100 - Math.abs((s1['P'+i]||50) - (s2['P'+i]||50));
     }
-    sim /= 12;
+    sim /= 11;
+
     const p13c = 100 - Math.abs((s1.P13||50) - (s2.P13||50));
 
-    // --- 友人相性 ---
-    // 軸一致数（0〜5）→ axisChem（0,20,40,60,80,100）
-    // 似た人ほど良い友達という設計思想を軸レベルで実現
-    const matchCount = ['c','e','m','s','d'].filter(a => ax1[a] === ax2[a]).length;
-    const axisChem = matchCount * 20;
-    const friendRaw = 0.55 * sim + 0.20 * p13c + 0.25 * axisChem;
-    const friendScore = Math.min(99, Math.max(15, Math.round(friendRaw)));
-
-    // --- 恋愛相性 ---
-    // D軸（Flow=0/Drive=1）が逆だと意思決定の補完になる
-    // → 「行き先を2人とも決めたがる」を避ける設計
-    const dComplement = ax1.d !== ax2.d ? 1 : 0;
-    const otherMatch = ['c','e','m','s'].filter(a => ax1[a] === ax2[a]).length;
-    const loveAxisChem = otherMatch * 15 + dComplement * 40; // max:60+40=100
+    // P4 補完スコア：決める人×任せる人=100、決める人×決める人=衝突で低スコア
+    // 式: 100 - |P4A + P4B - 100|
+    //   補完例: P4=80+P4=20 → |80+20-100|=0 → 100（最高）
+    //   衝突例: P4=90+P4=90 → |90+90-100|=80 → 20（低）
+    //   中立例: P4=50+P4=50 → |50+50-100|=0 → 100（摩擦なし）
     const p4sum = (s1.P4||50) + (s2.P4||50);
     const p4c   = 100 - Math.abs(p4sum - 100);
+
+    // --- 友人相性 ---
+    // ■ CEMS軸（C=内向/外向 E=論理/感情 M=開放/秘匿 S=自由/秩序）
+    //   → 「一緒にいて楽」な次元：似ているほど良い（各+23）
+    // ■ D軸（Flow/Drive = 決断スタイル）
+    //   → 補完が良い：決める人×任せる人 = 摩擦なし（+50ボーナス）
+    //   → 同じだと衝突可能性（ボーナスなし、-30ベースで引かれる）
+    // axisChemFriend 範囲:
+    //   0CEMS + D同じ → -30（正反対の引力）     ← 全く合わない + 両者が仕切りたがる
+    //   0CEMS + D補完 → +20（刺激ある関係）     ← 正反対だけど決断スタイルは補完
+    //   4CEMS + D同じ → +62（親友クラス）       ← 同タイプ = ここ（~74%）
+    //   4CEMS + D補完 → +112（運命的・理論値）  ← 同じ世界観 + 決断スタイル補完 = 最高
+    // dComplement=50 にすることで、全問一致+P4補完の場合に99%到達可能
+    const cemsMatch    = ['c','e','m','s'].filter(a => ax1[a] === ax2[a]).length;
+    const dComplement  = ax1.d !== ax2.d ? 1 : 0;
+    const axisChemFriend = cemsMatch * 23 + dComplement * 50 - 30;
+
+    const friendRaw   = 0.30 * sim + 0.10 * p13c + 0.10 * p4c + 0.50 * axisChemFriend;
+    const friendScore = Math.min(99, Math.max(5, Math.round(friendRaw)));
+
+    // --- 恋愛相性 ---
+    // D軸補完（+40）は恋愛でさらに重要：「引っ張る人×ついていく人」が恋愛の理想
+    const loveAxisChem = cemsMatch * 15 + dComplement * 40; // max: 60+40=100
     const p14c  = 100 - Math.abs((s1.P14||50) - (s2.P14||50));
     const p15c  = 100 - Math.abs((s1.P15||50) - (s2.P15||50)) * 0.8;
-    const loveRaw = 0.30 * sim + 0.15 * p4c + 0.20 * p14c + 0.15 * p15c + 0.20 * loveAxisChem;
+    const loveRaw   = 0.30 * sim + 0.15 * p4c + 0.20 * p14c + 0.15 * p15c + 0.20 * loveAxisChem;
     const loveScore = Math.min(99, Math.max(15, Math.round(loveRaw)));
 
     return { friendScore, loveScore };
@@ -207,11 +225,12 @@
   // ============================================================
   function getTier(score) {
     const color = gradientColor(score);
-    if (score >= 88) return { label:'運命的な相性',   short:'運命', emoji:'💎', color };
-    if (score >= 78) return { label:'最高の相棒',     short:'最高', emoji:'✨', color };
-    if (score >= 68) return { label:'良い相性',       short:'良い', emoji:'💙', color };
-    if (score >= 55) return { label:'刺激ある関係',   short:'刺激', emoji:'⚡', color };
-    if (score >= 42) return { label:'成長できる関係', short:'成長', emoji:'🌱', color };
+    if (score >= 95) return { label:'運命的な相性',   short:'運命', emoji:'💎', color };
+    if (score >= 90) return { label:'最高の相棒',     short:'最高', emoji:'✨', color };
+    if (score >= 80) return { label:'親友クラス',     short:'親友', emoji:'🌟', color };
+    if (score >= 60) return { label:'いい相性',       short:'いい', emoji:'💙', color };
+    if (score >= 40) return { label:'刺激ある関係',   short:'刺激', emoji:'⚡', color };
+    if (score >= 20) return { label:'成長できる関係', short:'成長', emoji:'🌱', color };
     return                   { label:'正反対の引力',  short:'引力', emoji:'🌀', color };
   }
 
@@ -305,19 +324,21 @@
     ctx.fillStyle = '#ffffff';
     let sz1 = 68;
     ctx.font = `700 ${sz1}px 'Hiragino Kaku Gothic Pro','Meiryo','Yu Gothic',sans-serif`;
-    while (ctx.measureText(d1.nm).width > 430 && sz1 > 40) {
-      sz1 -= 3;
+    while (ctx.measureText(d1.nm).width > 290 && sz1 > 28) {
+      sz1 -= 2;
       ctx.font = `700 ${sz1}px 'Hiragino Kaku Gothic Pro','Meiryo',sans-serif`;
     }
-    ctx.fillText(d1.nm, LX, 290);
+    ctx.textBaseline = 'middle';
+    ctx.fillText(d1.nm, LX, 265);
+    ctx.textBaseline = 'alphabetic';
 
     ctx.fillStyle = f1.accent;
     ctx.font = `300 italic 24px 'Georgia',serif`;
-    ctx.fillText(d1.en, LX, 333);
+    ctx.fillText(d1.en, LX, 325);
 
     ctx.fillStyle = f1.accent + '88';
     ctx.font = `400 18px 'Hiragino Kaku Gothic Pro','Meiryo',sans-serif`;
-    ctx.fillText(FIGURE_NAMES[d1.n] || '', LX, 372);
+    ctx.fillText(FIGURE_NAMES[d1.n] || '', LX, 360);
 
     // ──────────────────────────────────────────────────────────
     // 右パネル（Type 2）
@@ -335,19 +356,21 @@
     ctx.fillStyle = '#ffffff';
     let sz2 = 68;
     ctx.font = `700 ${sz2}px 'Hiragino Kaku Gothic Pro','Meiryo','Yu Gothic',sans-serif`;
-    while (ctx.measureText(d2.nm).width > 430 && sz2 > 40) {
-      sz2 -= 3;
+    while (ctx.measureText(d2.nm).width > 290 && sz2 > 28) {
+      sz2 -= 2;
       ctx.font = `700 ${sz2}px 'Hiragino Kaku Gothic Pro','Meiryo',sans-serif`;
     }
-    ctx.fillText(d2.nm, RX, 290);
+    ctx.textBaseline = 'middle';
+    ctx.fillText(d2.nm, RX, 265);
+    ctx.textBaseline = 'alphabetic';
 
     ctx.fillStyle = f2.accent;
     ctx.font = `300 italic 24px 'Georgia',serif`;
-    ctx.fillText(d2.en, RX, 333);
+    ctx.fillText(d2.en, RX, 325);
 
     ctx.fillStyle = f2.accent + '88';
     ctx.font = `400 18px 'Hiragino Kaku Gothic Pro','Meiryo',sans-serif`;
-    ctx.fillText(FIGURE_NAMES[d2.n] || '', RX, 372);
+    ctx.fillText(FIGURE_NAMES[d2.n] || '', RX, 360);
 
     // ──────────────────────────────────────────────────────────
     // 中央スコアサークル
@@ -414,7 +437,7 @@
 
     // ── 相性の理由（上位2つ）────────────────────────────────────
     const s1 = getTypicalScores(d1.n), s2 = getTypicalScores(d2.n);
-    const reasons = buildCompatReasons(s1, s2);
+    const reasons = buildCompatReasons(s1, s2, d1.n, d2.n);
     const reasonY = 510;
     ctx.fillStyle = 'rgba(255,255,255,0.55)';
     ctx.font = `400 19px 'Hiragino Kaku Gothic Pro','Meiryo',sans-serif`;
@@ -465,22 +488,74 @@
   }
 
   // ============================================================
-  // 相性の理由テキスト（matching.js getCompatReason と同一軸）
+  // 相性の理由テキスト（5軸 + P値ベースで各ペア固有の文を生成）
   // ============================================================
-  function buildCompatReasons(s1, s2) {
-    const reasons = [];
-    const p3d  = Math.abs((s1.P3||50)  - (s2.P3||50));
-    const p7d  = Math.abs((s1.P7||50)  - (s2.P7||50));
-    const p13d = Math.abs((s1.P13||50) - (s2.P13||50));
-    const p14d = Math.abs((s1.P14||50) - (s2.P14||50));
-    const p4s  = (s1.P4||50) + (s2.P4||50);
+  function buildCompatReasons(s1, s2, n1, n2) {
+    const ax1 = getAxes(n1), ax2 = getAxes(n2);
+    const pool = []; // { text, pri }
 
-    if (p3d  < 26) reasons.push('距離感が近く、自然体でいられる');
-    if (p7d  < 31) reasons.push('熱量が似ていてテンポが合う');
-    if (p13d < 31) reasons.push('会話スタイルが合って話しやすい');
-    if (p14d < 31) reasons.push('愛情表現の形が似ていてすれ違いが少ない');
-    if (Math.abs(p4s - 100) < 34) reasons.push('リーダーとサポーターのバランスが良い');
-    if (reasons.length === 0) reasons.push('異なる視点が互いを豊かにする');
+    // ─── D軸（Flow=0 vs Drive=1）：補完が恋愛・友情ともに最も重要 ───
+    if (ax1.d !== ax2.d) {
+      pool.push({ text: '一方が方向を示し、もう一方が流れを読む自然なリズム', pri: 90 });
+    } else if (ax1.d === 1) {
+      pool.push({ text: '二人ともエンジンを切らず、一緒にいると推進力が生まれる', pri: 70 });
+    } else {
+      pool.push({ text: '強制し合わず流れの中で動ける、穏やかな組み合わせ', pri: 65 });
+    }
+
+    // ─── E軸（Logic=0 vs Passion=1）：思考スタイルの一致か補完か ───
+    if (ax1.e !== ax2.e) {
+      pool.push({ text: '論理と感性が交差し、互いにない視点を持ち込み合える', pri: 82 });
+    } else if (ax1.e === 0) {
+      pool.push({ text: '理論と分析を共通言語に、深い対話が生まれやすい', pri: 62 });
+    } else {
+      pool.push({ text: '感情と直感を大切にするスタイルが共鳴し合う', pri: 62 });
+    }
+
+    // ─── C軸（Core=0 vs Social=1）：内向・外向の組み合わせ ───
+    if (ax1.c !== ax2.c) {
+      pool.push({ text: '内省の深みと社交のエネルギーが互いの世界を広げる', pri: 76 });
+    } else if (ax1.c === 0) {
+      pool.push({ text: '内省的な深みを持つ者同士、言葉を選んで理解し合える', pri: 55 });
+    } else {
+      pool.push({ text: '社交的なエネルギーが共鳴し、場を活気づける組み合わせ', pri: 55 });
+    }
+
+    // ─── S軸（Free=0 vs Order=1）：自由か規律か ───
+    if (ax1.s !== ax2.s) {
+      pool.push({ text: '自由な発想と計画力が組み合わさり、行動の幅が広がる', pri: 68 });
+    } else if (ax1.s === 0) {
+      pool.push({ text: '自由で柔軟なペースが合い、窮屈さを感じない', pri: 52 });
+    } else {
+      pool.push({ text: '計画と規律を大切にするスタイルが共鳴する', pri: 52 });
+    }
+
+    // ─── M軸（Open=0 vs Veiled=1）：オープンか内に秘めるか ───
+    if (ax1.m === ax2.m) {
+      if (ax1.m === 0) pool.push({ text: 'オープンに思いを出し合えるスタイルが一致している', pri: 50 });
+      else             pool.push({ text: '内面を大切にするスタイルが共鳴し、深い理解が生まれやすい', pri: 50 });
+    } else {
+      pool.push({ text: '本音をさらす者と内に秘める者が、互いの謎を引き出し合う', pri: 48 });
+    }
+
+    // ─── P4 補完（決断 vs 委任）───
+    const p4comp = Math.abs((s1.P4||50) + (s2.P4||50) - 100);
+    if (p4comp < 30) pool.push({ text: 'リードするタイプとサポートするタイプ、役割が自然に決まる', pri: 85 });
+
+    // ─── P7（エネルギー量）───
+    const p7avg = ((s1.P7||50) + (s2.P7||50)) / 2;
+    const p7diff = Math.abs((s1.P7||50) - (s2.P7||50));
+    if (p7diff < 22 && p7avg > 65) pool.push({ text: '二人の情熱と熱量が共鳴し、場を動かす力がある', pri: 72 });
+    else if (p7diff < 22 && p7avg < 35) pool.push({ text: '穏やかなペースが一致し、じっくり関係を育てられる', pri: 68 });
+    else if (p7diff > 40) pool.push({ text: '情熱と冷静さのバランスが取れた組み合わせ', pri: 60 });
+
+    pool.sort((a, b) => b.pri - a.pri);
+    const reasons = [];
+    const seen = new Set();
+    for (const c of pool) {
+      if (reasons.length >= 2) break;
+      if (!seen.has(c.text)) { reasons.push(c.text); seen.add(c.text); }
+    }
     return reasons;
   }
 
@@ -557,6 +632,34 @@
           `https://twitter.com/intent/tweet?text=${text}&url=${url}`,
           '_blank', 'width=560,height=440'
         );
+      },
+
+      shareToInsta(n1, n2) {
+        const canvas = document.createElement('canvas');
+        this.draw(canvas, n1, n2);
+        const d1 = TYPE_DATA[n1] || {};
+        const d2 = TYPE_DATA[n2] || {};
+        const scores = calcScores(n1, n2);
+        const tier = getTier(scores.friendScore);
+        const fileName = `sinc-compat-t${String(n1).padStart(2,'0')}-t${String(n2).padStart(2,'0')}.png`;
+        canvas.toBlob(async (blob) => {
+          const file = new File([blob], fileName, { type: 'image/png' });
+          // Web Share API（モバイルでInstagramなどに直接シェア）
+          if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+            try {
+              await navigator.share({
+                files: [file],
+                title: 'Sinc 相性診断',
+                text: `「${d1.nm}」×「${d2.nm}」 ${tier.emoji} ${tier.label} ${scores.friendScore}%\n#Sinc相性診断 #性格診断`,
+              });
+            } catch (e) {
+              if (e.name !== 'AbortError') this.download(n1, n2);
+            }
+          } else {
+            // PCなど非対応環境はダウンロードにフォールバック
+            this.download(n1, n2);
+          }
+        });
       },
     },
   };

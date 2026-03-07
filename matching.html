@@ -23,10 +23,10 @@
   .match-card{background:var(--surface);border:1px solid var(--surface3);border-radius:var(--radius);padding:18px;margin-bottom:12px;animation:fadeIn .4s ease;transition:border-color .3s}
   .match-card:hover{border-color:rgba(108,92,231,.3)}
   .match-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:10px}
-  .match-user{display:flex;align-items:center;gap:10px}
+  .match-user{display:flex;align-items:center;gap:10px;min-width:0;flex:1}
   .match-avatar{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0}
   .match-user-info{min-width:0}
-  .match-type-name{font-size:.9rem;font-weight:700}
+  .match-type-name{font-size:.9rem;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .match-display-id{font-size:.7rem;color:var(--text2);display:flex;align-items:center;gap:4px;margin-top:2px}
 
   .match-score{text-align:right;flex-shrink:0}
@@ -670,6 +670,7 @@ function openCompatModal(n1, n2) {
     <div style="display:flex;gap:8px;justify-content:center">
       <button onclick="Compat.CompatCard.download(${n1},${n2})" style="padding:8px 18px;border-radius:50px;background:rgba(255,255,255,.1);color:#fff;border:none;font-size:.8rem;cursor:pointer">⬇ DL</button>
       <button onclick="Compat.CompatCard.shareToX(${n1},${n2})" style="padding:8px 18px;border-radius:50px;background:#000;color:#fff;border:none;font-size:.8rem;cursor:pointer">𝕏 シェア</button>
+      <button onclick="Compat.CompatCard.shareToInsta(${n1},${n2})" style="padding:8px 18px;border-radius:50px;background:linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);color:#fff;border:none;font-size:.8rem;cursor:pointer">📸 Insta</button>
     </div>
   `;
   document.getElementById('compatCardModal').style.display = 'flex';
