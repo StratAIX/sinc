@@ -4,21 +4,21 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>32タイプ相性マトリクス | Sinc</title>
+<script>!function(){var t=localStorage.getItem('theme');if(t)document.documentElement.setAttribute('data-theme',t)}();</script>
 <link rel="stylesheet" href="css/common.css">
 <style>
-body { background:#0a0a14; color:#fff; font-family:'Hiragino Kaku Gothic Pro','Meiryo',sans-serif; }
 .page-header { text-align:center; padding:32px 16px 16px; }
 .page-header h1 { font-size:1.3rem; font-weight:700; margin-bottom:6px; }
-.page-header p  { font-size:.8rem; color:rgba(255,255,255,.45); }
+.page-header p  { font-size:.8rem; color:var(--text2); }
 
 /* タイプセレクター */
 .selector-wrap { max-width:600px; margin:0 auto 24px; padding:0 16px; }
-.selector-label { font-size:.78rem; color:rgba(255,255,255,.5); margin-bottom:8px; }
+.selector-label { font-size:.78rem; color:var(--text2); margin-bottom:8px; }
 .selector-row { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
 .type-select {
   flex:1; min-width:180px; padding:10px 14px;
-  background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.15);
-  border-radius:10px; color:#fff; font-size:.88rem;
+  background:var(--surface2); border:1px solid var(--surface3);
+  border-radius:10px; color:var(--text); font-size:.88rem;
   -webkit-appearance:none; cursor:pointer;
 }
 .type-select:focus { outline:none; border-color:rgba(108,92,231,.6); }
@@ -35,47 +35,47 @@ body { background:#0a0a14; color:#fff; font-family:'Hiragino Kaku Gothic Pro','M
 .matrix-table td, .matrix-table th {
   width:28px; height:28px; font-size:.6rem;
   text-align:center; vertical-align:middle;
-  border:1px solid rgba(255,255,255,.04);
+  border:1px solid var(--surface3);
   cursor:pointer; transition:transform .15s;
 }
 .matrix-table td:hover { transform:scale(1.4); z-index:10; position:relative; }
-.axis-label { background:transparent !important; color:rgba(255,255,255,.35); font-size:.58rem; cursor:default !important; }
+.axis-label { background:transparent !important; color:var(--text2); font-size:.58rem; cursor:default !important; }
 .axis-label:hover { transform:none !important; }
 .type-label {
-  width:36px; min-width:36px; font-size:.58rem; color:rgba(255,255,255,.4);
+  width:36px; min-width:36px; font-size:.58rem; color:var(--text2);
   background:transparent; text-align:right; padding-right:4px; white-space:nowrap;
   cursor:default !important;
 }
 .type-label:hover { transform:none !important; }
-.cell-self { background:rgba(255,255,255,.08) !important; }
+.cell-self { background:var(--surface3) !important; }
 .cell-hl-row { box-shadow:inset 0 0 0 1px rgba(108,92,231,.5); }
 .cell-hl-col { box-shadow:inset 0 0 0 1px rgba(108,92,231,.5); }
 
 /* ファミリー色ラベル行/列 */
-.fam-architects { color:#a29bfe; }
-.fam-mystics    { color:#fd79a8; }
-.fam-commanders { color:#55efc4; }
-.fam-catalysts  { color:#ffeaa7; }
+.fam-architects { color:#6c5ce7; }
+.fam-mystics    { color:#e84393; }
+.fam-commanders { color:#00b894; }
+.fam-catalysts  { color:#d97706; }
 
 /* 凡例 */
 .legend { display:flex; gap:16px; justify-content:center; flex-wrap:wrap; padding:8px 16px 20px; }
-.legend-item { display:flex; align-items:center; gap:6px; font-size:.72rem; color:rgba(255,255,255,.55); }
+.legend-item { display:flex; align-items:center; gap:6px; font-size:.72rem; color:var(--text2); }
 .legend-dot { width:16px; height:16px; border-radius:3px; }
 
 /* モーダル */
 .modal-overlay {
-  display:none; position:fixed; inset:0; background:rgba(0,0,0,.85);
+  display:none; position:fixed; inset:0; background:rgba(0,0,0,.6);
   z-index:1000; align-items:center; justify-content:center; padding:16px;
   overflow-y:auto;
 }
 .modal-overlay.open { display:flex; }
 .modal-box {
-  background:#14121f; border:1px solid rgba(255,255,255,.12);
+  background:var(--surface); border:1px solid var(--surface3);
   border-radius:18px; max-width:560px; width:100%; padding:24px;
   animation:fadeIn .25s ease;
 }
 @keyframes fadeIn { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:none} }
-.modal-close { float:right; background:none; border:none; color:rgba(255,255,255,.5); font-size:1.4rem; cursor:pointer; line-height:1; }
+.modal-close { float:right; background:none; border:none; color:var(--text2); font-size:1.4rem; cursor:pointer; line-height:1; }
 .modal-types { display:flex; align-items:center; gap:12px; margin-bottom:20px; flex-wrap:wrap; }
 .modal-type-tag {
   flex:1; min-width:140px; padding:10px 14px;
@@ -84,12 +84,12 @@ body { background:#0a0a14; color:#fff; font-family:'Hiragino Kaku Gothic Pro','M
 .modal-type-tag .t-fam { font-size:.72rem; opacity:.7; margin-bottom:4px; }
 .modal-type-tag .t-nm  { font-size:1rem; font-weight:700; }
 .modal-type-tag .t-en  { font-size:.72rem; opacity:.6; }
-.vs-badge { font-size:1.2rem; color:rgba(255,255,255,.3); flex-shrink:0; }
+.vs-badge { font-size:1.2rem; color:var(--text2); flex-shrink:0; }
 
 .score-section { margin-bottom:20px; }
 .score-row { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
-.score-label { font-size:.78rem; color:rgba(255,255,255,.5); width:80px; }
-.score-bar-bg { flex:1; height:8px; background:rgba(255,255,255,.1); border-radius:4px; overflow:hidden; }
+.score-label { font-size:.78rem; color:var(--text2); width:80px; }
+.score-bar-bg { flex:1; height:8px; background:var(--surface3); border-radius:4px; overflow:hidden; }
 .score-bar-fill { height:100%; border-radius:4px; transition:width .5s; }
 .score-val { font-size:.88rem; font-weight:700; width:42px; text-align:right; }
 
@@ -99,7 +99,7 @@ body { background:#0a0a14; color:#fff; font-family:'Hiragino Kaku Gothic Pro','M
   margin-bottom:16px;
 }
 .reasons-list { margin-bottom:20px; }
-.reason-item { font-size:.78rem; color:rgba(255,255,255,.55); padding:4px 0; }
+.reason-item { font-size:.78rem; color:var(--text2); padding:4px 0; }
 
 .card-preview { text-align:center; margin-bottom:16px; }
 .card-canvas { width:100%; max-width:340px; height:auto; border-radius:12px; display:block; margin:0 auto 12px; }
@@ -108,8 +108,8 @@ body { background:#0a0a14; color:#fff; font-family:'Hiragino Kaku Gothic Pro','M
   padding:9px 20px; border-radius:50px; font-size:.82rem; font-weight:600;
   cursor:pointer; border:none; transition:all .2s;
 }
-.card-btn-dl { background:rgba(255,255,255,.1); color:#fff; }
-.card-btn-dl:hover { background:rgba(108,92,231,.5); }
+.card-btn-dl { background:var(--surface2); color:var(--text); border:1px solid var(--surface3); }
+.card-btn-dl:hover { background:rgba(108,92,231,.15); }
 .card-btn-x  { background:#000; color:#fff; }
 .card-btn-x:hover { background:#333; }
 .card-btn-insta { background:linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888); color:#fff; }
@@ -138,7 +138,7 @@ body { background:#0a0a14; color:#fff; font-family:'Hiragino Kaku Gothic Pro','M
 <!-- 凡例：グラデーション帯 -->
 <div style="max-width:600px;margin:0 auto 20px;padding:0 16px">
   <div style="height:14px;border-radius:7px;background:linear-gradient(90deg,rgb(220,50,80) 0%,rgb(230,90,60) 6%,rgb(235,160,70) 30%,rgb(253,210,100) 54%,rgb(9,132,227) 77%,rgb(108,92,231) 89%,rgb(0,200,155) 95%,rgb(0,230,180) 100%)"></div>
-  <div style="display:flex;justify-content:space-between;margin-top:5px;font-size:.6rem;color:rgba(255,255,255,.4)">
+  <div style="display:flex;justify-content:space-between;margin-top:5px;font-size:.6rem;color:var(--text2)">
     <span>〜20% 正反対の引力</span>
     <span>40% 成長できる</span>
     <span>60% 刺激ある</span>
