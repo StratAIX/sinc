@@ -79,9 +79,10 @@
           <span class="sb-label" data-i18n="nav.friends">フレンド</span>
           <span class="sb-badge" id="sb-badge-fr" title="未読"></span>
         </a>
-        <a href="matching.html" class="sb-item ${isActive(['matching.html'])}" id="sb-matching-link">
+        <a href="matching.html" class="sb-item ${isActive(['matching.html'])}${typeof ALPHA_MODE !== 'undefined' && ALPHA_MODE ? ' sb-item-locked' : ''}" id="sb-matching-link">
           <span class="sb-icon" aria-hidden="true">💕</span>
           <span class="sb-label" data-i18n="nav.matching">マッチング</span>
+          ${typeof ALPHA_MODE !== 'undefined' && ALPHA_MODE ? '<span class="sb-soon">SOON</span>' : ''}
         </a>
         <a href="profile.html" class="sb-item ${isActive(['profile.html'])}">
           <span class="sb-icon" aria-hidden="true">👤</span>
@@ -253,6 +254,14 @@
       if (getCurrentPage() === 'profile.html') {
         document.body.append(buildMobileLangBtn());
       }
+    }
+
+    // ALPHA_MODE: モバイルナビのマッチングに SOON バッジを付与
+    if (typeof ALPHA_MODE !== 'undefined' && ALPHA_MODE) {
+      document.querySelectorAll('.nav-bar a[href="matching.html"]').forEach(function(el) {
+        el.classList.add('nav-item-soon');
+        el.style.opacity = '.65';
+      });
     }
 
     // i18n が既にロード済みなら翻訳を再適用

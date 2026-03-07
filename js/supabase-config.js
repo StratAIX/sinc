@@ -2,6 +2,11 @@
 // Sinc - Supabase 接続設定
 // ============================================================
 
+// ============================================================
+// アルファ版フラグ — false に変更するだけで全機能解放
+// ============================================================
+const ALPHA_MODE = true;
+
 const SUPABASE_URL = 'https://ddabcnvxdheuyeqelffx.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkYWJjbnZ4ZGhldXllcWVsZmZ4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2NDY5NTYsImV4cCI6MjA4NzIyMjk1Nn0.211clga5DD-BvSosAosGVa04QBL3SdEQuQlC6do--C4';
 

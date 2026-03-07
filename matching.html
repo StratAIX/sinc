@@ -84,9 +84,154 @@
   /* 相性スコアバー */
   .score-bar{height:4px;border-radius:2px;background:var(--surface3);margin-top:4px;overflow:hidden}
   .score-bar-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--accent),var(--pink));transition:width .6s ease}
+
+  /* ALPHA Feature Preview */
+  .alpha-screen{
+    display:none;flex-direction:column;align-items:center;
+    padding:40px 24px 120px;text-align:center;min-height:100vh;
+    background:var(--bg);
+  }
+  .alpha-screen.show{display:flex}
+  .alpha-badge{
+    display:inline-flex;align-items:center;gap:6px;
+    background:linear-gradient(135deg,rgba(108,92,231,.12),rgba(162,155,254,.12));
+    border:1px solid rgba(108,92,231,.25);
+    color:var(--accent2);font-size:.72rem;font-weight:700;letter-spacing:.08em;
+    padding:5px 14px;border-radius:50px;margin-bottom:28px;
+  }
+  .alpha-badge-dot{
+    width:7px;height:7px;border-radius:50%;
+    background:var(--accent);
+    box-shadow:0 0 0 3px rgba(108,92,231,.2);
+    animation:pulse 2s ease infinite;
+  }
+  .alpha-title{font-size:1.6rem;font-weight:900;line-height:1.2;margin-bottom:12px}
+  .alpha-title .grad{
+    background:linear-gradient(135deg,var(--accent),var(--pink));
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  }
+  .alpha-sub{font-size:.88rem;color:var(--text2);line-height:1.7;margin-bottom:36px;max-width:320px}
+  .alpha-features{
+    width:100%;max-width:360px;
+    display:flex;flex-direction:column;gap:12px;
+    margin-bottom:40px;text-align:left;
+  }
+  .alpha-feat{
+    display:flex;align-items:flex-start;gap:14px;
+    background:var(--surface);border:1px solid var(--surface3);
+    border-radius:14px;padding:16px;
+  }
+  .alpha-feat-icon{font-size:1.4rem;flex-shrink:0;margin-top:1px}
+  .alpha-feat-body{}
+  .alpha-feat-title{font-size:.88rem;font-weight:700;margin-bottom:3px}
+  .alpha-feat-desc{font-size:.75rem;color:var(--text2);line-height:1.55}
+  .alpha-preview{
+    width:100%;max-width:360px;
+    background:var(--surface);border:1px solid var(--surface3);
+    border-radius:16px;padding:16px;margin-bottom:32px;
+    filter:blur(3px);opacity:.4;pointer-events:none;
+    user-select:none;
+  }
+  .alpha-preview-label{font-size:.65rem;color:var(--text2);margin-bottom:10px;font-weight:600;letter-spacing:.06em}
+  .alpha-mock-card{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--surface3)}
+  .alpha-mock-card:last-child{border-bottom:none}
+  .alpha-mock-avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--pink));display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0}
+  .alpha-mock-info{flex:1}
+  .alpha-mock-name{font-size:.82rem;font-weight:700;margin-bottom:2px}
+  .alpha-mock-type{font-size:.68rem;color:var(--text2)}
+  .alpha-mock-score{font-size:1.1rem;font-weight:900;background:linear-gradient(135deg,var(--accent),var(--pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+  .alpha-preview-caption{
+    font-size:.72rem;color:var(--accent2);font-weight:700;
+    margin-bottom:24px;
+  }
+  .alpha-cta{
+    display:flex;flex-direction:column;align-items:center;gap:12px;
+    width:100%;max-width:320px;
+  }
+  .alpha-cta-btn{
+    width:100%;padding:16px;border-radius:50px;
+    background:linear-gradient(135deg,var(--accent),#a29bfe);
+    color:#fff;font-size:1rem;font-weight:700;border:none;cursor:pointer;
+    text-decoration:none;display:block;text-align:center;
+    box-shadow:0 4px 20px rgba(108,92,231,.3);
+    transition:transform .2s,box-shadow .2s;
+  }
+  .alpha-cta-btn:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(108,92,231,.45)}
+  .alpha-cta-sub{font-size:.75rem;color:var(--text2);line-height:1.5}
 </style>
 </head>
 <body>
+
+<!-- ALPHA Feature Preview（ALPHA_MODE=true のとき表示） -->
+<div class="alpha-screen" id="alphaScreen">
+  <div class="alpha-badge">
+    <span class="alpha-badge-dot"></span>
+    アルファテスト実施中
+  </div>
+
+  <h1 class="alpha-title">相性スコアで<br><span class="grad">本当に合う人</span>と<br>つながれる</h1>
+  <p class="alpha-sub">マッチング機能は現在準備中です。<br>掲示板・フレンド・チャットはすでに使えます。</p>
+
+  <!-- 機能プレビュー（ぼかし） -->
+  <div class="alpha-preview">
+    <div class="alpha-preview-label">MATCHING PREVIEW</div>
+    <div class="alpha-mock-card">
+      <div class="alpha-mock-avatar">🌙</div>
+      <div class="alpha-mock-info">
+        <div class="alpha-mock-name">詩人タイプ</div>
+        <div class="alpha-mock-type">Mystics · #sincXXXX</div>
+      </div>
+      <div class="alpha-mock-score">92%</div>
+    </div>
+    <div class="alpha-mock-card">
+      <div class="alpha-mock-avatar">⚡</div>
+      <div class="alpha-mock-info">
+        <div class="alpha-mock-name">冒険家タイプ</div>
+        <div class="alpha-mock-type">Commanders · #sincYYYY</div>
+      </div>
+      <div class="alpha-mock-score">78%</div>
+    </div>
+    <div class="alpha-mock-card">
+      <div class="alpha-mock-avatar">🔮</div>
+      <div class="alpha-mock-info">
+        <div class="alpha-mock-name">戦略家タイプ</div>
+        <div class="alpha-mock-type">Architects · #sincZZZZ</div>
+      </div>
+      <div class="alpha-mock-score">65%</div>
+    </div>
+  </div>
+  <p class="alpha-preview-caption">↑ こんな感じで相性スコア順に候補が並びます</p>
+
+  <!-- できること一覧 -->
+  <div class="alpha-features">
+    <div class="alpha-feat">
+      <div class="alpha-feat-icon">💕</div>
+      <div class="alpha-feat-body">
+        <div class="alpha-feat-title">友人・恋愛の相性スコアで候補表示</div>
+        <div class="alpha-feat-desc">136問の診断結果をもとに、友人相性・恋愛相性を数値で算出。あなたと相性の良い人を優先的に表示します。</div>
+      </div>
+    </div>
+    <div class="alpha-feat">
+      <div class="alpha-feat-icon">✉️</div>
+      <div class="alpha-feat-body">
+        <div class="alpha-feat-title">「つながり希望」が成立したらDM解放</div>
+        <div class="alpha-feat-desc">お互いが「つながりたい」と思ったときだけDMが開く仕組み。一方的な連絡は来ません。</div>
+      </div>
+    </div>
+    <div class="alpha-feat">
+      <div class="alpha-feat-icon">🔒</div>
+      <div class="alpha-feat-body">
+        <div class="alpha-feat-title">安心の年齢確認つき</div>
+        <div class="alpha-feat-desc">18歳以上確認・法令対応済みで解放予定。真剣にコミュニケーションを求める人のための機能です。</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="alpha-cta">
+    <a href="board.html" class="alpha-cta-btn">掲示板でコミュニティへ参加する</a>
+    <p class="alpha-cta-sub">診断・掲示板・フレンド・チャットは今すぐ使えます<br>マッチング解放時にお知らせ予定</p>
+  </div>
+</div>
 
 <!-- バナー広告（上部） -->
 <div id="matching-banner-ad" style="padding:8px 16px 0"></div>
@@ -679,6 +824,21 @@ function openCompatModal(n1, n2) {
     if (cv) Compat.CompatCard.draw(cv, n1, n2);
   }, 80);
 }
+</script>
+
+<script>
+// ALPHA_MODE チェック — supabase-config.js 読み込み後に実行
+(function() {
+  if (typeof ALPHA_MODE === 'undefined' || !ALPHA_MODE) return;
+  // Feature Preview を表示、通常コンテンツを非表示
+  document.getElementById('alphaScreen').classList.add('show');
+  const page = document.getElementById('page');
+  const bannerAd = document.getElementById('matching-banner-ad');
+  if (page) page.style.display = 'none';
+  if (bannerAd) bannerAd.style.display = 'none';
+  // 全モーダルも非表示
+  document.querySelectorAll('.modal').forEach(function(m){ m.style.display = 'none'; });
+})();
 </script>
 </body>
 </html>

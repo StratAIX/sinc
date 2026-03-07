@@ -43,6 +43,9 @@ const PRODUCTS = {
 // Web: Stripe Checkout
 // ============================================================
 async function purchaseStripe(product, metadata) {
+  if (typeof ALPHA_MODE !== 'undefined' && ALPHA_MODE) {
+    throw new Error('アルファ版では課金機能は利用できません。正式リリース後に解放予定です。');
+  }
   if (!window.supabase) throw new Error('Supabase not initialized');
 
   const { data, error } = await supabase.functions.invoke('create-checkout-session', {
@@ -103,6 +106,9 @@ async function initStore(productIds) {
 }
 
 async function purchaseNative(product) {
+  if (typeof ALPHA_MODE !== 'undefined' && ALPHA_MODE) {
+    throw new Error('アルファ版では課金機能は利用できません。正式リリース後に解放予定です。');
+  }
   const { store, Platform: P } = window.CdvPurchase;
   const platform = window.Platform.isIOS() ? P.APPLE_APPSTORE : P.GOOGLE_PLAY;
   const productId = window.Platform.isIOS() ? product.iosId : product.androidId;

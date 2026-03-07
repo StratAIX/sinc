@@ -733,5 +733,12 @@ init();
 
 })();
 </script>
+
+<script>
+// ALPHA_MODE: マッチングページのFeature Previewへリダイレクト
+if (typeof ALPHA_MODE !== 'undefined' && ALPHA_MODE) {
+  window.location.replace('matching.html');
+}
+</script>
 </body>
 </html>

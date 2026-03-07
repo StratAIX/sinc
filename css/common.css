@@ -710,6 +710,29 @@ textarea.form-input{
 }
 .sb-badge.show{display:inline-block}
 
+/* ALPHA SOON バッジ */
+.sb-soon{
+  font-size:.58rem;font-weight:800;letter-spacing:.05em;
+  background:linear-gradient(135deg,#6c5ce7,#a29bfe);
+  color:#fff;border-radius:50px;padding:2px 7px;
+  flex-shrink:0;
+}
+.sb-item-locked{opacity:.65}
+.sb-item-locked:hover{opacity:1}
+
+/* モバイルナビ SOON バッジ */
+.nav-item-soon{
+  position:relative;
+}
+.nav-item-soon::after{
+  content:'SOON';
+  position:absolute;top:-6px;right:50%;transform:translateX(50%);
+  font-size:.52rem;font-weight:800;letter-spacing:.04em;
+  background:linear-gradient(135deg,#6c5ce7,#a29bfe);
+  color:#fff;border-radius:50px;padding:1px 5px;
+  white-space:nowrap;
+}
+
 /* ポイント表示 */
 .sb-points-area{
   display:flex;align-items:center;gap:6px;
