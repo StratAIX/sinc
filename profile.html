@@ -553,6 +553,7 @@
 
   const params = new URLSearchParams(window.location.search);
   let isSetupMode = params.get('setup') === '1';
+  const _afterDiag = params.get('afterDiag') === '1';
   let isHobbyTab  = params.get('tab') === 'hobby';
   let currentProfile = null;
   let pendingAvatarBlob = null; // アップロード待ちのblob
@@ -1031,7 +1032,10 @@
 
       // セットアップモードなら診断ページへ遷移（新フロー）
       if (isSetupMode) {
-        setTimeout(() => { window.location.href = 'doppelganger-diagnosis.index.html'; }, 800);
+        // ゲスト診断から登録した場合（afterDiag=1）、または診断完了済みなら掲示板へ
+        const latestProfile = await getMyProfile(true);
+        const dest = (_afterDiag || latestProfile?.diagnosis_completed_at) ? 'board.html' : 'doppelganger-diagnosis.index.html';
+        setTimeout(() => { window.location.href = dest; }, 800);
       } else {
         showViewMode();
         initNavUser();

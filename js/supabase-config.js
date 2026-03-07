@@ -58,6 +58,42 @@ function onAuthChange(callback) {
   });
 }
 
+// ============================================================
+// ゲスト診断結果の自動同期（ログイン/新規登録時）
+// ============================================================
+supabase.auth.onAuthStateChange(async (event, session) => {
+  if (event === 'SIGNED_IN' && session?.user) {
+    try {
+      const raw = localStorage.getItem('sincGuestResult');
+      if (!raw) return;
+      const g = JSON.parse(raw);
+      if (!g || !g.code) return;
+
+      // 既存の診断と比較 — DBの診断の方が新しければスキップ（上書き防止）
+      const { data: existing } = await supabase
+        .from('users').select('diagnosis_completed_at').eq('id', session.user.id).single();
+      if (existing?.diagnosis_completed_at &&
+          new Date(existing.diagnosis_completed_at) > new Date(g.timestamp || 0)) {
+        localStorage.removeItem('sincGuestResult');
+        return;
+      }
+
+      const { error } = await supabase.from('users').update({
+        type_code: g.code,
+        type_number: g.typeNumber,
+        type_name: g.typeName,
+        family: g.family,
+        diagnosis_scores: g.scores,
+        diagnosis_completed_at: new Date(g.timestamp || Date.now()).toISOString(),
+      }).eq('id', session.user.id);
+      if (!error) {
+        localStorage.removeItem('sincGuestResult');
+        console.log('[Sinc] ゲスト診断結果をアカウントに同期しました');
+      }
+    } catch(e) { /* サイレント */ }
+  }
+});
+
 async function requireAuth(redirectTo = 'index.html') {
   const user = await getCurrentUser();
   if (!user) {

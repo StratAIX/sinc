@@ -200,6 +200,29 @@ canvas#radarChart{max-width:320px;width:100%;height:auto}
 .share-btn.insta-btn{background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)}
 .share-btn.copy-btn{background:var(--surface3);color:var(--text2)}
 .share-btn.copy-btn:hover{color:var(--text)}
+.share-btn.line-btn{background:#00B900}
+
+/* === Pre-result Ad Modal === */
+.prere-modal{position:fixed;inset:0;background:rgba(10,10,15,.95);z-index:300;display:flex;align-items:center;justify-content:center}
+.prere-card{max-width:380px;width:90%;text-align:center;padding:36px 28px;background:var(--surface);border:1px solid var(--surface3);border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.prere-card h3{font-size:1.05rem;font-weight:700;margin-bottom:10px;color:var(--text)}
+.prere-card p{font-size:.85rem;color:var(--text2);margin-bottom:24px;line-height:1.7}
+.prere-watch-btn{width:100%;padding:16px;background:linear-gradient(135deg,#6c5ce7,#a29bfe);color:#fff;border:none;border-radius:14px;font-size:1rem;font-weight:700;cursor:pointer;transition:all .2s;-webkit-appearance:none;touch-action:manipulation}
+.prere-watch-btn:hover{transform:translateY(-2px);box-shadow:0 4px 20px rgba(108,92,231,.5)}
+.prere-watch-btn:disabled{opacity:.6;cursor:not-allowed;transform:none}
+
+/* === Registration Prompt (Bottom Sheet) === */
+.reg-modal{position:fixed;inset:0;background:rgba(10,10,15,.85);z-index:250;display:flex;align-items:flex-end;justify-content:center}
+.reg-card{width:100%;max-width:520px;background:var(--surface);border:1px solid var(--surface3);border-radius:20px 20px 0 0;padding:28px 20px 36px;animation:slideUp .4s cubic-bezier(.2,.8,.2,1)}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.reg-card-title{font-size:1.2rem;font-weight:800;text-align:center;margin-bottom:6px;color:var(--text)}
+.reg-card-sub{font-size:.85rem;color:var(--text2);text-align:center;margin-bottom:18px;line-height:1.7}
+.reg-benefits{list-style:none;margin-bottom:20px;padding:0}
+.reg-benefits li{padding:9px 0;font-size:.85rem;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--surface3);color:var(--text)}
+.reg-benefits li:last-child{border-bottom:none}
+.reg-main-btn{width:100%;padding:15px;background:linear-gradient(135deg,#6c5ce7,#a29bfe);color:#fff;border:none;border-radius:14px;font-size:.95rem;font-weight:700;cursor:pointer;margin-bottom:10px;transition:all .2s;-webkit-appearance:none;touch-action:manipulation}
+.reg-main-btn:hover{transform:translateY(-2px);box-shadow:0 4px 20px rgba(108,92,231,.5)}
+.reg-skip-btn{width:100%;padding:12px;background:transparent;border:1px solid var(--surface3);border-radius:14px;color:var(--text2);cursor:pointer;font-size:.85rem;-webkit-appearance:none;touch-action:manipulation}
 
 /* === Share Card Preview === */
 .share-card-wrap{margin:20px auto 4px;max-width:520px;text-align:center}
@@ -1013,6 +1036,9 @@ const COMPAT={
 let cur=0;
 const ans=new Array(Q.length).fill(null);
 
+// 友人招待URLのrefパラメータ（シェアリンク経由時に設定される）
+const _urlRef=new URLSearchParams(window.location.search).get('ref');
+
 // ============================================================
 // PARTICLES BACKGROUND
 // ============================================================
@@ -1169,11 +1195,14 @@ function prevQ(){if(cur>0){cur--;renderQ()}}
 // ============================================================
 function showAnalyzing(){
 clearSave();
+// 診断完了回数を記録（2回目以降は広告表示）
+const diagCount=parseInt(localStorage.getItem('sincDiagCount')||'0');
+localStorage.setItem('sincDiagCount',String(diagCount+1));
 show('analyzeScreen');
 const steps=getAnalyzingSteps();
 let i=0;
 const el=document.getElementById('analyzeStep');
-const iv=setInterval(()=>{if(i<steps.length){el.textContent=steps[i];i++}else{clearInterval(iv);showResult()}},700);
+const iv=setInterval(()=>{if(i<steps.length){el.textContent=steps[i];i++}else{clearInterval(iv);if(diagCount>=1){showPreResultAd()}else{showResult()}}},700);
 }
 
 // ============================================================
@@ -1664,27 +1693,27 @@ ${buildSpectrumHTML(scores)}
 <div class="share-section">
   <div class="share-title">診断結果をシェア</div>
   <div class="share-buttons">
-    <button class="share-btn x-btn" onclick="shareToX()">
+    <button class="share-btn x-btn" onclick="SincShare.toX()">
       <svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
       X
     </button>
-    <button class="share-btn fb-btn" onclick="shareToFacebook()">
-      <svg viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-      Facebook
+    <button class="share-btn line-btn" onclick="SincShare.toLine()">
+      <svg viewBox="0 0 24 24"><path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63h2.386c.346 0 .627.285.627.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63.346 0 .628.285.628.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.281.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314"/></svg>
+      LINE
     </button>
-    <button class="share-btn insta-btn" onclick="shareToInstagram()">
+    <button class="share-btn insta-btn" onclick="SincShare.toInstagram()">
       <svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
       Instagram
     </button>
-    <button class="share-btn copy-btn" onclick="copyShareText()">📋 コピー</button>
+    <button class="share-btn copy-btn" onclick="SincShare.copy().then(ok=>{if(ok){const b=document.querySelector('.copy-btn');if(b){b.textContent='✅ コピーしました！';setTimeout(()=>{b.textContent='📋 コピー'},2000)}}})">📋 コピー</button>
   </div>
 </div>
 <div class="share-card-wrap">
   <div class="share-card-label">📱 シェアカードを作成・保存</div>
   <canvas id="shareCardCanvas" class="share-card-canvas"></canvas>
   <div class="share-card-btns">
-    <button class="share-card-dl" onclick="downloadShareCard()">⬇ 画像をダウンロード</button>
-    <button class="share-card-x" onclick="shareCardToX()">𝕏 Xでシェア</button>
+    <button class="share-card-dl" onclick="SincShare.downloadCard()">⬇ 画像をダウンロード</button>
+    <button class="share-card-x" onclick="SincShare.shareCardToX()">𝕏 Xでシェア</button>
   </div>
   <div class="share-card-hint">DLしてInstagram / X / LINEに投稿しよう！</div>
 </div>
@@ -1720,10 +1749,32 @@ setTimeout(()=>{
 
 // 診断結果をSupabaseに保存し、完了したらボタンを有効化
 window._diagnosisSavePromise=(async()=>{
+  let isGuest=false;
   try{
-    if(typeof supabase==='undefined')return;
+    // ゲスト結果をlocalStorageに一時保存（ログイン後に自動同期される）
+    const guestR={code,typeNumber:t.n,typeName:t.nm,family:t.fam,scores,timestamp:Date.now()};
+    try{localStorage.setItem('sincGuestResult',JSON.stringify(guestR));}catch(e){}
+
+    if(typeof supabase==='undefined'){
+      isGuest=true;
+      const btn=document.getElementById('go-board-btn');
+      if(btn){btn.textContent='📱 Sincに登録する（無料）';btn.style.opacity='1';btn.onclick=goToRegister;}
+      setTimeout(()=>showRegPrompt(),1500);
+      return;
+    }
     const{data:{user}}=await supabase.auth.getUser();
-    if(!user)return;
+    if(!user){
+      isGuest=true;
+      const btn=document.getElementById('go-board-btn');
+      if(btn){btn.textContent='📱 Sincに登録する（無料）';btn.style.opacity='1';btn.onclick=goToRegister;}
+      setTimeout(()=>showRegPrompt(),1500);
+      return;
+    }
+
+    // ログイン済み: シェアURL用にユーザーIDをセット
+    window._currentUserId=user.id;
+    // ログイン済みならゲスト結果は不要
+    try{localStorage.removeItem('sincGuestResult');}catch(e){}
 
     const now=new Date().toISOString();
 
@@ -1761,9 +1812,10 @@ window._diagnosisSavePromise=(async()=>{
   }catch(e){
     console.error('診断結果保存エラー',e);
   }finally{
-    // 保存完了（成功・失敗どちらでも）ボタンを有効化
-    const btn=document.getElementById('go-board-btn');
-    if(btn){btn.textContent='✨ コミュニティ掲示板へ進む →';btn.style.opacity='1';}
+    if(!isGuest){
+      const btn=document.getElementById('go-board-btn');
+      if(btn){btn.textContent='✨ コミュニティ掲示板へ進む →';btn.style.opacity='1';}
+    }
   }
 })();
 }
@@ -1817,62 +1869,134 @@ async function diagWatchRewardedVideo(){
 }
 
 // ============================================================
-// SNS SHARE
+// SHARE MODULE（拡張性対応 SincShare）
 // ============================================================
-// サイトURL（診断ページのindex.htmlを自動検出）
-function getSiteUrl(){
-  // 本番: ドメイン/index.html、ローカル: 現在のoriginベース
+
+// ref付き招待URL（ログイン済みならユーザーIDをrefとして付加）
+function getShareUrl(){
   const origin=window.location.origin;
   const path=window.location.pathname;
-  // 診断ページのパスからサイトのベースURLを算出
   const base=path.substring(0,path.lastIndexOf('/')+1);
-  return origin+base+'index.html';
+  const diagUrl=origin+base+'doppelganger-diagnosis.index.html';
+  if(window._currentUserId)return diagUrl+'?ref='+encodeURIComponent(window._currentUserId);
+  return diagUrl;
 }
 
-function getShareText(){
-  const d=window._shareData;
-  if(!d)return'';
-  const url=getSiteUrl();
-  return `🎭 私は「${d.nm}」タイプでした！\n${d.d}\n\nあなたも診断してみてね！\n${url}`;
+// 後方互換ラッパー
+function getSiteUrl(){return getShareUrl();}
+function getShareText(){return SincShare.getText();}
+function shareToX(){SincShare.toX();}
+function shareToFacebook(){SincShare.toFacebook();}
+function shareToInstagram(){SincShare.toInstagram();}
+function downloadShareCard(){SincShare.downloadCard();}
+function shareCardToX(){SincShare.shareCardToX();}
+function copyShareText(){SincShare.copy().then(ok=>{if(ok){const b=document.querySelector('.copy-btn');if(b){b.textContent='✅ コピーしました！';setTimeout(()=>{b.textContent='📋 コピー'},2000)}}});}
+
+const SincShare={
+  getUrl(){return getShareUrl();},
+
+  getText(){
+    const d=window._shareData;
+    if(!d)return'';
+    return`🎭 私は「${d.nm}」タイプでした！\n${d.d}\n\nあなたも診断してみてね！ #Sinc\n${this.getUrl()}`;
+  },
+
+  toX(){
+    const d=window._shareData;if(!d)return;
+    const text=encodeURIComponent(`🎭 私は「${d.nm}」タイプでした！\n${d.d}\n\nあなたも診断してみてね！ #Sinc`);
+    const url=encodeURIComponent(this.getUrl());
+    window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`,'_blank','width=550,height=420');
+  },
+
+  toLine(){
+    const text=encodeURIComponent(this.getText());
+    window.open(`https://line.me/R/msg/text/?${text}`,'_blank');
+  },
+
+  toFacebook(){
+    const url=encodeURIComponent(this.getUrl());
+    window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`,'_blank','width=550,height=420');
+  },
+
+  async toInstagram(){
+    const canvas=document.getElementById('shareCardCanvas');
+    if(canvas&&navigator.share&&navigator.canShare){
+      try{
+        const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));
+        const file=new File([blob],'sinc-type.png',{type:'image/png'});
+        if(navigator.canShare({files:[file]})){await navigator.share({files:[file],text:this.getText()});return;}
+      }catch(e){}
+    }
+    const copied=await this.copy();
+    if(copied)alert('シェア用テキストをコピーしました！\nInstagramのストーリーズやフィードに貼り付けてください。');
+  },
+
+  async copy(){
+    const text=this.getText();
+    try{await navigator.clipboard.writeText(text);return true;}
+    catch(e){prompt('以下のテキストをコピーしてください:',text);return false;}
+  },
+
+  downloadCard(){if(window.ShareCard&&window._shareData)ShareCard.download(window._shareData);},
+  shareCardToX(){if(window.ShareCard&&window._shareData)ShareCard.shareToX(window._shareData);},
+
+  // 任意のプラットフォームを追加できる拡張ポイント
+  extend(name,fn){this[name]=fn.bind(this);}
+};
+
+// ============================================================
+// PRE-RESULT AD（2回目以降の診断前に動画広告）
+// ============================================================
+function showPreResultAd(){
+  const modal=document.getElementById('preResultAdModal');
+  if(!modal){showResult();return;}
+  modal.style.display='flex';
+  // スキップボタンは10秒後に出現
+  setTimeout(()=>{const s=document.getElementById('preResultAdSkip');if(s)s.style.display='block';},10000);
 }
 
-function shareToX(){
-  const d=window._shareData;
-  if(!d)return;
-  const url=getSiteUrl();
-  const text=encodeURIComponent(`🎭 私は「${d.nm}」タイプでした！\n${d.d}\n\nあなたも診断してみてね！`);
-  window.open(`https://twitter.com/intent/tweet?text=${text}&url=${encodeURIComponent(url)}`,'_blank','width=550,height=420');
+function playPreResultAd(){
+  const btn=document.getElementById('preResultAdBtn');
+  if(btn){btn.disabled=true;btn.textContent='読み込み中...';}
+  if(typeof Ads==='undefined'){
+    // 広告モジュール未ロード時は3秒カウントダウン
+    let sec=3;if(btn)btn.textContent=`お待ちください... ${sec}秒`;
+    const iv=setInterval(()=>{sec--;
+      if(sec<=0){clearInterval(iv);_dismissPreResultAd();}
+      else if(btn)btn.textContent=`お待ちください... ${sec}秒`;
+    },1000);
+    return;
+  }
+  Ads.showRewardedVideo(5,()=>_dismissPreResultAd(),()=>_dismissPreResultAd());
 }
 
-function shareToFacebook(){
-  const url=encodeURIComponent(getSiteUrl());
-  window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`,'_blank','width=550,height=420');
+function skipPreResultAd(){_dismissPreResultAd();}
+
+function _dismissPreResultAd(){
+  const modal=document.getElementById('preResultAdModal');
+  if(modal)modal.style.display='none';
+  showResult();
 }
 
-function shareToInstagram(){
-  const text=getShareText();
-  navigator.clipboard.writeText(text).then(()=>{
-    alert('シェア用テキストをコピーしました！\nInstagramのストーリーズやフィードに貼り付けてください。');
-  }).catch(()=>{
-    prompt('以下のテキストをコピーしてInstagramに投稿してください:',text);
-  });
+// ============================================================
+// REGISTRATION PROMPT（初回未ログイン結果表示後）
+// ============================================================
+function showRegPrompt(){
+  // ref経由（友人シェアリンク）の場合はメッセージを動的に変更
+  if(_urlRef){
+    const desc=document.getElementById('regPromptDesc');
+    if(desc)desc.innerHTML='紹介してくれた友人との<strong>相性チェック</strong>もできます！<br>登録して確認しましょう。';
+    const refBenefit=document.getElementById('regBenefitRef');
+    if(refBenefit){refBenefit.style.display='flex';refBenefit.textContent='🔗 紹介してくれた友人との相性チェック';}
+  }
+  const modal=document.getElementById('regPromptModal');
+  if(modal)modal.style.display='flex';
 }
 
-function downloadShareCard(){
-  if(window.ShareCard&&window._shareData)ShareCard.download(window._shareData);
-}
-function shareCardToX(){
-  if(window.ShareCard&&window._shareData)ShareCard.shareToX(window._shareData);
-}
-
-function copyShareText(){
-  const text=getShareText();
-  navigator.clipboard.writeText(text).then(()=>{
-    const btn=document.querySelector('.copy-btn');
-    if(btn){btn.textContent='✅ コピーしました！';setTimeout(()=>{btn.textContent='📋 コピー'},2000)}
-  }).catch(()=>{
-    prompt('以下のテキストをコピーしてください:',text);
-  });
+function goToRegister(){
+  let dest='index.html?afterDiag=1';
+  if(_urlRef)dest+='&ref='+encodeURIComponent(_urlRef);
+  window.location.href=dest;
 }
 
 // ============================================================
@@ -2016,6 +2140,36 @@ function startFresh(){
     <span>マイページ</span>
   </a>
 </nav>
+
+<!-- Pre-result Ad Modal（2回目以降の診断前） -->
+<div id="preResultAdModal" class="prere-modal" style="display:none">
+  <div class="prere-card">
+    <div style="font-size:2.5rem;margin-bottom:12px">📺</div>
+    <h3>診断結果まであと少し！</h3>
+    <p>2回目以降の診断は、<br>短い動画広告をご覧いただいた後に<br>結果をお見せします。</p>
+    <button id="preResultAdBtn" class="prere-watch-btn" onclick="playPreResultAd()">▶ 動画を見て結果を表示</button>
+    <div id="preResultAdSkip" style="display:none;margin-top:10px">
+      <button onclick="skipPreResultAd()" style="width:100%;padding:12px;background:transparent;border:1px solid var(--surface3);border-radius:14px;color:var(--text2);cursor:pointer;font-size:.85rem;-webkit-appearance:none">スキップ</button>
+    </div>
+  </div>
+</div>
+
+<!-- Registration Prompt Modal（初回未ログイン） -->
+<div id="regPromptModal" class="reg-modal" style="display:none" onclick="this.style.display='none'">
+  <div class="reg-card" onclick="event.stopPropagation()">
+    <div class="reg-card-title">🎉 診断完了！</div>
+    <p class="reg-card-sub" id="regPromptDesc">Sincに登録すると、<br>もっとできることが広がります！</p>
+    <ul class="reg-benefits">
+      <li id="regBenefitRef" style="display:none">🔗 紹介してくれた友人との相性チェック</li>
+      <li>👥 同タイプのコミュニティに参加</li>
+      <li>💬 フレンド申請・DMチャット</li>
+      <li>💾 診断結果を永久保存・再確認</li>
+      <li>💕 相性マッチング機能</li>
+    </ul>
+    <button class="reg-main-btn" onclick="goToRegister()">📱 Sincに登録する（無料）</button>
+    <button class="reg-skip-btn" onclick="document.getElementById('regPromptModal').style.display='none'">後で登録する</button>
+  </div>
+</div>
 
 <!-- Supabase SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
