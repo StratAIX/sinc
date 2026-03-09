@@ -203,6 +203,17 @@
   // 診断ページからの登録フロー判定
   const _afterDiag = new URLSearchParams(window.location.search).get('afterDiag') === '1';
 
+  // セッションチェック：ログイン済み→掲示板、未ログイン→診断ページ
+  if (!_afterDiag) {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        window.location.href = 'board.html';
+      } else {
+        window.location.href = 'doppelganger-diagnosis.index.html';
+      }
+    });
+  }
+
   // --- タブ切り替え ---
   const tabs = document.querySelectorAll('.auth-tab');
   const forms = document.querySelectorAll('.auth-form');
