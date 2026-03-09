@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="format-detection" content="telephone=no">
 <title>Sinc - 性格診断</title>
-<script>!function(){var t=localStorage.getItem('theme');if(t)document.documentElement.setAttribute('data-theme',t)}();</script>
+<script>!function(){var t=localStorage.getItem('theme')||'light';document.documentElement.setAttribute('data-theme',t)}();</script>
 <link rel="stylesheet" href="css/common.css">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -262,6 +262,11 @@ canvas#radarChart{max-width:320px;width:100%;height:auto}
 <body>
 
 <canvas id="particles"></canvas>
+
+<!-- ログインボタン（未ログイン時のみ表示） -->
+<div id="loginHeader" style="display:none;position:fixed;top:env(safe-area-inset-top,12px);right:16px;z-index:999">
+  <a href="index.html?login=1" style="display:inline-block;padding:7px 16px;background:var(--surface2);border:1px solid var(--surface3);border-radius:50px;font-size:.8rem;font-weight:600;color:var(--text);text-decoration:none">ログイン</a>
+</div>
 
 <!-- Start -->
 <div id="startScreen" class="screen active">
@@ -2175,6 +2180,14 @@ function startFresh(){
 <!-- Supabase SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="js/supabase-config.js"></script>
+<script>
+// 未ログイン時のみ上部ログインボタンを表示
+if (typeof supabase !== 'undefined') {
+  supabase.auth.getSession().then(({ data: { session } }) => {
+    if (!session) document.getElementById('loginHeader').style.display = 'block';
+  });
+}
+</script>
 <script src="js/platform.js"></script>
 <script src="js/ads.js"></script>
 <script src="js/nav.js"></script>

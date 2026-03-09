@@ -105,7 +105,7 @@ const I18n = (() => {
       'diagnosis.subtitle_html': '最新AIが導き出す<strong>あなたの本当の性格</strong>を知り、<br>最高の仲間たちと楽しめる<strong>世界唯一の掲示板</strong>へ',
       'diagnosis.start_sub': 'タイプ判定は気分や状況によって変わることがあります。定期的に受け直すことで、今の自分をより深く知れます。<br>本サービスの分析は娯楽・自己理解を目的とするものであり、医学的・心理学的診断ではありません。',
       'diagnosis.start_btn': '診断を始める',
-      'diagnosis.start_info': '136問 ｜ 所要時間 約35〜45分<br>途中で戻ることもできます',
+      'diagnosis.start_info': '136問 ｜ 所要時間 15〜30分<br>途中で戻ることもできます',
 
       // ログインページ
       'index.intro_html': '136の問いがあなたの思考・行動パターンを解き明かす。<br>同じ魂を持つ者たちが集う掲示板へ。',
@@ -365,7 +365,7 @@ const I18n = (() => {
       'diagnosis.subtitle_html': 'Discover <strong>your true personality</strong> with AI,<br>and join the <strong>world\'s only community board</strong> for your type',
       'diagnosis.start_sub': 'Your personality type may shift with mood or context. Retake periodically to understand yourself better.<br>This analysis is for entertainment and self-understanding, not a medical or psychological diagnosis.',
       'diagnosis.start_btn': 'Start Assessment',
-      'diagnosis.start_info': '136 questions | Est. 35–45 min<br>You can go back at any time',
+      'diagnosis.start_info': '136 questions | Est. 15–30 min<br>You can go back at any time',
 
       // Login page
       'index.intro_html': '136 questions to reveal your thinking and behavioral patterns.<br>Join the community board of kindred souls.',
