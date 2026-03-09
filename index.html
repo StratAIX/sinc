@@ -202,9 +202,10 @@
 (function() {
   // 診断ページからの登録フロー判定
   const _afterDiag = new URLSearchParams(window.location.search).get('afterDiag') === '1';
+  const _forceLogin = new URLSearchParams(window.location.search).get('login') === '1';
 
   // セッションチェック：ログイン済み→掲示板、未ログイン→診断ページ
-  if (!_afterDiag) {
+  if (!_afterDiag && !_forceLogin && typeof supabase !== 'undefined') {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         window.location.href = 'board.html';
