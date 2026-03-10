@@ -6,6 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="format-detection" content="telephone=no">
+<meta name="color-scheme" content="light">
 <title>Sinc - 性格診断</title>
 <script>!function(){var t=localStorage.getItem('theme')||'light';document.documentElement.setAttribute('data-theme',t)}();</script>
 <link rel="stylesheet" href="css/common.css">
@@ -1062,7 +1063,11 @@ draw();
 // SCREENS
 // ============================================================
 function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active')}
-function startDiagnosis(){show('questionScreen');renderQ()}
+function startDiagnosis(){
+  const h=document.getElementById('loginHeader');
+  if(h)h.style.display='none';
+  show('questionScreen');renderQ();
+}
 
 // ============================================================
 // QUESTION RENDERING

@@ -20,7 +20,7 @@
   // テーマ管理
   // ——————————————————————————————
   function getCurrentTheme() {
-    return localStorage.getItem('theme') || 'dark';
+    return localStorage.getItem('theme') || 'light';
   }
 
   function applyTheme(theme) {
@@ -37,6 +37,7 @@
   }
 
   function toggleTheme() {
+    localStorage.setItem('themeUserSet', '1');
     applyTheme(getCurrentTheme() === 'light' ? 'dark' : 'light');
   }
 
@@ -219,6 +220,10 @@
   // 初期化
   // ——————————————————————————————
   function init() {
+    // 旧デフォルト 'dark' を 'light' に移行（ユーザーが明示的に設定していない場合のみ）
+    if (!localStorage.getItem('themeUserSet')) {
+      localStorage.setItem('theme', 'light');
+    }
     // テーマ即時適用（チラつき防止）
     applyTheme(getCurrentTheme());
 
