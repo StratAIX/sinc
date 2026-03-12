@@ -347,10 +347,14 @@ const Board = {
   // 投稿を論理削除（自分の投稿のみ）
   // ============================================================
   async deletePost(postId) {
+    const user = await getCurrentUser();
+    if (!user) throw new Error('ログインが必要です');
+
     const { error } = await supabase
       .from('posts')
       .update({ is_deleted: true })
-      .eq('id', postId);
+      .eq('id', postId)
+      .eq('user_id', user.id);
 
     if (error) throw error;
   },

@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
 <title>管理ダッシュボード - Sinc</title>
+<meta name="robots" content="noindex,nofollow">
+<link rel="icon" href="https://sinc.strataix.net/favicon.ico">
 <script>!function(){var t=localStorage.getItem('theme');if(t)document.documentElement.setAttribute('data-theme',t)}();</script>
 <link rel="stylesheet" href="css/common.css">
 <style>
@@ -96,6 +98,8 @@ body{display:flex;min-height:100vh;background:var(--bg)}
     <a onclick="showSection('boards')" id="nav-boards"><span>📋</span><span>掲示板管理</span></a>
     <a onclick="showSection('announce')" id="nav-announce"><span>📢</span><span>お知らせ</span></a>
     <a onclick="showSection('matching')" id="nav-matching"><span>💘</span><span>マッチング</span></a>
+    <a onclick="showSection('dm_reports')" id="nav-dm_reports"><span>💬</span><span>DM通報</span><span class="badge" id="badge-dm-reports" style="display:none">0</span></a>
+    <a onclick="showSection('action_logs')" id="nav-action_logs"><span>📋</span><span>アクションログ</span></a>
   </nav>
   <div class="adm-signout"><button onclick="signOut()"><span>🚪</span> <span>ログアウト</span></button></div>
 </aside>
@@ -111,7 +115,8 @@ body{display:flex;min-height:100vh;background:var(--bg)}
       <div class="stat-card"><div class="val" id="st-users-today">-</div><div class="lbl">今日の新規登録</div></div>
       <div class="stat-card"><div class="val" id="st-posts">-</div><div class="lbl">総投稿数</div></div>
       <div class="stat-card"><div class="val" id="st-posts-today">-</div><div class="lbl">今日の投稿数</div></div>
-      <div class="stat-card warn"><div class="val" id="st-reports">-</div><div class="lbl">未処理通報</div></div>
+      <div class="stat-card warn"><div class="val" id="st-reports">-</div><div class="lbl">未処理通報（掲示板）</div></div>
+      <div class="stat-card warn"><div class="val" id="st-dm-reports">-</div><div class="lbl">未処理DM通報</div></div>
       <div class="stat-card warn"><div class="val" id="st-banned">-</div><div class="lbl">BANユーザー数</div></div>
       <div class="stat-card"><div class="val" id="st-matching">-</div><div class="lbl">マッチング解放数</div></div>
       <div class="stat-card"><div class="val" id="st-threads">-</div><div class="lbl">総スレッド数</div></div>
@@ -258,6 +263,49 @@ body{display:flex;min-height:100vh;background:var(--bg)}
     </div>
   </section>
 
+  <!-- DM通報 -->
+  <section class="adm-section" id="section-dm_reports">
+    <div class="adm-header"><h1>DM通報管理</h1><p>通報されたメッセージのみ確認できます（プライバシー保護のため全文閲覧は不可）</p></div>
+    <div class="adm-toolbar">
+      <select id="dm-report-filter" onchange="loadChatReports()">
+        <option value="pending">未処理</option>
+        <option value="reviewed">確認済み</option>
+        <option value="actioned">対処済み</option>
+        <option value="dismissed">却下</option>
+        <option value="all">すべて</option>
+      </select>
+      <button class="btn btn-ghost btn-sm" onclick="loadChatReports()">🔄 更新</button>
+    </div>
+    <div class="adm-table-wrap">
+      <table class="adm-table">
+        <thead><tr><th>通報ID</th><th>送信者</th><th>メッセージ内容</th><th>種別</th><th>通報理由</th><th>状態</th><th>日時</th><th>操作</th></tr></thead>
+        <tbody id="dm-reports-table"><tr><td colspan="8" class="loading">読み込み中...</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- アクションログ -->
+  <section class="adm-section" id="section-action_logs">
+    <div class="adm-header"><h1>アクションログ</h1><p>管理者操作の全記録。法令に基づく捜査機関への提供時に参照してください。</p></div>
+    <div class="adm-toolbar">
+      <select id="log-type-filter" onchange="loadActionLogs()">
+        <option value="all">すべて</option>
+        <option value="ban">BAN</option>
+        <option value="unban">BAN解除</option>
+        <option value="warn">警告</option>
+        <option value="delete_dm">DM削除</option>
+        <option value="delete_post">投稿削除</option>
+      </select>
+      <button class="btn btn-ghost btn-sm" onclick="loadActionLogs()">🔄 更新</button>
+    </div>
+    <div class="adm-table-wrap">
+      <table class="adm-table">
+        <thead><tr><th>日時</th><th>操作種別</th><th>管理者</th><th>対象ユーザー</th><th>理由・詳細</th></tr></thead>
+        <tbody id="action-logs-table"><tr><td colspan="5" class="loading">読み込み中...</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+
 </main>
 
 <!-- お知らせ作成モーダル -->
@@ -300,6 +348,14 @@ body{display:flex;min-height:100vh;background:var(--bg)}
     location.href = 'index.html';
     return;
   }
+  // DBのis_adminフラグでも二重チェック（メールのなりすまし対策）
+  const { data: adminCheck } = await supabase
+    .from('users').select('is_admin').eq('id', user.id).single();
+  if (!adminCheck?.is_admin) {
+    alert('管理者権限がありません');
+    location.href = 'index.html';
+    return;
+  }
 
   // ============================================================
   // ナビゲーション
@@ -312,7 +368,7 @@ body{display:flex;min-height:100vh;background:var(--bg)}
     const loaders = {
       overview: loadOverview, reports: loadReports, users: loadUsers,
       posts: loadPosts, boards: loadBoards, announce: loadAnnouncements,
-      matching: loadKyc
+      matching: loadKyc, dm_reports: loadChatReports, action_logs: loadActionLogs
     };
     if (loaders[name]) loaders[name]();
   };
@@ -343,7 +399,7 @@ body{display:flex;min-height:100vh;background:var(--bg)}
 
     const [
       {count:users}, {count:usersToday}, {count:posts},
-      {count:postsToday}, {count:reports}, {count:banned},
+      {count:postsToday}, {count:reports}, {count:dmReports}, {count:banned},
       {count:matching}, {count:threads}
     ] = await Promise.all([
       supabase.from('users').select('*',{count:'exact',head:true}),
@@ -351,6 +407,7 @@ body{display:flex;min-height:100vh;background:var(--bg)}
       supabase.from('posts').select('*',{count:'exact',head:true}).eq('is_deleted',false),
       supabase.from('posts').select('*',{count:'exact',head:true}).eq('is_deleted',false).gte('created_at',today),
       supabase.from('reports').select('*',{count:'exact',head:true}).eq('status','pending'),
+      supabase.from('chat_reports').select('*',{count:'exact',head:true}).eq('status','pending'),
       supabase.from('users').select('*',{count:'exact',head:true}).eq('ban_status','banned'),
       supabase.from('users').select('*',{count:'exact',head:true}).eq('matching_unlocked',true),
       supabase.from('threads').select('*',{count:'exact',head:true}),
@@ -361,6 +418,7 @@ body{display:flex;min-height:100vh;background:var(--bg)}
     document.getElementById('st-posts').textContent = posts??0;
     document.getElementById('st-posts-today').textContent = '+' + (postsToday??0);
     document.getElementById('st-reports').textContent = reports??0;
+    document.getElementById('st-dm-reports').textContent = dmReports??0;
     document.getElementById('st-banned').textContent = banned??0;
     document.getElementById('st-matching').textContent = matching??0;
     document.getElementById('st-threads').textContent = threads??0;
@@ -369,6 +427,10 @@ body{display:flex;min-height:100vh;background:var(--bg)}
     const badge = document.getElementById('badge-reports');
     if (reports > 0) { badge.textContent = reports; badge.style.display=''; }
     else badge.style.display='none';
+
+    const dmBadge = document.getElementById('badge-dm-reports');
+    if (dmReports > 0) { dmBadge.textContent = dmReports; dmBadge.style.display=''; }
+    else dmBadge.style.display='none';
 
     // 最新通報
     const {data:rpts} = await supabase.from('reports')
@@ -491,26 +553,40 @@ body{display:flex;min-height:100vh;background:var(--bg)}
     </tr>`).join('');
   }
 
-  window.warnUser = async function(uid) {
+  // ============================================================
+  // アクションログ記録ヘルパー
+  // ============================================================
+  async function logAction(targetUserId, actionType, reason, metadata) {
+    await supabase.from('action_logs').insert({
+      admin_id:       user.id,
+      target_user_id: targetUserId || null,
+      action_type:    actionType,
+      reason:         reason   || null,
+      metadata:       metadata || null,
+    }).catch(console.error);
+  }
+
+  window.warnUser = async function(uid, reason) {
     if (!uid||!confirm('このユーザーに警告を送りますか？')) return;
-    await supabase.from('users').update({ban_status:'warned', violation_count: supabase.rpc ? undefined : undefined})
-      .eq('id',uid);
-    // violation_countをインクリメント
+    await supabase.from('users').update({ban_status:'warned'}).eq('id',uid);
     await supabase.rpc('increment_violation', {user_id: uid}).catch(() =>
       supabase.from('users').update({ban_status:'warned'}).eq('id',uid)
     );
+    await logAction(uid, 'warn', reason || 'admin手動警告');
     showToast('警告しました'); loadUsers();
   };
 
-  window.banUser = async function(uid) {
+  window.banUser = async function(uid, reason) {
     if (!uid||!confirm('このユーザーをBANしますか？')) return;
     await supabase.from('users').update({ban_status:'banned'}).eq('id',uid);
+    await logAction(uid, 'ban', reason || 'admin手動BAN');
     showToast('BANしました'); loadUsers();
   };
 
   window.unbanUser = async function(uid) {
     if (!uid||!confirm('このユーザーのBANを解除しますか？')) return;
     await supabase.from('users').update({ban_status:'active'}).eq('id',uid);
+    await logAction(uid, 'unban', 'admin手動BAN解除');
     showToast('BAN解除しました'); loadUsers();
   };
 
@@ -746,6 +822,97 @@ body{display:flex;min-height:100vh;background:var(--bg)}
       <td style="font-size:.72rem;color:var(--text2)">${fmtDate(u.updated_at)}</td>
     </tr>`).join('');
   }
+
+  // ============================================================
+  // DM通報管理
+  // ============================================================
+  window.loadChatReports = async function() {
+    const filter = document.getElementById('dm-report-filter').value;
+    let q = supabase.from('chat_reports')
+      .select(`id,reason,status,created_at,conversation_id,
+               message_content,message_type,media_path,sender_id,reporter_id,
+               sender:users!chat_reports_sender_id_fkey(display_id,nickname)`)
+      .order('created_at', {ascending: false}).limit(100);
+    if (filter !== 'all') q = q.eq('status', filter);
+    const {data} = await q;
+
+    const tb = document.getElementById('dm-reports-table');
+    if (!data||!data.length) { tb.innerHTML='<tr><td colspan="8" class="empty-msg">データなし</td></tr>'; return; }
+
+    tb.innerHTML = data.map(r => `<tr>
+      <td><code style="font-size:.72rem">${r.id.slice(0,8)}</code></td>
+      <td style="font-size:.75rem">${esc(r.sender?.nickname || r.sender?.display_id || r.sender_id?.slice(0,8) || '-')}</td>
+      <td>
+        ${r.message_type==='image'
+          ? '<span style="font-size:.75rem;color:var(--text2)">📷 画像メッセージ</span>'
+          : `<div class="post-content-box">${esc(trunc(r.message_content,80))}</div>`}
+      </td>
+      <td style="font-size:.72rem">${r.message_type==='image'?'画像':'テキスト'}</td>
+      <td style="font-size:.78rem">${esc(trunc(r.reason,35))}</td>
+      <td>${statusBadge(r.status)}</td>
+      <td style="font-size:.72rem;color:var(--text2)">${fmtDate(r.created_at)}</td>
+      <td>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          ${r.status==='pending'?`<button class="btn btn-ghost btn-sm" onclick="updateChatReport('${r.id}','reviewed')">確認済</button>`:''}
+          ${r.message_id?`<button class="btn btn-danger btn-sm" onclick="deleteDm('${r.message_id}','${r.id}','${r.sender_id||''}')">DM削除</button>`:''}
+          <button class="btn btn-warn btn-sm" onclick="warnUser('${r.sender_id||''}','DM通報対応')">警告</button>
+          <button class="btn btn-danger btn-sm" onclick="banUser('${r.sender_id||''}','DM通報対応')">BAN</button>
+          ${r.status!=='actioned'&&r.status!=='dismissed'?`<button class="btn btn-ghost btn-sm" onclick="updateChatReport('${r.id}','dismissed')">却下</button>`:''}
+        </div>
+      </td>
+    </tr>`).join('');
+  };
+
+  window.updateChatReport = async function(id, status) {
+    await supabase.from('chat_reports').update({status}).eq('id',id);
+    loadChatReports();
+    showToast('ステータスを更新しました');
+  };
+
+  window.deleteDm = async function(msgId, reportId, senderUid) {
+    if (!confirm('このDMを削除しますか？')) return;
+    const {data:msg} = await supabase.from('dms').select('content,media_url').eq('id',msgId).single();
+    await supabase.from('dms').update({is_deleted:true, deleted_at: new Date().toISOString()}).eq('id',msgId);
+    if (reportId) await supabase.from('chat_reports').update({status:'actioned'}).eq('id',reportId);
+    await logAction(senderUid||null, 'delete_dm', 'DM通報対応', {
+      message_id: msgId,
+      content_snapshot: msg?.content || null,
+      media_path: msg?.media_url || null,
+      report_id: reportId,
+    });
+    loadChatReports();
+    showToast('DMを削除しました');
+  };
+
+  // ============================================================
+  // アクションログ
+  // ============================================================
+  window.loadActionLogs = async function() {
+    const filter = document.getElementById('log-type-filter').value;
+    let q = supabase.from('action_logs')
+      .select(`id,action_type,reason,metadata,created_at,
+               admin:users!action_logs_admin_id_fkey(nickname,display_id),
+               target:users!action_logs_target_user_id_fkey(nickname,display_id)`)
+      .order('created_at', {ascending: false}).limit(300);
+    if (filter !== 'all') q = q.eq('action_type', filter);
+    const {data} = await q;
+
+    const tb = document.getElementById('action-logs-table');
+    if (!data||!data.length) { tb.innerHTML='<tr><td colspan="5" class="empty-msg">ログなし</td></tr>'; return; }
+
+    const labels = {
+      ban:'🔴 BAN', unban:'🟢 BAN解除', warn:'🟡 警告',
+      delete_dm:'💬 DM削除', delete_post:'📝 投稿削除'
+    };
+
+    tb.innerHTML = data.map(l => `<tr>
+      <td style="font-size:.72rem;color:var(--text2);white-space:nowrap">${fmtDate(l.created_at)}</td>
+      <td><span style="font-size:.8rem;font-weight:700">${labels[l.action_type]||l.action_type}</span></td>
+      <td style="font-size:.75rem">${esc(l.admin?.nickname||l.admin?.display_id||'-')}</td>
+      <td style="font-size:.75rem">${esc(l.target?.nickname||l.target?.display_id||l.target_user_id?.slice(0,8)||'-')}</td>
+      <td style="font-size:.78rem">${esc(l.reason||'-')}</td>
+    </tr>`).join('');
+  };
 
   // ============================================================
   // 初期ロード

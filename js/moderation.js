@@ -102,6 +102,32 @@ const Moderation = {
   },
 
   // ============================================================
+  // DM（チャット）通報送信
+  // ============================================================
+  async submitChatReport(messageId, senderId, messageContent, mediaPath, reason, conversationId) {
+    const user = await getCurrentUser();
+    if (!user) throw new Error('ログインが必要です');
+
+    const { error } = await supabase
+      .from('chat_reports')
+      .insert({
+        reporter_id:     user.id,
+        message_id:      messageId   || null,
+        conversation_id: conversationId || null,
+        message_content: messageContent || null,
+        message_type:    mediaPath ? 'image' : 'text',
+        media_path:      mediaPath  || null,
+        sender_id:       senderId   || null,
+        reason:          reason,
+      });
+
+    if (error) {
+      if (error.code === '23505') throw new Error('このメッセージは既に通報済みです');
+      throw error;
+    }
+  },
+
+  // ============================================================
   // 通報モーダルを表示
   // ============================================================
   showReportModal(postId) {

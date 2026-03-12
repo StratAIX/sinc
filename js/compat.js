@@ -650,7 +650,7 @@
               await navigator.share({
                 files: [file],
                 title: 'Sinc 相性診断',
-                text: `「${d1.nm}」×「${d2.nm}」 ${tier.emoji} ${tier.label} ${scores.friendScore}%\n#Sinc相性診断 #性格診断`,
+                text: `「${d1.nm}」×「${d2.nm}」 ${tier.emoji} ${tier.label} ${scores.friendScore}%\n#Sinc相性診断 #性格診断\nhttps://sinc.strataix.net/compat-matrix.html`,
               });
             } catch (e) {
               if (e.name !== 'AbortError') this.download(n1, n2);

@@ -93,7 +93,6 @@ supabase.auth.onAuthStateChange(async (event, session) => {
       }).eq('id', session.user.id);
       if (!error) {
         localStorage.removeItem('sincGuestResult');
-        console.log('[Sinc] ゲスト診断結果をアカウントに同期しました');
       }
     } catch(e) { /* サイレント */ }
   }

@@ -217,6 +217,28 @@
   }
 
   // ——————————————————————————————
+  // αテストバナー（ALPHA_MODE=true の場合のみ表示）
+  // ——————————————————————————————
+  function buildAlphaBanner() {
+    if (typeof ALPHA_MODE === 'undefined' || !ALPHA_MODE) return null;
+    const div = document.createElement('div');
+    div.id = 'alpha-top-banner';
+    div.style.cssText = [
+      'position:fixed', 'top:0', 'left:0', 'right:0', 'z-index:9999',
+      'background:#6c5ce7', 'color:#fff', 'font-size:.72rem',
+      'text-align:center', 'padding:5px 36px', 'line-height:1.5',
+      'box-shadow:0 2px 8px rgba(0,0,0,.25)', 'font-weight:500'
+    ].join(';');
+    div.innerHTML = '🧪 <strong>αテスト実施中</strong> — 未完成の部分があります。不具合・ご意見は'
+      + ' <a href="mailto:support@strataix.net" style="color:#a29bfe">support@strataix.net</a> まで'
+      + '<button onclick="var b=document.getElementById(\'alpha-top-banner\');if(b)b.remove();"'
+      + ' style="position:absolute;right:10px;top:50%;transform:translateY(-50%);'
+      + 'background:none;border:none;color:rgba(255,255,255,.7);cursor:pointer;'
+      + 'font-size:1.1rem;line-height:1;padding:0" title="閉じる">×</button>';
+    return div;
+  }
+
+  // ——————————————————————————————
   // 初期化
   // ——————————————————————————————
   function init() {
@@ -226,6 +248,12 @@
     }
     // テーマ即時適用（チラつき防止）
     applyTheme(getCurrentTheme());
+
+    // αバナー挿入（ALPHA_MODE=true のとき、legal/ページ以外に表示）
+    if (!location.pathname.includes('/legal/')) {
+      const alphaBanner = buildAlphaBanner();
+      if (alphaBanner) document.body.prepend(alphaBanner);
+    }
 
     // サイドバー挿入
     document.body.prepend(buildSidebar());

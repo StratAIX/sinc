@@ -6,6 +6,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Sinc - チャット</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="https://sinc.strataix.net/favicon.ico">
 <script>!function(){var t=localStorage.getItem('theme');if(t)document.documentElement.setAttribute('data-theme',t)}();</script>
 <link rel="stylesheet" href="css/common.css">
 <style>
@@ -42,7 +44,7 @@
 
 .chat-messages {
   flex: 1;
-  padding: 72px 16px 90px;
+  padding: 104px 16px 90px;
   display: flex; flex-direction: column;
   gap: 8px;
   overflow-y: auto;
@@ -129,9 +131,77 @@
 /* デスクトップ対応 */
 @media (min-width: 768px) {
   body.has-sidebar .chat-header { left: 240px; }
+  body.has-sidebar .chat-warn-banner { left: 240px; }
   body.has-sidebar .chat-input-area { left: 240px; }
   .chat-messages { max-width: 640px; margin: 0 auto; width: 100%; }
 }
+
+/* 警告バナー */
+.chat-warn-banner {
+  position: fixed; top: 56px; left: 0; right: 0; z-index: 45;
+  background: linear-gradient(135deg, rgba(225,112,85,.12), rgba(253,203,110,.10));
+  border-bottom: 1px solid rgba(225,112,85,.22);
+  padding: 6px 16px;
+  font-size: .7rem; color: var(--text2); text-align: center; line-height: 1.5;
+}
+
+/* メッセージ フッター */
+.msg-footer { display: flex; align-items: center; gap: 6px; }
+
+/* 通報ボタン */
+.msg-report-btn {
+  background: none; border: none; cursor: pointer;
+  font-size: .72rem; color: var(--text2); opacity: 0;
+  padding: 2px 5px; border-radius: 4px; transition: opacity .2s, color .2s;
+  flex-shrink: 0;
+}
+.msg-bubble:hover .msg-report-btn,
+.msg-bubble:focus-within .msg-report-btn { opacity: 1; }
+.msg-report-btn:hover { color: #e17355; }
+
+/* 誓約モーダル（ボトムシート） */
+.agreement-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.88);
+  z-index: 300;
+  display: flex; align-items: flex-end; justify-content: center;
+}
+.agreement-sheet {
+  background: var(--surface1);
+  border-radius: 20px 20px 0 0;
+  padding: 24px 20px calc(28px + env(safe-area-inset-bottom, 0px));
+  max-width: 540px; width: 100%;
+  max-height: 92dvh; overflow-y: auto;
+}
+.agreement-title {
+  font-size: 1rem; font-weight: 800; margin-bottom: 16px; text-align: center;
+}
+.agreement-body {
+  font-size: .82rem; line-height: 1.8; color: var(--text2);
+  background: var(--surface2); border-radius: var(--radius);
+  padding: 14px 16px; margin-bottom: 16px;
+  max-height: 38dvh; overflow-y: auto;
+}
+.agreement-body h4 { font-size: .82rem; color: var(--text); margin: 12px 0 4px; }
+.agreement-body h4:first-child { margin-top: 0; }
+.agreement-body ul { padding-left: 18px; }
+.agreement-body li { margin-bottom: 4px; }
+.agreement-check-row {
+  display: flex; align-items: flex-start; gap: 10px;
+  font-size: .85rem; margin-bottom: 16px; cursor: pointer;
+}
+.agreement-check-row input[type="checkbox"] {
+  width: 18px; height: 18px; flex-shrink: 0; margin-top: 2px;
+  cursor: pointer; accent-color: var(--accent);
+}
+.agreement-agree-btn {
+  width: 100%; padding: 14px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #fff; border: none; border-radius: var(--radius);
+  font-size: .95rem; font-weight: 700; cursor: pointer; font-family: inherit;
+  transition: opacity .2s;
+}
+.agreement-agree-btn:disabled { opacity: .35; cursor: not-allowed; }
 </style>
 </head>
 <body>
@@ -145,6 +215,11 @@
       <div class="chat-header-type" id="chat-header-type"></div>
     </div>
     <a id="view-profile-btn" href="#" class="btn btn-secondary btn-sm">プロフィール</a>
+  </div>
+
+  <!-- 警告バナー -->
+  <div class="chat-warn-banner">
+    ⚠️ 個人情報・外部SNSへの誘導は禁止です。不審なメッセージは通報ボタン（⚑）からご報告ください。
   </div>
 
   <!-- メッセージエリア -->
@@ -161,6 +236,33 @@
     <textarea class="chat-input-box" id="chat-input"
       placeholder="メッセージを入力..." rows="1"></textarea>
     <button class="chat-send-btn" id="chat-send" disabled>▶</button>
+  </div>
+</div>
+
+<!-- チャット利用規約モーダル -->
+<div class="agreement-overlay" id="chat-agreement-modal" style="display:none">
+  <div class="agreement-sheet">
+    <div class="agreement-title">💬 メッセージ機能のご利用にあたって</div>
+    <div class="agreement-body">
+      <p>Sincのメッセージ機能は、フレンド間の安心・安全なコミュニケーションのために提供しています。ご利用前に以下の禁止事項をご確認ください。</p>
+      <h4>🚫 禁止事項</h4>
+      <ul>
+        <li>電話番号・メールアドレス・住所など、個人を特定できる情報の送受信</li>
+        <li>LINE・Instagram・X（旧Twitter）など、Sinc外の連絡先・SNSへの誘導</li>
+        <li>性的・暴力的・差別的なメッセージや画像の送信</li>
+        <li>出会い目的・勧誘・詐欺行為</li>
+        <li>相手が望まない連絡の繰り返し（ハラスメント）</li>
+      </ul>
+      <h4>⚠️ 違反した場合</h4>
+      <p>規約違反が確認された場合、アカウントの警告・停止・永久利用禁止の措置をとることがあります。また、法令に基づき捜査機関から照会があった場合は、メッセージの記録を提供することがあります。</p>
+      <h4>🚨 不審なメッセージを受け取ったら</h4>
+      <p>各メッセージの通報ボタン（⚑）からご報告ください。運営が確認し、適切に対処します。</p>
+    </div>
+    <label class="agreement-check-row">
+      <input type="checkbox" id="agree-checkbox">
+      <span>上記の内容を理解し、ルールを守って利用します</span>
+    </label>
+    <button class="agreement-agree-btn" id="agree-btn" disabled>同意して利用を開始する</button>
   </div>
 </div>
 
@@ -190,6 +292,7 @@
 <script src="js/nav.js"></script>
 <script src="js/i18n.js"></script>
 <script src="js/avatar.js"></script>
+<script src="js/moderation.js"></script>
 <script>
 (function () {
   let myUserId = null;
@@ -261,6 +364,144 @@
     setupRealtime();
     setupInput();
     setupImageUpload();
+    await checkChatAgreement();
+  }
+
+  // ============================================================
+  // チャット利用規約の同意確認
+  // ============================================================
+  async function checkChatAgreement() {
+    const localKey = 'sincChatAgreed_' + myUserId;
+    if (localStorage.getItem(localKey) === '1') return;
+
+    const { data } = await supabase
+      .from('users').select('chat_agreed_at').eq('id', myUserId).single();
+
+    if (data?.chat_agreed_at) {
+      localStorage.setItem(localKey, '1');
+      return;
+    }
+
+    // 未同意 → 入力を無効にしてモーダル表示
+    const chatInput = document.getElementById('chat-input');
+    const sendBtn   = document.getElementById('chat-send');
+    const imgBtn    = document.getElementById('img-btn');
+    chatInput.disabled = true;
+    sendBtn.disabled   = true;
+    imgBtn.disabled    = true;
+
+    const modal    = document.getElementById('chat-agreement-modal');
+    const checkbox = document.getElementById('agree-checkbox');
+    const agreeBtn = document.getElementById('agree-btn');
+    modal.style.display = 'flex';
+
+    checkbox.addEventListener('change', () => {
+      agreeBtn.disabled = !checkbox.checked;
+    });
+
+    agreeBtn.addEventListener('click', async () => {
+      if (!checkbox.checked) return;
+      agreeBtn.disabled = true;
+      agreeBtn.textContent = '確認中...';
+
+      await supabase.from('users')
+        .update({ chat_agreed_at: new Date().toISOString() })
+        .eq('id', myUserId);
+
+      localStorage.setItem(localKey, '1');
+      modal.style.display = 'none';
+      chatInput.disabled = false;
+      imgBtn.disabled    = false;
+      chatInput.dispatchEvent(new Event('input')); // send ボタン状態更新
+      chatInput.focus();
+    });
+  }
+
+  // ============================================================
+  // DM通報モーダル
+  // ============================================================
+  function showChatReportModal(msgId, content, senderId, mediaPath) {
+    const existing = document.getElementById('chat-report-modal');
+    if (existing) existing.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'chat-report-modal';
+    overlay.style.cssText =
+      'position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:400;' +
+      'display:flex;align-items:center;justify-content:center;padding:20px';
+
+    overlay.innerHTML = `
+      <div style="background:var(--surface1);border:1px solid var(--surface3);
+                  border-radius:14px;padding:24px;max-width:400px;width:100%">
+        <div style="font-size:.95rem;font-weight:800;margin-bottom:4px">メッセージを通報</div>
+        <div style="font-size:.75rem;color:var(--text2);margin-bottom:14px">
+          通報内容はSinc運営のみが確認します。相手には通知されません。
+        </div>
+        <div style="background:var(--surface2);border-radius:var(--radius);padding:10px;
+                    font-size:.82rem;color:var(--text2);max-height:72px;overflow-y:auto;
+                    margin-bottom:14px;line-height:1.6">
+          ${content
+            ? escapeHtml(content).replace(/\n/g, '<br>')
+            : '📷 画像メッセージ'}
+        </div>
+        <select id="dm-report-reason"
+          style="width:100%;background:var(--surface2);border:1px solid var(--surface3);
+                 border-radius:var(--radius);padding:9px 10px;color:var(--text);
+                 font-family:inherit;font-size:.85rem;margin-bottom:14px;cursor:pointer">
+          <option value="">通報理由を選択してください</option>
+          <option value="個人情報の共有">個人情報の共有（電話番号・住所など）</option>
+          <option value="外部SNS・連絡先への誘導">外部SNS・連絡先への誘導</option>
+          <option value="性的・暴力的なメッセージ">性的・暴力的・差別的なメッセージ</option>
+          <option value="ハラスメント・嫌がらせ">ハラスメント・嫌がらせ</option>
+          <option value="詐欺・勧誘行為">詐欺・勧誘行為</option>
+          <option value="その他">その他</option>
+        </select>
+        <div style="display:flex;gap:8px;justify-content:flex-end">
+          <button id="dm-report-cancel"
+            style="padding:8px 16px;background:var(--surface2);
+                   border:1px solid var(--surface3);border-radius:var(--radius);
+                   cursor:pointer;font-family:inherit;font-size:.82rem;color:var(--text)">
+            キャンセル
+          </button>
+          <button id="dm-report-submit" disabled
+            style="padding:8px 16px;background:#e17355;color:#fff;border:none;
+                   border-radius:var(--radius);cursor:pointer;font-family:inherit;
+                   font-size:.82rem;font-weight:700;opacity:.4;transition:opacity .15s">
+            通報する
+          </button>
+        </div>
+      </div>`;
+
+    document.body.appendChild(overlay);
+
+    const select    = document.getElementById('dm-report-reason');
+    const submitBtn = document.getElementById('dm-report-submit');
+
+    select.addEventListener('change', () => {
+      submitBtn.disabled = !select.value;
+      submitBtn.style.opacity = select.value ? '1' : '.4';
+    });
+    document.getElementById('dm-report-cancel').addEventListener('click', () => overlay.remove());
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+
+    submitBtn.addEventListener('click', async () => {
+      const reason = select.value;
+      if (!reason) return;
+      submitBtn.disabled = true;
+      submitBtn.textContent = '送信中...';
+      try {
+        await Moderation.submitChatReport(
+          msgId, senderId, content, mediaPath, reason, conversationId
+        );
+        overlay.remove();
+        showToast('通報を受け付けました。ご協力ありがとうございます。', 'success');
+      } catch (err) {
+        showToast(err.message || '通報に失敗しました', 'error');
+        submitBtn.disabled = false;
+        submitBtn.style.opacity = '1';
+        submitBtn.textContent = '通報する';
+      }
+    });
   }
 
   async function loadMessages() {
@@ -305,7 +546,6 @@
 
     let contentHtml = '';
     if (msg.media_url) {
-      // media_signed_url があればそれを使用、なければパスからsigned URLを非同期取得
       const imgSrc = msg.media_signed_url || '';
       contentHtml = `<img class="msg-img" src="${escapeHtml(imgSrc)}" alt="" loading="lazy"
         data-media-path="${escapeHtml(msg.media_url)}"
@@ -317,8 +557,23 @@
 
     div.innerHTML = `
       ${contentHtml}
-      <div class="msg-time">${timeAgo(msg.created_at)}${isMine && msg.is_read ? ' · 既読' : ''}</div>
+      <div class="msg-footer">
+        <span class="msg-time">${timeAgo(msg.created_at)}${isMine && msg.is_read ? ' · 既読' : ''}</span>
+      </div>
     `;
+
+    // 相手のメッセージに通報ボタンを追加
+    if (!isMine) {
+      const reportBtn = document.createElement('button');
+      reportBtn.className = 'msg-report-btn';
+      reportBtn.title = 'このメッセージを通報する';
+      reportBtn.textContent = '⚑';
+      reportBtn.addEventListener('click', () => {
+        showChatReportModal(msg.id, msg.content, msg.sender_id, msg.media_url);
+      });
+      div.querySelector('.msg-footer').appendChild(reportBtn);
+    }
+
     container.appendChild(div);
   }
 
@@ -366,6 +621,13 @@
     const sendBtn = document.getElementById('chat-send');
     const content = input.value.trim();
     if (!content) return;
+
+    // 禁止ワードチェック（電話番号・メール・LINE ID・外部URL等）
+    const check = Moderation.checkContent(content);
+    if (!check.ok) {
+      showToast('送信できません: ' + check.reason, 'error');
+      return;
+    }
 
     sendBtn.disabled = true;
 

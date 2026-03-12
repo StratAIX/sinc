@@ -6,6 +6,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Sinc - マイページ</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="https://sinc.strataix.net/favicon.ico">
 <script>!function(){var t=localStorage.getItem('theme');if(t)document.documentElement.setAttribute('data-theme',t)}();</script>
 <link rel="stylesheet" href="css/common.css">
 <style>
@@ -438,8 +440,30 @@
     <button class="logout-btn" id="logout-btn" data-i18n="nav.logout">ログアウト</button>
 
     <div class="text-center mt-16 text-xs text-muted">
-      Sinc v1.0
+      Sinc v1.0 α
     </div>
+    <div class="text-center mt-8" style="margin-top:12px">
+      <button id="delete-account-btn" style="background:none;border:none;color:var(--text2);font-size:.72rem;cursor:pointer;text-decoration:underline;opacity:.6">アカウントを削除する</button>
+    </div>
+  </div>
+</div>
+
+<!-- アカウント削除確認モーダル -->
+<div class="modal-overlay" id="delete-account-modal" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal" style="max-width:360px;padding:24px">
+    <div class="modal-title" style="color:var(--danger)">⚠️ アカウントを削除</div>
+    <p style="font-size:.83rem;color:var(--text2);line-height:1.75;margin:12px 0">
+      アカウントを削除すると、投稿・フレンド・診断データを含むすべての情報が削除されます。<br>
+      この操作は取り消せません。<br><br>
+      削除後90日間はデータをバックアップとして保管し、その後完全に消去します。
+    </p>
+    <p style="font-size:.8rem;font-weight:700;margin-bottom:8px">確認のため「削除する」と入力してください</p>
+    <input type="text" id="delete-confirm-input" class="form-input" placeholder="削除する" style="margin-bottom:12px">
+    <div class="modal-actions">
+      <button class="btn btn-secondary btn-sm" onclick="document.getElementById('delete-account-modal').style.display='none'">キャンセル</button>
+      <button class="btn btn-sm" id="delete-account-confirm-btn" style="background:var(--danger);color:#fff">削除する</button>
+    </div>
+    <div id="delete-account-status" style="font-size:.78rem;color:var(--danger);margin-top:8px;min-height:1em"></div>
   </div>
 </div>
 
@@ -1146,7 +1170,7 @@
     const shareText = `Sinc 性格診断の結果\n\n` +
       `🎭 Type ${profile.type_number}: ${profile.type_name}\n` +
       `📦 ${profile.family} Family\n\n` +
-      `あなたも自分の「精神の設計図」を見てみませんか？`;
+      `あなたも自分の「精神の設計図」を見てみませんか？\nhttps://sinc.strataix.net/doppelganger-diagnosis.index.html`;
 
     if (navigator.share) {
       try {
@@ -1183,6 +1207,41 @@
   document.getElementById('logout-btn').addEventListener('click', async () => {
     if (confirm('ログアウトしますか？')) {
       await Auth.signOut();
+    }
+  });
+
+  // --- アカウント削除 ---
+  document.getElementById('delete-account-btn').addEventListener('click', () => {
+    document.getElementById('delete-confirm-input').value = '';
+    document.getElementById('delete-account-status').textContent = '';
+    document.getElementById('delete-account-modal').style.display = 'flex';
+  });
+
+  document.getElementById('delete-account-confirm-btn').addEventListener('click', async () => {
+    const input = document.getElementById('delete-confirm-input').value.trim();
+    const status = document.getElementById('delete-account-status');
+    if (input !== '削除する') {
+      status.textContent = '「削除する」と正確に入力してください';
+      return;
+    }
+    const btn = document.getElementById('delete-account-confirm-btn');
+    btn.disabled = true;
+    btn.textContent = '削除中...';
+    try {
+      const user = await getCurrentUser();
+      if (!user) throw new Error('ログイン情報が取得できません');
+      // ban_status を 'deleted' にして論理削除（90日後に物理削除）
+      const { error } = await supabase.from('users')
+        .update({ ban_status: 'banned', nickname: null, bio: null, avatar_url: null })
+        .eq('id', user.id);
+      if (error) throw error;
+      await supabase.auth.signOut();
+      alert('アカウントを削除しました。ご利用ありがとうございました。');
+      location.href = 'index.html';
+    } catch (e) {
+      status.textContent = 'エラーが発生しました: ' + e.message;
+      btn.disabled = false;
+      btn.textContent = '削除する';
     }
   });
 
