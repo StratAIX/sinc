@@ -51,7 +51,8 @@ async function getMyProfile(forceRefresh = false) {
   } catch (e) {
     // users行が存在しない場合（Google OAuth新規ユーザー等）は自動作成
     if (e.code === 'PGRST116') {
-      await supabase.from('users').insert({ id: user.id, alpha_agreed_at: new Date().toISOString() }).select().single();
+      const agreedAt = localStorage.getItem('sincAlphaAgreedAt') || new Date().toISOString();
+      await supabase.from('users').insert({ id: user.id, alpha_agreed_at: agreedAt }).select().single();
       const { data } = await supabase.from('users').select('*').eq('id', user.id).single();
       _cachedProfile = data;
     } else {

@@ -182,18 +182,10 @@
       <p class="age-notice">⚠️ 本サービスは18歳以上の方を対象としています</p>
 
       <div class="disclaimer-box">
-        本サービスはAIを使用し管理者が制作した個人製作のWEBサービスです。開発・管理は厳重に行っていますが、不具合などが発生した際の保証は一切いたしません。同意いただける方のみαテストにご参加ください。
-        <label class="disclaimer-check">
-          <input type="checkbox" id="agree-general">
-          <span>上記に同意する</span>
-        </label>
-      </div>
-
-      <div class="disclaimer-box">
-        本サービスはAIを使用し管理者が制作した個人製作のWEBサービスです。開発・管理は厳重に行っていますが、入力いただいたメールアドレスやパスワードが流出しない保証はございません。同意いただける方のみαテストにご参加ください。
+        本サービスは個人製作のαテスト版です。セキュリティには最善を尽くしていますが、完全な安全性を保証するものではありません。αテストの趣旨をご理解のうえご参加ください。
         <label class="disclaimer-check">
           <input type="checkbox" id="agree-security">
-          <span>上記に同意する</span>
+          <span>上記に同意してアカウントを作成する</span>
         </label>
       </div>
 
@@ -310,14 +302,11 @@
   });
 
   // --- 免責チェックボックス → ボタン活性化 ---
-  const agreeGeneral  = document.getElementById('agree-general');
   const agreeSecurity = document.getElementById('agree-security');
   const signupBtn     = document.getElementById('signup-btn');
-  function updateSignupBtn() {
-    signupBtn.disabled = !(agreeGeneral.checked && agreeSecurity.checked);
-  }
-  agreeGeneral.addEventListener('change', updateSignupBtn);
-  agreeSecurity.addEventListener('change', updateSignupBtn);
+  agreeSecurity.addEventListener('change', () => {
+    signupBtn.disabled = !agreeSecurity.checked;
+  });
 
   // --- 新規登録 ---
   document.getElementById('signup-form').addEventListener('submit', async (e) => {
@@ -341,11 +330,20 @@
     btn.textContent = '作成中...';
 
     try {
-      await Auth.signUp(email, password);
-      status.className = 'auth-status success';
-      status.textContent = 'アカウントを作成しました！プロフィール設定へ移動中...';
-      // afterDiag=1 を引き継ぐ（プロフィール設定後に診断ページをスキップするため）
-      setTimeout(() => { window.location.href = 'profile.html?setup=1' + (_afterDiag ? '&afterDiag=1' : ''); }, 800);
+      // 同意日時をlocalStorageに保存（メール確認後のDB保存に使用）
+      localStorage.setItem('sincAlphaAgreedAt', new Date().toISOString());
+      const data = await Auth.signUp(email, password);
+      if (data.session) {
+        // メール確認不要設定 → そのままリダイレクト
+        status.className = 'auth-status success';
+        status.textContent = 'アカウントを作成しました！プロフィール設定へ移動中...';
+        setTimeout(() => { window.location.href = 'profile.html?setup=1' + (_afterDiag ? '&afterDiag=1' : ''); }, 800);
+      } else {
+        // メール確認必要 → 確認メール送信済みメッセージを表示
+        status.className = 'auth-status success';
+        status.innerHTML = '📧 確認メールを送信しました。<br>メール内のリンクをクリックして登録を完了してください。';
+        btn.textContent = '送信済み';
+      }
     } catch (err) {
       status.className = 'auth-status error';
       status.textContent = translateAuthError(err.message);

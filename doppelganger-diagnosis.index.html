@@ -55,6 +55,9 @@ html,body{height:100%;background:var(--bg);color:var(--text);overflow-x:hidden;-
 .start-btn:active{transform:translateY(0)}
 .start-sub{margin-top:12px;margin-bottom:28px;font-size:.75rem;color:var(--text2);line-height:1.6;opacity:.75;max-width:320px;text-align:center}
 .start-info{margin-top:28px;font-size:.8rem;color:var(--text2);line-height:1.6;opacity:.85}
+.diag-agree-label{display:flex;align-items:flex-start;gap:8px;margin:20px auto 16px;max-width:320px;font-size:.8rem;color:var(--text2);line-height:1.5;cursor:pointer;text-align:left}
+.diag-agree-label input[type=checkbox]{margin-top:2px;accent-color:var(--accent);flex-shrink:0;width:15px;height:15px;cursor:pointer}
+.start-btn:disabled{opacity:.45;cursor:not-allowed;transform:none!important;box-shadow:0 4px 20px rgba(108,92,231,.2)!important}
 
 /* === Question Screen === */
 .question-screen{justify-content:flex-start;padding-top:16px}
@@ -291,7 +294,11 @@ canvas#radarChart{max-width:320px;width:100%;height:auto}
   </div>
   <p class="subtitle" data-i18n-html="diagnosis.subtitle_html">最新AIが導き出す<strong>あなたの本当の性格</strong>を知り、<br>最高の仲間たちと楽しめる<strong>世界唯一の掲示板</strong>へ</p>
   <p class="start-sub" data-i18n-html="diagnosis.start_sub">※ タイプ判定は気分や状況によって変わることがあります。定期的に受け直すことで、今の自分をより深く知れます。<br>本サービスの分析は娯楽・自己理解を目的とするものであり、医学的・心理学的診断ではありません。</p>
-  <button class="start-btn" onclick="startDiagnosis()" data-i18n="diagnosis.start_btn">診断を始める</button>
+  <label class="diag-agree-label" id="diagAgreeLabel">
+    <input type="checkbox" id="diagAgreeCheck" onchange="onDiagAgreeChange()">
+    <span>本サービスはαテスト版です。内容に同意して診断を始めます。</span>
+  </label>
+  <button class="start-btn" id="diagStartBtn" onclick="startDiagnosis()" data-i18n="diagnosis.start_btn" disabled>診断を始める</button>
   <p class="start-info" data-i18n-html="diagnosis.start_info">136問 ｜ 所要時間 15〜30分<br>途中で戻ることもできます</p>
   <p style="margin-top:20px;font-size:.82rem;color:var(--text2)">アカウントをお持ちの方は<a href="index.html?login=1" style="color:var(--accent2);text-decoration:none;font-weight:600">ログイン</a></p>
 </div>
@@ -1076,7 +1083,18 @@ draw();
 // SCREENS
 // ============================================================
 function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active')}
+function onDiagAgreeChange(){
+  const cb=document.getElementById('diagAgreeCheck');
+  const btn=document.getElementById('diagStartBtn');
+  if(btn) btn.disabled=!cb.checked;
+}
 function startDiagnosis(){
+  const cb=document.getElementById('diagAgreeCheck');
+  if(cb && !cb.checked) return;
+  // αテスト同意タイムスタンプを保存（診断のみ利用者向け）
+  if(!localStorage.getItem('sincAlphaAgreedAt')){
+    localStorage.setItem('sincAlphaAgreedAt', new Date().toISOString());
+  }
   const h=document.getElementById('loginHeader');
   if(h)h.style.display='none';
   show('questionScreen');renderQ();
