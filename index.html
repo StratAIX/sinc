@@ -455,8 +455,12 @@
 
   // --- 招待コードをlocalStorageに保存（ログイン後も引き継ぐため） ---
   (function() {
-    const _inv = new URLSearchParams(location.search).get('invite');
+    const params = new URLSearchParams(location.search);
+    const _inv = params.get('invite');
     if (_inv) localStorage.setItem('pendingInvite', _inv);
+    // 診断ページ経由の招待ref（?ref=userId）も保存
+    const _ref = params.get('ref');
+    if (_ref) localStorage.setItem('sincPendingRef', _ref);
   })();
 
   // --- 認証エラーの日本語化 ---

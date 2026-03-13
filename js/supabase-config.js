@@ -78,31 +78,53 @@ function onAuthChange(callback) {
 // ============================================================
 supabase.auth.onAuthStateChange(async (event, session) => {
   if (event === 'SIGNED_IN' && session?.user) {
+    const userId = session.user.id;
+
+    // ── ゲスト診断結果の自動同期 ──────────────────────────────
     try {
       const raw = localStorage.getItem('sincGuestResult');
-      if (!raw) return;
-      const g = JSON.parse(raw);
-      if (!g || !g.code) return;
-
-      // 既存の診断と比較 — DBの診断の方が新しければスキップ（上書き防止）
-      const { data: existing } = await supabase
-        .from('users').select('diagnosis_completed_at').eq('id', session.user.id).single();
-      if (existing?.diagnosis_completed_at &&
-          new Date(existing.diagnosis_completed_at) > new Date(g.timestamp || 0)) {
-        localStorage.removeItem('sincGuestResult');
-        return;
+      if (raw) {
+        const g = JSON.parse(raw);
+        if (g && g.code) {
+          const { data: existing } = await supabase
+            .from('users').select('diagnosis_completed_at').eq('id', userId).single();
+          if (!(existing?.diagnosis_completed_at &&
+              new Date(existing.diagnosis_completed_at) > new Date(g.timestamp || 0))) {
+            const { error } = await supabase.from('users').update({
+              type_code: g.code,
+              type_number: g.typeNumber,
+              type_name: g.typeName,
+              family: g.family,
+              diagnosis_scores: g.scores,
+              diagnosis_completed_at: new Date(g.timestamp || Date.now()).toISOString(),
+            }).eq('id', userId);
+            if (!error) localStorage.removeItem('sincGuestResult');
+          } else {
+            localStorage.removeItem('sincGuestResult');
+          }
+        }
       }
+    } catch(e) { /* サイレント */ }
 
-      const { error } = await supabase.from('users').update({
-        type_code: g.code,
-        type_number: g.typeNumber,
-        type_name: g.typeName,
-        family: g.family,
-        diagnosis_scores: g.scores,
-        diagnosis_completed_at: new Date(g.timestamp || Date.now()).toISOString(),
-      }).eq('id', session.user.id);
-      if (!error) {
-        localStorage.removeItem('sincGuestResult');
+    // ── 招待リンク経由フレンド自動登録 ───────────────────────
+    try {
+      const inviterId = localStorage.getItem('sincPendingRef');
+      if (inviterId && inviterId !== userId) {
+        // 既にフレンド関係がないか確認
+        const { data: existing } = await supabase
+          .from('friends')
+          .select('id')
+          .or(`and(requester_id.eq.${inviterId},receiver_id.eq.${userId}),and(requester_id.eq.${userId},receiver_id.eq.${inviterId})`)
+          .maybeSingle();
+        if (!existing) {
+          await supabase.from('friends').insert({
+            requester_id: inviterId,
+            receiver_id: userId,
+            status: 'accepted',
+            source: 'invite',
+          });
+        }
+        localStorage.removeItem('sincPendingRef');
       }
     } catch(e) { /* サイレント */ }
   }
