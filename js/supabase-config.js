@@ -2,6 +2,15 @@
 // Sinc - Supabase 接続設定
 // ============================================================
 
+// AdSense（全ページ共通読み込み）
+(function(){
+  var s = document.createElement('script');
+  s.async = true;
+  s.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7018374006710584';
+  s.setAttribute('crossorigin','anonymous');
+  document.head.appendChild(s);
+})();
+
 // ============================================================
 // アルファ版フラグ — false に変更するだけで全機能解放
 // ============================================================
