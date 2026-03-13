@@ -258,8 +258,9 @@ const Ads = {
     if (window.Platform && window.Platform.isNative()) {
       watched = await AdMob.showRewarded();
     } else {
-      // Web: AdSense はリワード動画非対応のため、デモ用モーダルを表示
-      watched = await _showWebRewardModal(pts);
+      // Web: 動画広告は準備中
+      showToast('動画広告は近日公開予定です', 'info');
+      watched = false;
     }
 
     if (watched) {

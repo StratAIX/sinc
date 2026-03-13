@@ -69,6 +69,18 @@
   .disclaimer-check{display:flex;align-items:flex-start;gap:8px;margin-top:8px;cursor:pointer}
   .disclaimer-check input[type=checkbox]{margin-top:2px;flex-shrink:0;accent-color:var(--accent)}
   .disclaimer-check span{font-size:.75rem;font-weight:600;color:var(--text)}
+  .terms-scroll-box{
+    background:var(--surface2);border:1px solid var(--surface3);
+    border-radius:8px;padding:12px 14px;margin-bottom:4px;
+    height:140px;overflow-y:scroll;font-size:.7rem;line-height:1.7;color:var(--text2);
+    scroll-behavior:smooth;
+  }
+  .terms-scroll-box h3{font-size:.72rem;color:var(--text);margin:8px 0 2px;font-weight:700}
+  .terms-scroll-box ul{padding-left:16px;margin:0 0 6px}
+  .terms-scroll-hint{font-size:.68rem;color:var(--text2);opacity:.7;text-align:right;margin-bottom:6px}
+  .terms-check-label{display:flex;align-items:flex-start;gap:8px;margin-bottom:10px;cursor:pointer}
+  .terms-check-label input[type=checkbox]{margin-top:2px;flex-shrink:0;accent-color:var(--accent)}
+  .terms-check-label span{font-size:.75rem;font-weight:600;color:var(--text)}
   .age-notice{
     text-align:center;font-size:.72rem;color:var(--danger);
     margin-bottom:14px;font-weight:600;
@@ -180,6 +192,41 @@
       </div>
       <!-- 免責同意 -->
       <p class="age-notice">⚠️ 本サービスは18歳以上の方を対象としています</p>
+
+      <!-- 利用規約スクロール確認 -->
+      <div class="terms-scroll-box" id="terms-scroll-box">
+        <h3>第1条（適用）</h3>
+        <p>本規約はSincの利用条件を定めるものです。登録をもって同意したものとします。</p>
+        <h3>第2条（利用登録）</h3>
+        <ul>
+          <li>18歳未満の方はマッチング機能を利用できません</li>
+          <li>虚偽情報による登録・規約違反による停止後の再登録は禁止します</li>
+        </ul>
+        <h3>第3条（禁止事項）</h3>
+        <ul>
+          <li>他ユーザーへの誹謗中傷・ハラスメント・脅迫</li>
+          <li>営利目的の勧誘・詐欺行為</li>
+          <li>わいせつ・暴力的・差別的なコンテンツの投稿</li>
+          <li>複数アカウントの作成・なりすまし</li>
+          <li>スパム・不正アクセス等のサービス妨害行為</li>
+        </ul>
+        <h3>第4条（免責事項）</h3>
+        <ul>
+          <li>本サービスの性格分析は娯楽目的であり、医学的・心理学的診断ではありません</li>
+          <li>本サービスはαテスト版のため、不具合が生じる可能性があります</li>
+          <li>ユーザー間のトラブルについて当社は直接の責任を負いません</li>
+        </ul>
+        <h3>第5条（知的財産権）</h3>
+        <p>本サービスの知的財産権はすべて当社に帰属します。投稿コンテンツについてはサービス提供・改善目的での利用に同意するものとします。</p>
+        <h3>第6条（準拠法）</h3>
+        <p>本規約は日本法に準拠し、紛争は東京地方裁判所を専属的合意管轄裁判所とします。</p>
+        <p style="margin-top:8px"><a href="legal/terms.html" target="_blank" style="color:var(--accent2)">利用規約全文を読む →</a>　<a href="legal/privacy.html" target="_blank" style="color:var(--accent2)">プライバシーポリシー →</a></p>
+      </div>
+      <div class="terms-scroll-hint" id="terms-scroll-hint">↓ 最後までスクロールしてください</div>
+      <label class="terms-check-label" id="terms-check-wrap">
+        <input type="checkbox" id="agree-terms" disabled>
+        <span>利用規約・プライバシーポリシーを確認し、同意します</span>
+      </label>
 
       <div class="disclaimer-box">
         本サービスは個人製作のαテスト版です。セキュリティには最善を尽くしていますが、完全な安全性を保証するものではありません。αテストの趣旨をご理解のうえご参加ください。
@@ -301,12 +348,26 @@
     }
   });
 
-  // --- 免責チェックボックス → ボタン活性化 ---
+  // --- 利用規約スクロール検知 → 同意チェックを解放 ---
+  const termsBox   = document.getElementById('terms-scroll-box');
+  const agreeTerms = document.getElementById('agree-terms');
+  const termsHint  = document.getElementById('terms-scroll-hint');
+  termsBox.addEventListener('scroll', () => {
+    const atBottom = termsBox.scrollTop + termsBox.clientHeight >= termsBox.scrollHeight - 8;
+    if (atBottom && agreeTerms.disabled) {
+      agreeTerms.disabled = false;
+      termsHint.textContent = '✅ 内容を確認しました。チェックを入れてください。';
+    }
+  });
+
+  // --- 両チェックボックスが揃ったらボタン活性化 ---
   const agreeSecurity = document.getElementById('agree-security');
   const signupBtn     = document.getElementById('signup-btn');
-  agreeSecurity.addEventListener('change', () => {
-    signupBtn.disabled = !agreeSecurity.checked;
-  });
+  function updateSignupBtn() {
+    signupBtn.disabled = !(agreeTerms.checked && agreeSecurity.checked);
+  }
+  agreeTerms.addEventListener('change', updateSignupBtn);
+  agreeSecurity.addEventListener('change', updateSignupBtn);
 
   // --- 新規登録 ---
   document.getElementById('signup-form').addEventListener('submit', async (e) => {

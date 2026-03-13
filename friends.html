@@ -102,16 +102,6 @@
       </div>
     </div>
 
-    <!-- テスト機能 -->
-    <div style="background:linear-gradient(135deg,rgba(253,203,110,.08),rgba(225,112,85,.08));border:1px dashed rgba(253,203,110,.4);border-radius:var(--radius);padding:12px 16px;margin-bottom:16px">
-      <div style="font-size:.8rem;font-weight:700;color:var(--warning);margin-bottom:6px">🧪 テスト機能</div>
-      <div style="font-size:.74rem;color:var(--text2);margin-bottom:10px">フレンドがいなくてもDMやプロフィール画面を確認できます</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button id="test-dm-btn" class="btn btn-secondary btn-sm">💬 DM画面をテスト</button>
-        <button id="test-profile-btn" class="btn btn-secondary btn-sm">👤 他人プロフィールをテスト</button>
-      </div>
-    </div>
-
     <!-- タブ -->
     <div class="tabs friend-tabs">
       <button class="tab active" data-tab="friends" data-i18n="friends.tab_friends">フレンド</button>
@@ -217,8 +207,8 @@
       .from('friends')
       .select(`
         *,
-        requester:users!friends_requester_id_fkey(id, nickname, type_name, type_number, family, avatar_url, display_id, username),
-        receiver:users!friends_receiver_id_fkey(id, nickname, type_name, type_number, family, avatar_url, display_id, username)
+        requester:users!friends_requester_id_fkey(id, nickname, type_name, type_number, family, avatar_url, display_id, username, diagnosis_completed_at),
+        receiver:users!friends_receiver_id_fkey(id, nickname, type_name, type_number, family, avatar_url, display_id, username, diagnosis_completed_at)
       `)
       .or(`requester_id.eq.${user.id},receiver_id.eq.${user.id}`);
 
@@ -263,7 +253,7 @@
         ${renderUserAvatar(f.other, 40)}
         <div class="friend-info">
           <div class="friend-name">${escapeHtml(f.other.nickname || f.other.type_name || '不明')}</div>
-          <div class="friend-type">${escapeHtml(f.other.type_name || '')} · ${escapeHtml(f.other.display_id || '')}</div>
+          <div class="friend-type">${f.other.diagnosis_completed_at ? escapeHtml(f.other.type_name || '') : '<span style="opacity:.6">未診断</span>'} · ${escapeHtml(f.other.display_id || '')}</div>
           <div class="friend-source">${sourceLabel(f.source)}</div>
         </div>
         <div class="friend-actions">
@@ -288,7 +278,7 @@
         ${renderUserAvatar(f.other, 40)}
         <div class="req-info">
           <div class="req-name">${escapeHtml(f.other.nickname || f.other.type_name || '不明')}</div>
-          <div class="req-type">${escapeHtml(f.other.type_name || '')} · 申請中</div>
+          <div class="req-type">${f.other.diagnosis_completed_at ? escapeHtml(f.other.type_name || '') : '<span style="opacity:.6">未診断</span>'} · 申請中</div>
         </div>
         <div class="req-actions">
           <button class="btn btn-secondary btn-sm" onclick="cancelRequest('${f.id}')">キャンセル</button>
@@ -308,7 +298,7 @@
         ${renderUserAvatar(f.other, 40)}
         <div class="req-info">
           <div class="req-name">${escapeHtml(f.other.nickname || f.other.type_name || '不明')}</div>
-          <div class="req-type">${escapeHtml(f.other.type_name || '')} · ${sourceLabel(f.source)}</div>
+          <div class="req-type">${f.other.diagnosis_completed_at ? escapeHtml(f.other.type_name || '') : '<span style="opacity:.6">未診断</span>'} · ${sourceLabel(f.source)}</div>
         </div>
         <div class="req-actions">
           <button class="btn btn-primary btn-sm" onclick="acceptRequest('${f.id}')">承認</button>
@@ -353,7 +343,7 @@
     // username または invite_code で検索
     const { data, error } = await supabase
       .from('users')
-      .select('id, nickname, type_name, family, avatar_url, display_id, username')
+      .select('id, nickname, type_name, family, avatar_url, display_id, username, diagnosis_completed_at')
       .or(`username.eq.${val},invite_code.eq.${val}`)
       .neq('id', myProfile.id)
       .limit(1);
@@ -369,7 +359,7 @@
         ${renderUserAvatar(target, 40)}
         <div class="friend-info">
           <div class="friend-name">${escapeHtml(target.nickname || target.type_name || '不明')}</div>
-          <div class="friend-type">${escapeHtml(target.type_name || '')} · ${escapeHtml(target.display_id || '')}</div>
+          <div class="friend-type">${target.diagnosis_completed_at ? escapeHtml(target.type_name || '') : '<span style="opacity:.6">未診断</span>'} · ${escapeHtml(target.display_id || '')}</div>
         </div>
         <div class="friend-actions">
           <a href="user-profile.html?id=${target.id}" class="btn btn-secondary btn-sm">プロフィール</a>
@@ -433,21 +423,6 @@
     const map = { search: 'ID検索', match: 'マッチング', invite: '招待' };
     return map[source] || '';
   }
-
-  // ——— テスト機能 ———
-  document.getElementById('test-dm-btn')?.addEventListener('click', async () => {
-    const user = await getCurrentUser();
-    if (user) {
-      location.href = `chat.html?user=${user.id}&test=1`;
-    }
-  });
-  document.getElementById('test-profile-btn')?.addEventListener('click', async () => {
-    const user = await getCurrentUser();
-    if (user) {
-      // test=1 で自分のIDでも他人視点プロフィールを表示
-      location.href = `user-profile.html?id=${user.id}&test=1`;
-    }
-  });
 
   init();
 })();

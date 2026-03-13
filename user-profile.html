@@ -120,8 +120,21 @@
         <div class="type-card">
           <div class="type-card-emoji" id="type-emoji">👤</div>
           <div class="type-card-name" id="type-name">—</div>
+          <div class="type-card-en" id="type-en" style="font-size:.78rem;opacity:.6;margin-top:2px"></div>
           <div class="type-card-family" id="type-family"></div>
+          <div class="type-card-desc" id="type-desc" style="font-size:.84rem;color:var(--text2);margin-top:10px;line-height:1.6;text-align:center"></div>
+          <div class="type-card-catch" id="type-catch" style="font-size:.82rem;color:var(--accent2);margin-top:8px;font-style:italic;text-align:center"></div>
           <div class="privacy-note">※ 詳細な診断スコアは本人のみ閲覧できます</div>
+        </div>
+      </div>
+
+      <!-- 相性カード -->
+      <div class="card" id="compat-card-wrap" style="display:none">
+        <div class="section-title" style="margin-bottom:12px">あなたとの相性</div>
+        <div id="compat-card-container" style="display:flex;justify-content:center"></div>
+        <div style="display:flex;justify-content:center;gap:10px;margin-top:12px">
+          <button class="btn btn-secondary btn-sm" id="compat-dl-btn">⬇ 画像保存</button>
+          <button class="btn btn-secondary btn-sm" id="compat-x-btn">𝕏 Xでシェア</button>
         </div>
       </div>
 
@@ -155,7 +168,52 @@
 <script src="js/auth.js"></script>
 <script src="js/nav.js"></script>
 <script src="js/i18n.js"></script>
+<script src="js/compat.js"></script>
 <script>
+// 趣味カテゴリ名テーブル
+const HOBBY_CATEGORIES = {
+  1:'💬 雑談・日常', 2:'🎵 音楽', 3:'🎮 アニメ・マンガ・ゲーム',
+  4:'🎬 映画・ドラマ・動画', 5:'⚽ スポーツ・アウトドア', 6:'📚 読書・学習',
+  7:'🎨 創作・アート', 8:'🍜 グルメ・食', 9:'👗 ファッション・美容',
+  10:'💻 テクノロジー', 11:'🎉 オフ会・イベント', 12:'🤝 お悩み・サポート', 13:'🔮 Sinc',
+};
+
+// タイプ説明テーブル（d=一言説明, c=キャッチコピー, en=英語名）
+const TYPE_INFO = {
+  1:{d:'知識を愛し、自由に思索する穏やかな知性',c:'「答えは急がない。考え続けることが答えだ」',en:'The Quiet Sage'},
+  2:{d:'一人で新しい道を切り拓く、論理的な冒険者',c:'「道がないなら、自分で作る」',en:'The Lone Pioneer'},
+  3:{d:'計画的で誠実。少数の大切な人を静かに守る',c:'「約束は守る。それが俺の全てだ」',en:'The Silent Guardian'},
+  4:{d:'合理的に世界を構造化し、計画的に目標を達成する',c:'「感情を排して、最善手を打つ」',en:'The Strategist'},
+  5:{d:'観察と分析で本質を掴む、静かなる洞察者',c:'「見ている。ただ、静かに見ている」',en:'The Shadow Observer'},
+  6:{d:'複雑な構造を設計し、影から世界を動かす',c:'「全ては計算通りだ」',en:'The Phantom Architect'},
+  7:{d:'原則と秩序を守り、組織を内側から支える',c:'「ルールは守るためにある」',en:'The Iron Sentinel'},
+  8:{d:'大局を見渡し、戦略で勝利をつかむ支配者',c:'「勝ちに不思議の勝ちあり、負けに不思議の負けなし」',en:'The Mastermind'},
+  9:{d:'感情と言葉で世界の美しさを表現する詩人',c:'「感じることが、全ての始まりだ」',en:'The Poet'},
+  10:{d:'独自のビジョンで新しい価値を生み出す創造者',c:'「まだ誰も見ていない景色がある」',en:'The Soul Creator'},
+  11:{d:'共感と優しさで周囲を癒し、つなぐ存在',c:'「あなたの痛みは、私の痛みでもある」',en:'The Gentle Healer'},
+  12:{d:'情熱と美意識で理想を形にし続ける建築家',c:'「美しいものを作ることが、私の使命だ」',en:'The Passionate Builder'},
+  13:{d:'自由に漂い、どこにでも属せるカメレオン',c:'「どこにでも行ける、どこにもいない」',en:'The Drifter'},
+  14:{d:'深淵を旅し、光と闇の両方を知る探求者',c:'「深く潜れば潜るほど、真実に近づく」',en:'The Abyss Walker'},
+  15:{d:'影に潜む感性で、世界の裏側を詩にする',c:'「私の言葉は、あなたの鏡だ」',en:'The Shadow Poet'},
+  16:{d:'仮面をつけて舞台を操る、感情の指揮者',c:'「全ては演技。だから全てが本物だ」',en:'The Masked Conductor'},
+  17:{d:'自由な知性と好奇心で世界を飛び回る思想家',c:'「知ることに、終わりはない」',en:'The Free Thinker'},
+  18:{d:'未知への恐怖を力に変え、前へ進む冒険家',c:'「地図にない場所にこそ、宝がある」',en:'The Adventurer'},
+  19:{d:'対立を橋渡しし、全員が納得できる答えを探す',c:'「争わなくていい。必ず道はある」',en:'The Mediator'},
+  20:{d:'ビジョンを示し、人々を束ねて動かすリーダー',c:'「ついてこい。必ず勝つ」',en:'The Commander'},
+  21:{d:'人脈と対話で世界を広げる、社交の天才',c:'「人と人をつなぐことが、私の力だ」',en:'The Social Fox'},
+  22:{d:'機を読み、最小の力で最大の結果を出す策士',c:'「動くな。今はまだその時じゃない」',en:'The Tactician'},
+  23:{d:'強さと外交を使い分け、難局を打開する',c:'「交渉は戦いの延長だ」',en:'The Iron Diplomat'},
+  24:{d:'絶対的な意志で世界に秩序をもたらす帝王',c:'「私が決めた。それが全てだ」',en:'The Emperor'},
+  25:{d:'温かさと希望で周囲を照らし続ける太陽',c:'「暗い場所があるなら、そこへ行く」',en:'The Sun'},
+  26:{d:'情熱と言葉で人の心に火をつける伝道者',c:'「あなたにはまだ、知らない力がある」',en:'The Firestarter'},
+  27:{d:'他者の感情を深く理解し、寄り添う共感者',c:'「あなたが感じていることは、正しい」',en:'The Empath'},
+  28:{d:'情熱で人を巻き込み、共に夢を実現するリーダー',c:'「一人より、みんなで。みんなの方が強い」',en:'The Passionate Leader'},
+  29:{d:'遊び心と創造性で世界を笑いに変える道化師',c:'「笑えない日は、まだ笑い方が足りない日だ」',en:'The Trickster'},
+  30:{d:'圧倒的な存在感で人を引き寄せるカリスマ',c:'「私がいれば、それだけで十分だ」',en:'The Charisma'},
+  31:{d:'舞台の上で輝き、人の心を動かす演者',c:'「人生は舞台。ならば主役を演じろ」',en:'The Performer'},
+  32:{d:'太陽の顔の下に深い影を持つ、複雑な存在',c:'「笑顔の裏に、全てがある」',en:'The Masked Sun'},
+};
+
 // タイプ絵文字テーブル
 function getTypeEmoji(n) {
   const e = {1:'🦉',2:'🧭',3:'🛡️',4:'♟️',5:'🔍',6:'⚙️',7:'🏰',8:'👑',
@@ -230,18 +288,25 @@ function getTypeEmoji(n) {
       document.getElementById('bio-text').textContent = target.bio;
     }
 
-    // 趣味
+    // 趣味（IDを名前に変換）
     if (target.hobbies && target.hobbies.length > 0) {
       document.getElementById('hobbies-card').style.display = '';
       document.getElementById('hobbies-list').innerHTML =
-        target.hobbies.map(h => `<span class="hobby-chip">${escapeHtml(h)}</span>`).join('');
+        target.hobbies.map(h => {
+          const label = HOBBY_CATEGORIES[Number(h)] || String(h);
+          return `<span class="hobby-chip">${escapeHtml(label)}</span>`;
+        }).join('');
     }
 
     // タイプ
     if (target.type_name) {
+      const info = TYPE_INFO[target.type_number] || {};
       document.getElementById('type-card-wrap').style.display = '';
       document.getElementById('type-emoji').textContent = getTypeEmoji(target.type_number);
       document.getElementById('type-name').textContent = target.type_name;
+      if (info.en) document.getElementById('type-en').textContent = info.en;
+      if (info.d)  document.getElementById('type-desc').textContent = info.d;
+      if (info.c)  document.getElementById('type-catch').textContent = info.c;
       const fam = target.family || '';
       const famColors = {
         Architects: 'var(--accent)', Mystics: 'var(--pink)',
@@ -249,6 +314,21 @@ function getTypeEmoji(n) {
       };
       document.getElementById('type-family').innerHTML =
         `<span style="color:${famColors[fam] || 'var(--text2)'};font-weight:700">${escapeHtml(fam)}</span>`;
+    }
+
+    // 相性カード（双方が診断済みの場合のみ表示）
+    const myProfile = await getMyProfile();
+    if (myProfile && myProfile.type_number && target.type_number && window.Compat) {
+      const n1 = myProfile.type_number;
+      const n2 = target.type_number;
+      const wrap = document.getElementById('compat-card-wrap');
+      wrap.style.display = '';
+      const canvas = document.createElement('canvas');
+      canvas.style.cssText = 'max-width:100%;border-radius:12px';
+      document.getElementById('compat-card-container').appendChild(canvas);
+      Compat.CompatCard.draw(canvas, n1, n2);
+      document.getElementById('compat-dl-btn').onclick = () => Compat.CompatCard.download(n1, n2);
+      document.getElementById('compat-x-btn').onclick  = () => Compat.CompatCard.shareToX(n1, n2);
     }
 
     // フレンド関係を確認してアクションボタンを表示
