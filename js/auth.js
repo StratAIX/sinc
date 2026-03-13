@@ -20,7 +20,10 @@ const Auth = {
     if (data.user && data.session) {
       const { error: profileError } = await supabase
         .from('users')
-        .insert({ id: data.user.id });
+        .insert({
+          id: data.user.id,
+          alpha_agreed_at: new Date().toISOString(), // 免責同意ログ
+        });
       if (profileError && profileError.code !== '23505') {
         // 23505 = 既に存在（重複INSERT防止）
         throw profileError;

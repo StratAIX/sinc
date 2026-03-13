@@ -61,6 +61,18 @@
   .auth-tab:hover:not(.active){color:var(--text)}
   .auth-form{display:none}
   .auth-form.active{display:block}
+  .disclaimer-box{
+    background:var(--surface2);border:1px solid var(--surface3);
+    border-radius:8px;padding:12px 14px;margin-bottom:10px;
+    font-size:.72rem;line-height:1.7;color:var(--text2);
+  }
+  .disclaimer-check{display:flex;align-items:flex-start;gap:8px;margin-top:8px;cursor:pointer}
+  .disclaimer-check input[type=checkbox]{margin-top:2px;flex-shrink:0;accent-color:var(--accent)}
+  .disclaimer-check span{font-size:.75rem;font-weight:600;color:var(--text)}
+  .age-notice{
+    text-align:center;font-size:.72rem;color:var(--danger);
+    margin-bottom:14px;font-weight:600;
+  }
   .auth-divider{
     display:flex;align-items:center;gap:12px;
     margin:20px 0;color:var(--text2);font-size:.75rem;
@@ -166,7 +178,26 @@
         <input type="password" class="form-input" id="signup-password-confirm"
                placeholder="もう一度入力" required minlength="8" autocomplete="new-password">
       </div>
-      <button type="submit" class="btn btn-primary btn-block" id="signup-btn">
+      <!-- 免責同意 -->
+      <p class="age-notice">⚠️ 本サービスは18歳以上の方を対象としています</p>
+
+      <div class="disclaimer-box">
+        本サービスはAIを使用し管理者が制作した個人製作のWEBサービスです。開発・管理は厳重に行っていますが、不具合などが発生した際の保証は一切いたしません。同意いただける方のみαテストにご参加ください。
+        <label class="disclaimer-check">
+          <input type="checkbox" id="agree-general">
+          <span>上記に同意する</span>
+        </label>
+      </div>
+
+      <div class="disclaimer-box">
+        本サービスはAIを使用し管理者が制作した個人製作のWEBサービスです。開発・管理は厳重に行っていますが、入力いただいたメールアドレスやパスワードが流出しない保証はございません。同意いただける方のみαテストにご参加ください。
+        <label class="disclaimer-check">
+          <input type="checkbox" id="agree-security">
+          <span>上記に同意する</span>
+        </label>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block" id="signup-btn" disabled>
         <span data-i18n="auth.register">アカウント作成</span>
       </button>
       <div class="auth-status" id="signup-status"></div>
@@ -277,6 +308,16 @@
       btn.textContent = 'ログイン';
     }
   });
+
+  // --- 免責チェックボックス → ボタン活性化 ---
+  const agreeGeneral  = document.getElementById('agree-general');
+  const agreeSecurity = document.getElementById('agree-security');
+  const signupBtn     = document.getElementById('signup-btn');
+  function updateSignupBtn() {
+    signupBtn.disabled = !(agreeGeneral.checked && agreeSecurity.checked);
+  }
+  agreeGeneral.addEventListener('change', updateSignupBtn);
+  agreeSecurity.addEventListener('change', updateSignupBtn);
 
   // --- 新規登録 ---
   document.getElementById('signup-form').addEventListener('submit', async (e) => {
