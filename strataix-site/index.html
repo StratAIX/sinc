@@ -690,6 +690,21 @@ section { position:relative; z-index:1; }
   font-size:.78rem; color:var(--text-muted);
   line-height:1.6;
 }
+.contact-x {
+  display:inline-flex; align-items:center; gap:8px;
+  font-family:var(--font-display);
+  font-size:.8rem; font-weight:600;
+  color:var(--text-dim); text-decoration:none;
+  letter-spacing:.04em;
+  border:1px solid var(--line-bright);
+  padding:10px 20px; border-radius:2px;
+  transition:color .3s, border-color .3s, background .3s;
+}
+.contact-x:hover {
+  color:var(--text);
+  border-color:rgba(255,255,255,.3);
+  background:rgba(255,255,255,.04);
+}
 
 /* =============================================
    FOOTER
@@ -1057,6 +1072,10 @@ footer {
       </p>
       <div class="contact-row reveal">
         <a href="mailto:info@strataix.net" class="contact-mail">info@strataix.net</a>
+        <a href="https://x.com/StratAIX_AI" class="contact-x" target="_blank" rel="noopener">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L2.25 2.25h6.928l4.279 5.652zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+          @StratAIX_AI
+        </a>
         <p class="contact-note">通常2〜3営業日以内にご返信します</p>
       </div>
     </div>
@@ -1070,6 +1089,7 @@ footer {
       <img src="../3.StratAIX/StratAIX_logo.png" alt="StratAIX">
     </a>
     <div class="footer-links">
+      <a href="https://x.com/StratAIX_AI" target="_blank" rel="noopener">X / @StratAIX_AI</a>
       <a href="https://sinc.strataix.net/legal/privacy.html">Privacy Policy</a>
       <a href="https://sinc.strataix.net/legal/terms.html">Terms of Service</a>
     </div>
