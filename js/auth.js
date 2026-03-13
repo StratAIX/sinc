@@ -15,7 +15,9 @@ const Auth = {
     if (error) throw error;
 
     // usersテーブルにレコードを作成
-    if (data.user) {
+    // ※ セッション確立済みの場合のみINSERT（メール確認必要な設定だとsessionがnullになるためスキップ）
+    //　 メール確認後のSIGNED_INイベント → getMyProfile()内のPGRST116ハンドラで自動作成される
+    if (data.user && data.session) {
       const { error: profileError } = await supabase
         .from('users')
         .insert({ id: data.user.id });
