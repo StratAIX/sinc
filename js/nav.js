@@ -110,7 +110,6 @@
         <div class="sb-legal-links">
           <a href="legal/privacy.html" class="sb-legal-link" data-i18n="footer.privacy">プライバシーポリシー</a>
           <a href="legal/terms.html" class="sb-legal-link" data-i18n="footer.terms">利用規約</a>
-          <a href="legal/tokusho.html" class="sb-legal-link" data-i18n="footer.tokusho">特定商取引法</a>
         </div>
         <div class="sb-copyright">© 2026 StratAIX</div>
       </div>
@@ -128,8 +127,6 @@
           <a href="legal/privacy.html" data-i18n="footer.privacy">プライバシーポリシー</a>
           <span class="pf-sep">·</span>
           <a href="legal/terms.html" data-i18n="footer.terms">利用規約</a>
-          <span class="pf-sep">·</span>
-          <a href="legal/tokusho.html" data-i18n="footer.tokusho_full">特定商取引法に基づく表示</a>
         </div>
         <p class="page-footer-disclaimer" data-i18n="footer.disclaimer">本サービスの性格分析は娯楽・自己理解を目的とするものであり、医学的・心理学的診断ではありません。</p>
         <p class="page-footer-copy">© 2026 StratAIX</p>
