@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-visual">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Sinc - チャット</title>
@@ -614,6 +614,18 @@
         sendMessage();
       }
     });
+
+    // モバイルキーボード表示時に入力エリアが隠れないようにする
+    if (window.visualViewport) {
+      const inputArea = document.querySelector('.chat-input-area');
+      const messages = document.querySelector('.chat-messages');
+      window.visualViewport.addEventListener('resize', () => {
+        const offset = Math.max(0, window.innerHeight - window.visualViewport.height - window.visualViewport.offsetTop);
+        inputArea.style.bottom = offset + 'px';
+        // キーボード表示時に最新メッセージまでスクロール
+        setTimeout(() => { messages.scrollTop = messages.scrollHeight; }, 80);
+      });
+    }
   }
 
   async function sendMessage() {

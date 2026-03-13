@@ -417,6 +417,18 @@
         <span class="menu-arrow">›</span>
       </div>
 
+      <a href="types.html" class="menu-item">
+        <span class="menu-icon">📖</span>
+        <span class="menu-label">全32タイプ一覧</span>
+        <span class="menu-arrow">›</span>
+      </a>
+
+      <a href="compat-matrix.html" class="menu-item">
+        <span class="menu-icon">💫</span>
+        <span class="menu-label">相性マトリクス</span>
+        <span class="menu-arrow">›</span>
+      </a>
+
       <div class="menu-item" id="share-btn">
         <span class="menu-icon">📤</span>
         <span class="menu-label" data-i18n="profile.share_results">診断結果をシェア</span>
@@ -703,12 +715,14 @@
       </div>
       ${profile.nickname ? `<div class="profile-nickname">${escapeHtml(profile.nickname)}</div>` : ''}
       ${profile.username ? `<div style="font-size:.78rem;color:var(--text2);margin-bottom:4px">@${escapeHtml(profile.username)}</div>` : ''}
-      <div class="profile-type-name">Type ${profile.type_number || '?'}: ${escapeHtml(profile.type_name || '未診断')}</div>
+      ${profile.diagnosis_completed_at
+        ? `<a href="doppelganger-diagnosis.index.html?viewResult=1" class="profile-type-name" style="text-decoration:none;cursor:pointer;" title="診断結果を見る">Type ${profile.type_number || '?'}: ${escapeHtml(profile.type_name || '未診断')} 🔍</a>`
+        : `<div class="profile-type-name">Type ${profile.type_number || '?'}: ${escapeHtml(profile.type_name || '未診断')}</div>`
+      }
       <div class="profile-type-sub">
         <span class="badge ${badgeClass}">${fam || '未分類'}</span>
       </div>
       ${profile.bio ? `<div class="profile-bio">${escapeHtml(profile.bio)}</div>` : ''}
-      <div class="profile-display-id">${escapeHtml(profile.display_id || '')}</div>
       <button class="edit-profile-btn" id="edit-btn">${(typeof I18n !== 'undefined') ? I18n.t('profile.edit_btn') : '✏️ プロフィール編集'}</button>
       ${!profile.diagnosis_completed_at ? '<div class="mt-16"><a href="doppelganger-diagnosis.index.html" class="btn btn-primary btn-sm">診断を受ける</a></div>' : ''}
     `;
@@ -765,7 +779,7 @@
           <span class="history-num">${labels[i] || (i + '回前')}</span>
           <div class="history-type">
             <div class="history-type-name">Type ${h.type_number || '?'}: ${escapeHtml(h.type_name || '不明')}</div>
-            <div class="history-type-sub">${escapeHtml(h.family || '')} Family ｜ ${escapeHtml(h.type_code || '')}</div>
+            <div class="history-type-sub">${escapeHtml(h.family || '')} Family</div>
           </div>
           <span class="history-date">${date}</span>
         </div>
