@@ -354,18 +354,28 @@ function getTypeEmoji(n) {
       .maybeSingle();
 
     let html = '';
-    if (!friendship) {
-      // フレンドでない → 申請ボタン
-      html = `<button class="btn btn-primary" id="add-friend-btn">👥 フレンド申請</button>`;
+    if (friendship?.status === 'blocked') {
+      // ブロック済み（自分がブロックした場合のみ解除可）
+      if (friendship.requester_id === myUserId) {
+        html = `<span class="btn btn-secondary" style="cursor:default;opacity:.6">🚫 ブロック中</span>
+                <button class="btn btn-secondary btn-sm" onclick="unblockUser('${friendship.id}')" style="color:var(--text2)">解除</button>`;
+      } else {
+        html = `<span class="btn btn-secondary" style="cursor:default;opacity:.6">🚫 ブロックされています</span>`;
+      }
+    } else if (!friendship) {
+      html = `<button class="btn btn-primary" id="add-friend-btn">👥 フレンド申請</button>
+              <button class="btn btn-secondary btn-sm" onclick="blockUser(null,'${target.id}')" style="color:var(--error,#e55)">🚫 ブロック</button>`;
     } else if (friendship.status === 'accepted') {
-      // フレンド → DM
-      html = `<a href="chat.html?user=${target.id}" class="btn btn-primary">💬 DM</a>`;
+      html = `<a href="chat.html?user=${target.id}" class="btn btn-primary">💬 DM</a>
+              <button class="btn btn-secondary btn-sm" onclick="blockUser('${friendship.id}','${target.id}')" style="color:var(--error,#e55)">🚫 ブロック</button>`;
     } else if (friendship.status === 'pending' && friendship.requester_id === myUserId) {
-      html = `<span class="btn btn-secondary" style="cursor:default">申請中...</span>`;
+      html = `<span class="btn btn-secondary" style="cursor:default">申請中...</span>
+              <button class="btn btn-secondary btn-sm" onclick="blockUser('${friendship.id}','${target.id}')" style="color:var(--error,#e55)">🚫 ブロック</button>`;
     } else if (friendship.status === 'pending') {
       html = `
         <button class="btn btn-primary" onclick="acceptFriend('${friendship.id}')">✅ 承認</button>
         <button class="btn btn-secondary" onclick="rejectFriend('${friendship.id}')">✕ 拒否</button>
+        <button class="btn btn-secondary btn-sm" onclick="blockUser('${friendship.id}','${target.id}')" style="color:var(--error,#e55)">🚫 ブロック</button>
       `;
     }
 
@@ -398,6 +408,38 @@ function getTypeEmoji(n) {
   };
   window.rejectFriend = async function (id) {
     await supabase.from('friends').update({ status: 'rejected' }).eq('id', id);
+    await loadProfile();
+  };
+
+  window.blockUser = async function (friendshipId, targetId) {
+    if (!confirm('このユーザーをブロックしますか？\nブロックするとDMの送受信ができなくなります。')) return;
+    if (friendshipId) {
+      // 既存のフレンド関係をブロックに更新
+      const { error } = await supabase.from('friends')
+        .update({ status: 'blocked', requester_id: myUserId, receiver_id: targetId })
+        .eq('id', friendshipId);
+      if (error) return showToast('ブロックに失敗しました', 'error');
+    } else {
+      // フレンド関係がない場合は新規insert
+      const { error } = await supabase.from('friends').insert({
+        requester_id: myUserId,
+        receiver_id: targetId,
+        status: 'blocked',
+        source: 'search',
+      });
+      if (error) return showToast('ブロックに失敗しました', 'error');
+    }
+    showToast('ブロックしました', 'success');
+    await loadProfile();
+  };
+
+  window.unblockUser = async function (friendshipId) {
+    if (!confirm('ブロックを解除しますか？')) return;
+    const { error } = await supabase.from('friends')
+      .delete()
+      .eq('id', friendshipId);
+    if (error) return showToast('解除に失敗しました', 'error');
+    showToast('ブロックを解除しました', 'success');
     await loadProfile();
   };
 
