@@ -5,6 +5,35 @@
 
 ---
 
+## 【初回のみ】アカウント作成手順
+
+### ① 管理者アカウント（admin.html専用）
+
+1. [Supabase Dashboard](https://supabase.com/dashboard) → 対象プロジェクト → `Authentication` → `Users`
+2. `Add user` → `Create new user`
+   - Email: `info@strataix.net`
+   - Password: 強いパスワードを設定
+   - **Auto Confirm User: ✅ チェックを入れる**（メール確認スキップ）
+3. `Table Editor` → `users` テーブルに手動でレコードを Insert
+   ```
+   id         : Authentication で作成されたユーザーのUUID（Authページでコピー）
+   is_admin   : true
+   ban_status : active
+   （他の列は空欄でOK。診断スコア不要）
+   ```
+4. これで `sinc.strataix.net/admin.html` にログインできるようになる
+
+### ② GMアカウント（掲示板の「Sinc公式」用）
+
+1. `sinc.strataix.net` から **普通に診断→登録**（136問を受ける）
+2. ニックネームを「Sinc公式」などに設定
+3. αテスト中の掲示板の最初の書き込みや場の雰囲気作りに使う
+4. このアカウントに管理者権限は**不要**（admin.htmlとは別運用）
+
+> **なぜ分けるか**: 管理アカウントとGMアカウントを分けることで、片方の情報が漏れてももう片方に影響が出ない。管理者権限は最小限のアカウントにのみ付与する。
+
+---
+
 ## ログイン方法
 
 1. ブラウザで `https://sinc.strataix.net/admin.html` にアクセス
