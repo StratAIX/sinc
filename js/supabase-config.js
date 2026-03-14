@@ -118,8 +118,8 @@ supabase.auth.onAuthStateChange(async (event, session) => {
           .maybeSingle();
         if (!existing) {
           await supabase.from('friends').insert({
-            requester_id: inviterId,
-            receiver_id: userId,
+            requester_id: userId,   // auth.uid()=自分がrequesterでないとRLSに弾かれる
+            receiver_id: inviterId,
             status: 'accepted',
             source: 'invite',
           });
