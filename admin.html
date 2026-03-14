@@ -78,6 +78,30 @@ body{display:flex;min-height:100vh;background:var(--bg)}
 .loading{text-align:center;padding:30px;color:var(--text2);font-size:.85rem}
 /* Tab section header */
 .section-title{font-size:1rem;font-weight:800;margin:0 0 16px;display:flex;align-items:center;gap:8px}
+/* ADMIN-01: DM画像サムネイル + ビューアー */
+.dm-img-thumb{max-height:56px;max-width:100px;border-radius:6px;cursor:pointer;object-fit:cover;border:1px solid var(--surface3);display:block;margin-top:4px}
+#img-viewer-overlay{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9999;display:none;align-items:center;justify-content:center;cursor:zoom-out;flex-direction:column;gap:12px}
+#img-viewer-overlay img{max-width:90vw;max-height:82vh;border-radius:8px;object-fit:contain}
+#img-viewer-overlay .viewer-actions{display:flex;gap:8px}
+/* ADMIN-02: 一括操作バー */
+.bulk-bar{display:flex;gap:8px;align-items:center;padding:8px 12px;background:var(--surface2);border:1px solid var(--surface3);border-radius:var(--radius);margin-bottom:8px;flex-wrap:wrap}
+.bulk-count{font-size:.8rem;color:var(--text2)}
+.adm-table th.chk-col,.adm-table td.chk-col{width:32px;padding:10px 6px;text-align:center}
+/* ADMIN-05: アラートバナー */
+.adm-alert{display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:var(--radius);font-size:.85rem;font-weight:700;margin-bottom:16px;border:1px solid}
+.adm-alert-crit{background:rgba(225,112,85,.12);border-color:#e17355;color:#e17355}
+.adm-alert-warn{background:rgba(253,203,110,.12);border-color:#fdcb6e;color:#c4912a}
+.adm-alert .alert-dismiss{background:none;border:none;cursor:pointer;margin-left:auto;opacity:.6;font-size:1rem;color:inherit}
+/* ADMIN-04: チャート */
+.charts-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-bottom:24px}
+.chart-card{background:var(--surface1);border:1px solid var(--surface3);border-radius:var(--radius);padding:16px}
+.chart-card h4{font-size:.78rem;font-weight:700;color:var(--text2);margin:0 0 10px;text-transform:uppercase;letter-spacing:.04em}
+.chart-bars{display:flex;align-items:flex-end;gap:4px;height:80px;padding-top:4px}
+.chart-bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px}
+.chart-bar{width:100%;border-radius:3px 3px 0 0;min-height:3px;transition:opacity .2s}
+.chart-bar:hover{opacity:.75}
+.chart-bar-label{font-size:.58rem;color:var(--text2);white-space:nowrap}
+.chart-bar-val{font-size:.62rem;color:var(--text);font-weight:700}
 @media(max-width:700px){
   .adm-sidebar{width:60px}
   .adm-nav a span,.adm-logo span,.adm-logo small,.adm-signout button span{display:none}
@@ -119,6 +143,8 @@ body{display:flex;min-height:100vh;background:var(--bg)}
   <!-- 概要 -->
   <section class="adm-section active" id="section-overview">
     <div class="adm-header"><h1>概要</h1><p id="overview-updated">読み込み中...</p></div>
+    <!-- ADMIN-05: アラートバナー -->
+    <div id="admin-alert-area"></div>
     <div class="stats-grid">
       <div class="stat-card"><div class="val" id="st-users">-</div><div class="lbl">総ユーザー数</div></div>
       <div class="stat-card"><div class="val" id="st-users-today">-</div><div class="lbl">今日の新規登録</div></div>
@@ -129,6 +155,21 @@ body{display:flex;min-height:100vh;background:var(--bg)}
       <div class="stat-card warn"><div class="val" id="st-banned">-</div><div class="lbl">BANユーザー数</div></div>
       <div class="stat-card"><div class="val" id="st-matching">-</div><div class="lbl">マッチング解放数</div></div>
       <div class="stat-card"><div class="val" id="st-threads">-</div><div class="lbl">総スレッド数</div></div>
+    </div>
+    <!-- ADMIN-04: 7日間グラフ -->
+    <div class="charts-row" id="charts-row">
+      <div class="chart-card">
+        <h4>📝 日別投稿数（7日間）</h4>
+        <div class="chart-bars" id="chart-posts"></div>
+      </div>
+      <div class="chart-card">
+        <h4>👤 日別新規登録（7日間）</h4>
+        <div class="chart-bars" id="chart-users"></div>
+      </div>
+      <div class="chart-card">
+        <h4>🚨 日別通報数（7日間）</h4>
+        <div class="chart-bars" id="chart-reports"></div>
+      </div>
     </div>
     <div class="adm-table-wrap">
       <table class="adm-table">
@@ -150,10 +191,18 @@ body{display:flex;min-height:100vh;background:var(--bg)}
       </select>
       <button class="btn btn-ghost btn-sm" onclick="loadReports()">🔄 更新</button>
     </div>
+    <!-- ADMIN-02: 一括操作バー -->
+    <div class="bulk-bar" id="reports-bulk-bar" style="display:none">
+      <span class="bulk-count" id="reports-bulk-count">0件選択</span>
+      <button class="btn btn-ghost btn-sm" onclick="bulkUpdateReports('reviewed')">✅ 一括確認済み</button>
+      <button class="btn btn-ghost btn-sm" onclick="bulkUpdateReports('dismissed')">❌ 一括却下</button>
+      <button class="btn btn-warn btn-sm" onclick="bulkWarnFromReports()">⚠️ 一括警告</button>
+      <button class="btn btn-danger btn-sm" onclick="bulkBanFromReports()">🔴 一括BAN</button>
+    </div>
     <div class="adm-table-wrap">
       <table class="adm-table">
-        <thead><tr><th>通報ID</th><th>通報者</th><th>投稿内容</th><th>理由</th><th>状態</th><th>日時</th><th>操作</th></tr></thead>
-        <tbody id="reports-table"><tr><td colspan="7" class="loading">読み込み中...</td></tr></tbody>
+        <thead><tr><th class="chk-col"><input type="checkbox" id="reports-chk-all" onchange="toggleAllReports(this)"></th><th>通報ID</th><th>通報者</th><th>投稿内容</th><th>理由</th><th>状態</th><th>日時</th><th>操作</th></tr></thead>
+        <tbody id="reports-table"><tr><td colspan="8" class="loading">読み込み中...</td></tr></tbody>
       </table>
     </div>
   </section>
@@ -193,6 +242,8 @@ body{display:flex;min-height:100vh;background:var(--bg)}
           <option value="active">表示中</option>
           <option value="deleted">削除済み</option>
         </select>
+        <!-- ADMIN-03: キーワード検索 -->
+        <input type="text" id="posts-search" placeholder="内容・ユーザーIDで検索" oninput="loadPosts()" style="min-width:200px">
         <button class="btn btn-ghost btn-sm" onclick="loadPosts()">🔄 更新</button>
       </div>
       <div class="adm-table-wrap">
@@ -285,10 +336,18 @@ body{display:flex;min-height:100vh;background:var(--bg)}
       </select>
       <button class="btn btn-ghost btn-sm" onclick="loadChatReports()">🔄 更新</button>
     </div>
+    <!-- ADMIN-02: DM通報一括操作バー -->
+    <div class="bulk-bar" id="dm-bulk-bar" style="display:none">
+      <span class="bulk-count" id="dm-bulk-count">0件選択</span>
+      <button class="btn btn-ghost btn-sm" onclick="bulkUpdateDmReports('reviewed')">✅ 一括確認済み</button>
+      <button class="btn btn-ghost btn-sm" onclick="bulkUpdateDmReports('dismissed')">❌ 一括却下</button>
+      <button class="btn btn-warn btn-sm" onclick="bulkWarnFromDmReports()">⚠️ 一括警告</button>
+      <button class="btn btn-danger btn-sm" onclick="bulkBanFromDmReports()">🔴 一括BAN</button>
+    </div>
     <div class="adm-table-wrap">
       <table class="adm-table">
-        <thead><tr><th>通報ID</th><th>送信者</th><th>メッセージ内容</th><th>種別</th><th>通報理由</th><th>状態</th><th>日時</th><th>操作</th></tr></thead>
-        <tbody id="dm-reports-table"><tr><td colspan="8" class="loading">読み込み中...</td></tr></tbody>
+        <thead><tr><th class="chk-col"><input type="checkbox" id="dm-chk-all" onchange="toggleAllDmReports(this)"></th><th>通報ID</th><th>送信者</th><th>メッセージ / 画像</th><th>種別</th><th>通報理由</th><th>状態</th><th>日時</th><th>操作</th></tr></thead>
+        <tbody id="dm-reports-table"><tr><td colspan="9" class="loading">読み込み中...</td></tr></tbody>
       </table>
     </div>
   </section>
@@ -336,6 +395,15 @@ body{display:flex;min-height:100vh;background:var(--bg)}
 <!-- ユーザー詳細モーダル -->
 <div class="modal-overlay" id="user-modal" style="display:none" onclick="closeUserModal(event)">
   <div class="modal-box" id="user-modal-content"></div>
+</div>
+
+<!-- ADMIN-01: DM画像ビューアー -->
+<div id="img-viewer-overlay" onclick="closeImgViewer()">
+  <img id="img-viewer-img" src="" alt="通報画像">
+  <div class="viewer-actions" onclick="event.stopPropagation()">
+    <button class="btn btn-danger btn-sm" id="img-viewer-delete-btn">🗑️ Storageから削除</button>
+    <button class="btn btn-ghost btn-sm" onclick="closeImgViewer()">✕ 閉じる</button>
+  </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -402,6 +470,10 @@ body{display:flex;min-height:100vh;background:var(--bg)}
   // ============================================================
   // 概要
   // ============================================================
+  // ADMIN-05: アラートしきい値
+  const ALERT_THRESHOLD_CRIT = 10; // 赤アラート
+  const ALERT_THRESHOLD_WARN = 5;  // 黄アラート
+
   async function loadOverview() {
     document.getElementById('overview-updated').textContent = '最終更新: ' + new Date().toLocaleTimeString('ja-JP');
     const today = todayStart();
@@ -441,20 +513,88 @@ body{display:flex;min-height:100vh;background:var(--bg)}
     if (dmReports > 0) { dmBadge.textContent = dmReports; dmBadge.style.display=''; }
     else dmBadge.style.display='none';
 
+    // ADMIN-05: アラートバナー
+    const totalPending = (reports??0) + (dmReports??0);
+    const alertArea = document.getElementById('admin-alert-area');
+    alertArea.innerHTML = '';
+    if (totalPending >= ALERT_THRESHOLD_CRIT) {
+      alertArea.innerHTML = `<div class="adm-alert adm-alert-crit">
+        🚨 未処理通報が <strong>${totalPending}件</strong>（掲示板:${reports??0} / DM:${dmReports??0}）あります。早急に確認してください。
+        <button class="alert-dismiss" onclick="this.closest('.adm-alert').remove()">✕</button>
+      </div>`;
+    } else if (totalPending >= ALERT_THRESHOLD_WARN) {
+      alertArea.innerHTML = `<div class="adm-alert adm-alert-warn">
+        ⚠️ 未処理通報が <strong>${totalPending}件</strong>あります（掲示板:${reports??0} / DM:${dmReports??0}）。
+        <button class="alert-dismiss" onclick="this.closest('.adm-alert').remove()">✕</button>
+      </div>`;
+    }
+
     // 最新通報
     const {data:rpts} = await supabase.from('reports')
       .select('id,reason,created_at,post_id,reporter_id,posts(content,user_id,users!posts_user_id_fkey(display_id,nickname))')
       .eq('status','pending').order('created_at',{ascending:false}).limit(5);
 
     const tb = document.getElementById('overview-reports-table');
-    if (!rpts||!rpts.length) { tb.innerHTML='<tr><td colspan="4" class="empty-msg">未処理通報なし</td></tr>'; return; }
-    tb.innerHTML = rpts.map(r => `
+    if (!rpts||!rpts.length) { tb.innerHTML='<tr><td colspan="4" class="empty-msg">未処理通報なし</td></tr>'; }
+    else tb.innerHTML = rpts.map(r => `
       <tr>
         <td><code style="font-size:.75rem">${r.id.slice(0,8)}</code></td>
         <td><div class="post-content-box">${esc(trunc(r.posts?.content,60))}</div></td>
         <td style="font-size:.75rem;color:var(--text2)">${fmtDate(r.created_at)}</td>
         <td><button class="btn btn-danger btn-sm" onclick="quickDeletePost('${r.posts?.user_id||''}','${r.id}','${r.post_id}')">削除+対処</button></td>
       </tr>`).join('');
+
+    // ADMIN-04: 7日間グラフ
+    loadCharts();
+  }
+
+  // ADMIN-04: グラフデータ取得・描画
+  async function loadCharts() {
+    const days7ago = new Date(Date.now() - 7*24*60*60*1000).toISOString();
+    const [
+      {data:postDates},
+      {data:userDates},
+      {data:reportDates},
+    ] = await Promise.all([
+      supabase.from('posts').select('created_at').gte('created_at',days7ago).eq('is_deleted',false),
+      supabase.from('users').select('created_at').gte('created_at',days7ago),
+      supabase.from('reports').select('created_at').gte('created_at',days7ago),
+    ]);
+
+    const labels = [];
+    for (let i=6;i>=0;i--) {
+      const d = new Date(); d.setDate(d.getDate()-i);
+      labels.push((d.getMonth()+1)+'/'+(d.getDate()));
+    }
+
+    const countByDay = (rows) => {
+      const m = {};
+      labels.forEach(l => m[l]=0);
+      (rows||[]).forEach(r => {
+        const d = new Date(r.created_at);
+        const k = (d.getMonth()+1)+'/'+(d.getDate());
+        if (k in m) m[k]++;
+      });
+      return labels.map(l => m[l]);
+    };
+
+    renderBarChart('chart-posts',  labels, countByDay(postDates),   '#6c5ce7');
+    renderBarChart('chart-users',  labels, countByDay(userDates),   '#00b894');
+    renderBarChart('chart-reports',labels, countByDay(reportDates), '#e17355');
+  }
+
+  function renderBarChart(containerId, labels, values, color) {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    const max = Math.max(...values, 1);
+    el.innerHTML = labels.map((l,i) => {
+      const h = Math.round((values[i]/max)*72);
+      return `<div class="chart-bar-col" title="${l}: ${values[i]}件">
+        <div class="chart-bar-val">${values[i]||''}</div>
+        <div class="chart-bar" style="height:${h}px;background:${color};opacity:${values[i]===0?.25:1}"></div>
+        <div class="chart-bar-label">${l}</div>
+      </div>`;
+    }).join('');
   }
 
   // ============================================================
@@ -469,11 +609,12 @@ body{display:flex;min-height:100vh;background:var(--bg)}
     const {data} = await q;
 
     const tb = document.getElementById('reports-table');
-    if (!data||!data.length) { tb.innerHTML='<tr><td colspan="7" class="empty-msg">データなし</td></tr>'; return; }
+    if (!data||!data.length) { tb.innerHTML='<tr><td colspan="8" class="empty-msg">データなし</td></tr>'; return; }
     tb.innerHTML = data.map(r => {
       const p = r.posts;
       const uid = p?.user_id||'';
-      return `<tr>
+      return `<tr data-report-id="${r.id}" data-user-id="${uid}">
+        <td class="chk-col"><input type="checkbox" class="report-chk" onchange="updateReportsBulkBar()"></td>
         <td><code style="font-size:.72rem">${r.id.slice(0,8)}</code></td>
         <td style="font-size:.75rem;color:var(--text2)">${esc(r.reporter_id?.slice(0,8))}</td>
         <td>
@@ -659,15 +800,21 @@ body{display:flex;min-height:100vh;background:var(--bg)}
 
   window.loadPosts = async function() {
     const isDeleted = document.getElementById('posts-filter').value === 'deleted';
-    const {data} = await supabase.from('posts')
-      .select('id,content,is_deleted,created_at,user_id,thread_id,users!posts_user_id_fkey(display_id,nickname),threads(title)')
-      .eq('is_deleted', isDeleted).order('created_at',{ascending:false}).limit(100);
+    const keyword = (document.getElementById('posts-search')?.value || '').trim();
+    let q = supabase.from('posts')
+      .select('id,content,media_url,is_deleted,created_at,user_id,thread_id,users!posts_user_id_fkey(display_id,nickname),threads(title)')
+      .eq('is_deleted', isDeleted).order('created_at',{ascending:false}).limit(200);
+    if (keyword) q = q.ilike('content', `%${keyword}%`);
+    const {data} = await q;
 
     const tb = document.getElementById('posts-table');
     if (!data||!data.length) { tb.innerHTML='<tr><td colspan="5" class="empty-msg">データなし</td></tr>'; return; }
     tb.innerHTML = data.map(p => `<tr>
       <td style="font-size:.75rem">${esc(p.users?.nickname||p.users?.display_id||'-')}</td>
-      <td><div class="post-content-box">${esc(trunc(p.content,80))}</div></td>
+      <td>
+        <div class="post-content-box">${esc(trunc(p.content,80))}</div>
+        ${p.media_url ? `<img src="${esc(p.media_url)}" class="dm-img-thumb" onclick="openImgViewer('${esc(p.media_url)}',null)">` : ''}
+      </td>
       <td style="font-size:.72rem;color:var(--text2)">${esc(trunc(p.threads?.title,30))}</td>
       <td style="font-size:.72rem;color:var(--text2)">${fmtDate(p.created_at)}</td>
       <td>
@@ -846,30 +993,44 @@ body{display:flex;min-height:100vh;background:var(--bg)}
     const {data} = await q;
 
     const tb = document.getElementById('dm-reports-table');
-    if (!data||!data.length) { tb.innerHTML='<tr><td colspan="8" class="empty-msg">データなし</td></tr>'; return; }
+    if (!data||!data.length) { tb.innerHTML='<tr><td colspan="9" class="empty-msg">データなし</td></tr>'; return; }
 
-    tb.innerHTML = data.map(r => `<tr>
-      <td><code style="font-size:.72rem">${r.id.slice(0,8)}</code></td>
-      <td style="font-size:.75rem">${esc(r.sender?.nickname || r.sender?.display_id || r.sender_id?.slice(0,8) || '-')}</td>
-      <td>
-        ${r.message_type==='image'
-          ? '<span style="font-size:.75rem;color:var(--text2)">📷 画像メッセージ</span>'
-          : `<div class="post-content-box">${esc(trunc(r.message_content,80))}</div>`}
-      </td>
-      <td style="font-size:.72rem">${r.message_type==='image'?'画像':'テキスト'}</td>
-      <td style="font-size:.78rem">${esc(trunc(r.reason,35))}</td>
-      <td>${statusBadge(r.status)}</td>
-      <td style="font-size:.72rem;color:var(--text2)">${fmtDate(r.created_at)}</td>
-      <td>
-        <div style="display:flex;flex-direction:column;gap:4px">
-          ${r.status==='pending'?`<button class="btn btn-ghost btn-sm" onclick="updateChatReport('${r.id}','reviewed')">確認済</button>`:''}
-          ${r.message_id?`<button class="btn btn-danger btn-sm" onclick="deleteDm('${r.message_id}','${r.id}','${r.sender_id||''}')">DM削除</button>`:''}
-          <button class="btn btn-warn btn-sm" onclick="warnUser('${r.sender_id||''}','DM通報対応')">警告</button>
-          <button class="btn btn-danger btn-sm" onclick="banUser('${r.sender_id||''}','DM通報対応')">BAN</button>
-          ${r.status!=='actioned'&&r.status!=='dismissed'?`<button class="btn btn-ghost btn-sm" onclick="updateChatReport('${r.id}','dismissed')">却下</button>`:''}
-        </div>
-      </td>
-    </tr>`).join('');
+    // ADMIN-01: 画像メッセージのsigned URL一括生成
+    const imgRows = data.filter(r => r.message_type==='image' && r.media_path);
+    let signedMap = {};
+    if (imgRows.length > 0) {
+      const {data:signedList} = await supabase.storage.from('dms')
+        .createSignedUrls(imgRows.map(r => r.media_path), 3600);
+      (signedList||[]).forEach(s => { signedMap[s.path] = s.signedUrl; });
+    }
+
+    tb.innerHTML = data.map(r => {
+      const senderName = esc(r.sender?.nickname || r.sender?.display_id || r.sender_id?.slice(0,8) || '-');
+      const signedUrl = r.media_path ? signedMap[r.media_path] : null;
+      const msgCell = r.message_type==='image'
+        ? `<span style="font-size:.75rem;color:var(--text2)">📷 画像</span>${signedUrl ? `<img src="${esc(signedUrl)}" class="dm-img-thumb" onclick="openImgViewer('${esc(signedUrl)}','${esc(r.media_path||'')}')">` : ''}`
+        : `<div class="post-content-box">${esc(trunc(r.message_content,80))}</div>`;
+      return `<tr data-report-id="${r.id}" data-user-id="${r.sender_id||''}">
+        <td class="chk-col"><input type="checkbox" class="dm-report-chk" onchange="updateDmBulkBar()"></td>
+        <td><code style="font-size:.72rem">${r.id.slice(0,8)}</code></td>
+        <td style="font-size:.75rem">${senderName}</td>
+        <td>${msgCell}</td>
+        <td style="font-size:.72rem">${r.message_type==='image'?'画像':'テキスト'}</td>
+        <td style="font-size:.78rem">${esc(trunc(r.reason,35))}</td>
+        <td>${statusBadge(r.status)}</td>
+        <td style="font-size:.72rem;color:var(--text2)">${fmtDate(r.created_at)}</td>
+        <td>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            ${r.status==='pending'?`<button class="btn btn-ghost btn-sm" onclick="updateChatReport('${r.id}','reviewed')">確認済</button>`:''}
+            ${r.media_path&&signedUrl?`<button class="btn btn-warn btn-sm" onclick="openImgViewer('${esc(signedUrl)}','${esc(r.media_path)}')">🖼️ 画像確認</button>`:''}
+            ${r.media_path?`<button class="btn btn-danger btn-sm" onclick="deleteDmStorage('${esc(r.media_path)}','${r.id}')">🗑️ 画像削除</button>`:''}
+            <button class="btn btn-warn btn-sm" onclick="warnUser('${r.sender_id||''}','DM通報対応')">警告</button>
+            <button class="btn btn-danger btn-sm" onclick="banUser('${r.sender_id||''}','DM通報対応')">BAN</button>
+            ${r.status!=='actioned'&&r.status!=='dismissed'?`<button class="btn btn-ghost btn-sm" onclick="updateChatReport('${r.id}','dismissed')">却下</button>`:''}
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
   };
 
   window.updateChatReport = async function(id, status) {
@@ -921,6 +1082,150 @@ body{display:flex;min-height:100vh;background:var(--bg)}
       <td style="font-size:.75rem">${esc(l.target?.nickname||l.target?.display_id||l.target_user_id?.slice(0,8)||'-')}</td>
       <td style="font-size:.78rem">${esc(l.reason||'-')}</td>
     </tr>`).join('');
+  };
+
+  // ============================================================
+  // ADMIN-01: DM画像ビューアー + Storage削除
+  // ============================================================
+  window.openImgViewer = function(signedUrl, storagePath) {
+    const overlay = document.getElementById('img-viewer-overlay');
+    document.getElementById('img-viewer-img').src = signedUrl;
+    const delBtn = document.getElementById('img-viewer-delete-btn');
+    if (storagePath) {
+      delBtn.style.display = '';
+      delBtn.onclick = () => deleteDmStorage(storagePath, null, true);
+    } else {
+      delBtn.style.display = 'none';
+    }
+    overlay.style.display = 'flex';
+  };
+
+  window.closeImgViewer = function() {
+    document.getElementById('img-viewer-overlay').style.display = 'none';
+    document.getElementById('img-viewer-img').src = '';
+  };
+
+  window.deleteDmStorage = async function(storagePath, reportId, fromViewer = false) {
+    if (!confirm('Storageから画像を完全に削除しますか？\n（この操作は取り消せません）')) return;
+    const {error} = await supabase.storage.from('dms').remove([storagePath]);
+    if (error) { showToast('削除失敗: ' + error.message, 'error'); return; }
+    if (reportId) await supabase.from('chat_reports').update({status:'actioned', media_path:null}).eq('id',reportId);
+    if (fromViewer) closeImgViewer();
+    showToast('画像をStorageから削除しました');
+    loadChatReports();
+    await logAction(null, 'delete_dm', '通報画像Storage削除', {media_path: storagePath});
+  };
+
+  // ============================================================
+  // ADMIN-02: 通報一括操作（掲示板）
+  // ============================================================
+  window.toggleAllReports = function(masterChk) {
+    document.querySelectorAll('.report-chk').forEach(c => c.checked = masterChk.checked);
+    updateReportsBulkBar();
+  };
+
+  window.updateReportsBulkBar = function() {
+    const checked = document.querySelectorAll('.report-chk:checked');
+    const bar = document.getElementById('reports-bulk-bar');
+    bar.style.display = checked.length > 0 ? 'flex' : 'none';
+    document.getElementById('reports-bulk-count').textContent = `${checked.length}件選択`;
+  };
+
+  function getSelectedReportRows() {
+    return [...document.querySelectorAll('.report-chk:checked')]
+      .map(c => c.closest('tr'))
+      .filter(Boolean);
+  }
+
+  window.bulkUpdateReports = async function(status) {
+    const rows = getSelectedReportRows();
+    if (!rows.length) return;
+    const ids = rows.map(r => r.dataset.reportId).filter(Boolean);
+    await supabase.from('reports').update({status}).in('id', ids);
+    showToast(`${ids.length}件を${status === 'reviewed' ? '確認済み' : '却下'}にしました`);
+    loadReports();
+  };
+
+  window.bulkWarnFromReports = async function() {
+    const rows = getSelectedReportRows();
+    if (!rows.length) return;
+    if (!confirm(`選択した${rows.length}件の通報者をすべて警告しますか？`)) return;
+    const uids = [...new Set(rows.map(r => r.dataset.userId).filter(Boolean))];
+    for (const uid of uids) {
+      await supabase.from('users').update({ban_status:'warned'}).eq('id',uid);
+      await logAction(uid, 'warn', '一括警告（通報対応）');
+    }
+    showToast(`${uids.length}ユーザーに警告しました`);
+    loadReports(); loadUsers();
+  };
+
+  window.bulkBanFromReports = async function() {
+    const rows = getSelectedReportRows();
+    if (!rows.length) return;
+    if (!confirm(`選択した${rows.length}件の通報対象者をすべてBANしますか？`)) return;
+    const uids = [...new Set(rows.map(r => r.dataset.userId).filter(Boolean))];
+    for (const uid of uids) {
+      await supabase.from('users').update({ban_status:'banned'}).eq('id',uid);
+      await logAction(uid, 'ban', '一括BAN（通報対応）');
+    }
+    showToast(`${uids.length}ユーザーをBANしました`);
+    loadReports(); loadUsers();
+  };
+
+  // ============================================================
+  // ADMIN-02: DM通報一括操作
+  // ============================================================
+  window.toggleAllDmReports = function(masterChk) {
+    document.querySelectorAll('.dm-report-chk').forEach(c => c.checked = masterChk.checked);
+    updateDmBulkBar();
+  };
+
+  window.updateDmBulkBar = function() {
+    const checked = document.querySelectorAll('.dm-report-chk:checked');
+    const bar = document.getElementById('dm-bulk-bar');
+    bar.style.display = checked.length > 0 ? 'flex' : 'none';
+    document.getElementById('dm-bulk-count').textContent = `${checked.length}件選択`;
+  };
+
+  function getSelectedDmRows() {
+    return [...document.querySelectorAll('.dm-report-chk:checked')]
+      .map(c => c.closest('tr'))
+      .filter(Boolean);
+  }
+
+  window.bulkUpdateDmReports = async function(status) {
+    const rows = getSelectedDmRows();
+    if (!rows.length) return;
+    const ids = rows.map(r => r.dataset.reportId).filter(Boolean);
+    await supabase.from('chat_reports').update({status}).in('id', ids);
+    showToast(`${ids.length}件を更新しました`);
+    loadChatReports();
+  };
+
+  window.bulkWarnFromDmReports = async function() {
+    const rows = getSelectedDmRows();
+    if (!rows.length) return;
+    if (!confirm(`選択した${rows.length}件の送信者をすべて警告しますか？`)) return;
+    const uids = [...new Set(rows.map(r => r.dataset.userId).filter(Boolean))];
+    for (const uid of uids) {
+      await supabase.from('users').update({ban_status:'warned'}).eq('id',uid);
+      await logAction(uid, 'warn', '一括警告（DM通報対応）');
+    }
+    showToast(`${uids.length}ユーザーに警告しました`);
+    loadChatReports();
+  };
+
+  window.bulkBanFromDmReports = async function() {
+    const rows = getSelectedDmRows();
+    if (!rows.length) return;
+    if (!confirm(`選択した${rows.length}件の送信者をすべてBANしますか？`)) return;
+    const uids = [...new Set(rows.map(r => r.dataset.userId).filter(Boolean))];
+    for (const uid of uids) {
+      await supabase.from('users').update({ban_status:'banned'}).eq('id',uid);
+      await logAction(uid, 'ban', '一括BAN（DM通報対応）');
+    }
+    showToast(`${uids.length}ユーザーをBANしました`);
+    loadChatReports();
   };
 
   // ============================================================

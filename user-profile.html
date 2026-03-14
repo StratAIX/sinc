@@ -57,11 +57,70 @@
   border-radius: var(--radius);
   padding: 20px;
   margin-bottom: 12px;
+  cursor: pointer;
+  transition: background .15s;
 }
+.type-card:hover { background: var(--surface2); }
 .type-card-emoji { font-size: 2.2rem; margin-bottom: 6px; }
 .type-card-name { font-size: 1.05rem; font-weight: 800; margin-bottom: 4px; }
 .type-card-family { font-size: .75rem; margin-bottom: 10px; }
 .type-card-desc { font-size: .82rem; color: var(--text2); line-height: 1.7; }
+.type-card-tap-hint {
+  font-size: .7rem; color: var(--text2); opacity: .6;
+  margin-top: 12px; letter-spacing: .04em;
+}
+
+/* タイプ詳細モーダル */
+.type-modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.6);
+  z-index: 500;
+  display: flex; align-items: flex-end; justify-content: center;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.type-modal-sheet {
+  background: var(--surface1);
+  border-radius: 20px 20px 0 0;
+  width: 100%; max-width: 520px;
+  max-height: 85vh; overflow-y: auto;
+  padding: 24px 20px 32px;
+  animation: slideUp .25s ease;
+}
+@keyframes slideUp { from { transform: translateY(40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.type-modal-handle {
+  width: 40px; height: 4px;
+  background: var(--surface3); border-radius: 2px;
+  margin: 0 auto 20px;
+}
+.type-modal-hero {
+  text-align: center; margin-bottom: 20px;
+}
+.type-modal-emoji { font-size: 3rem; margin-bottom: 8px; }
+.type-modal-num { font-size: .72rem; color: var(--text2); opacity: .7; letter-spacing: .1em; }
+.type-modal-name { font-size: 1.25rem; font-weight: 900; margin: 4px 0; }
+.type-modal-en { font-size: .8rem; color: var(--text2); margin-bottom: 6px; }
+.type-modal-family { font-size: .75rem; font-weight: 700; }
+.type-modal-desc {
+  font-size: .88rem; color: var(--text); line-height: 1.8;
+  text-align: center; margin: 16px 0 12px;
+}
+.type-modal-quote {
+  font-size: .82rem; font-style: italic; color: var(--text2);
+  border-left: 3px solid var(--accent);
+  padding: 10px 14px;
+  border-radius: 0 10px 10px 0;
+  background: var(--surface2);
+  margin: 0 0 20px;
+  line-height: 1.7;
+}
+.type-modal-link {
+  display: block; text-align: center;
+  font-size: .82rem; color: var(--accent);
+  text-decoration: none; padding: 10px;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  font-weight: 700;
+}
 
 /* 趣味タグ */
 .hobby-chips { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -126,7 +185,7 @@
       <!-- タイプ情報（公開情報のみ） -->
       <div class="card" id="type-card-wrap" style="display:none">
         <div class="section-title" style="margin-bottom:12px">パーソナリティタイプ</div>
-        <div class="type-card">
+        <div class="type-card" onclick="openTypeModal()" id="type-card-clickable">
           <div class="type-card-emoji" id="type-emoji">👤</div>
           <div class="type-card-name" id="type-name">—</div>
           <div class="type-card-en" id="type-en" style="font-size:.78rem;opacity:.6;margin-top:2px"></div>
@@ -134,6 +193,7 @@
           <div class="type-card-desc" id="type-desc" style="font-size:.84rem;color:var(--text2);margin-top:10px;line-height:1.6;text-align:center"></div>
           <div class="type-card-catch" id="type-catch" style="font-size:.82rem;color:var(--accent2);margin-top:8px;font-style:italic;text-align:center"></div>
           <div class="privacy-note">※ 詳細な診断スコアは本人のみ閲覧できます</div>
+          <div class="type-card-tap-hint">タップしてタイプの詳細を見る →</div>
         </div>
       </div>
 
@@ -149,6 +209,23 @@
 
     </div>
 
+  </div>
+</div>
+
+<!-- タイプ詳細モーダル -->
+<div class="type-modal-overlay" id="type-modal-overlay" style="display:none" onclick="closeTypeModal(event)">
+  <div class="type-modal-sheet" id="type-modal-sheet">
+    <div class="type-modal-handle"></div>
+    <div class="type-modal-hero">
+      <div class="type-modal-emoji" id="modal-emoji">👤</div>
+      <div class="type-modal-num" id="modal-num">TYPE 00</div>
+      <div class="type-modal-name" id="modal-name">—</div>
+      <div class="type-modal-en" id="modal-en"></div>
+      <div class="type-modal-family" id="modal-family"></div>
+    </div>
+    <p class="type-modal-desc" id="modal-desc"></p>
+    <div class="type-modal-quote" id="modal-quote"></div>
+    <a class="type-modal-link" id="modal-link" href="types.html">全32タイプを見る →</a>
   </div>
 </div>
 
@@ -325,6 +402,16 @@ function getTypeEmoji(n) {
       };
       document.getElementById('type-family').innerHTML =
         `<span style="color:${famColors[fam] || 'var(--text2)'};font-weight:700">${escapeHtml(fam)}</span>`;
+      // モーダル用データをセット
+      _typeModalData = {
+        n: target.type_number,
+        nm: target.type_name,
+        en: info.en || '',
+        fam,
+        d: info.d || '',
+        c: info.c || '',
+        famColor: famColors[fam] || 'var(--text2)',
+      };
     }
 
     // 相性カード（双方が診断済みの場合のみ表示）
@@ -446,6 +533,34 @@ function getTypeEmoji(n) {
     showToast('ブロックを解除しました', 'success');
     if (typeof clearBlockedCache === 'function') clearBlockedCache();
     await loadProfile();
+  };
+
+  // タイプ詳細モーダル
+  let _typeModalData = null;
+
+  window.openTypeModal = function() {
+    if (!_typeModalData) return;
+    const { n, nm, en, fam, d, c, famColor } = _typeModalData;
+    document.getElementById('modal-emoji').textContent = getTypeEmoji(n);
+    document.getElementById('modal-num').textContent = 'TYPE ' + String(n).padStart(2, '0');
+    document.getElementById('modal-name').textContent = nm;
+    document.getElementById('modal-en').textContent = en || '';
+    document.getElementById('modal-family').innerHTML =
+      `<span style="color:${famColor};font-weight:700">${escapeHtml(fam)}</span>`;
+    document.getElementById('modal-desc').textContent = d || '';
+    document.getElementById('modal-quote').textContent = c || '';
+    document.getElementById('modal-link').href = `types.html?type=${n}`;
+    document.getElementById('type-modal-overlay').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  };
+
+  window.closeTypeModal = function(e) {
+    const overlay = document.getElementById('type-modal-overlay');
+    const sheet = document.getElementById('type-modal-sheet');
+    if (!e || !sheet.contains(e.target)) {
+      overlay.style.display = 'none';
+      document.body.style.overflow = '';
+    }
   };
 
   init();
