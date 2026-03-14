@@ -434,7 +434,7 @@
 
       <a href="compat-matrix.html" class="menu-item">
         <span class="menu-icon">💫</span>
-        <span class="menu-label">相性マトリクス</span>
+        <span class="menu-label">相性カードを作る</span>
         <span class="menu-arrow">›</span>
       </a>
 
@@ -872,19 +872,13 @@
         </div>`;
     } else {
       wrap.innerHTML = `
-        <div class="verify-banner">
-          <div class="verify-banner-icon">⚠️</div>
+        <div class="verify-banner" style="opacity:.45;pointer-events:none;filter:grayscale(.6)">
+          <div class="verify-banner-icon">🔒</div>
           <div class="verify-banner-body">
-            <div class="verify-banner-title">${_t('profile.unverified_banner')}</div>
-            <div class="verify-banner-sub">${_t('profile.unverified_desc')}</div>
+            <div class="verify-banner-title">本人確認（準備中）</div>
+            <div class="verify-banner-sub">αテスト期間中は本人確認機能を停止しています</div>
           </div>
-          <button class="btn btn-primary btn-sm" id="verify-open-btn">${_t('profile.verify_open')}</button>
         </div>`;
-      document.getElementById('verify-open-btn')?.addEventListener('click', () => {
-        document.getElementById('age-confirm-check').checked = false;
-        document.getElementById('verify-submit-btn').disabled = true;
-        document.getElementById('verify-modal').classList.add('show');
-      });
     }
   }
 

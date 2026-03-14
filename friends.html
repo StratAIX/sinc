@@ -18,18 +18,20 @@
 .friend-tabs { margin-bottom: 16px; }
 
 .friend-card {
-  display: flex; align-items: center; gap: 12px;
+  display: flex; flex-direction: column; gap: 10px;
   padding: 14px 16px;
   background: var(--surface); border: 1px solid var(--surface3);
   border-radius: var(--radius); margin-bottom: 8px;
   transition: border-color .2s;
 }
 .friend-card:hover { border-color: rgba(108,92,231,.3); }
+.friend-card-top { display: flex; align-items: center; gap: 12px; }
 .friend-info { flex: 1; min-width: 0; }
-.friend-name { font-size: .9rem; font-weight: 700; }
-.friend-type { font-size: .72rem; color: var(--text2); margin-top: 2px; }
+.friend-name { font-size: .9rem; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.friend-type { font-size: .72rem; color: var(--text2); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .friend-source { font-size: .65rem; color: var(--text2); }
-.friend-actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+.friend-actions { display: flex; gap: 6px; align-items: center; }
+.friend-actions .btn { flex: 1; text-align: center; font-size: .78rem; padding: 7px 4px; }
 
 .req-card {
   display: flex; align-items: center; gap: 12px;
@@ -303,23 +305,30 @@
       el.innerHTML = `<div class="empty-state"><div class="empty-icon">👥</div><div class="empty-text">フレンドがいません<br>IDや招待リンクでフレンドを追加しましょう</div></div>`;
       return;
     }
-    el.innerHTML = friends.map(f => `
+    el.innerHTML = friends.map(f => {
+      const typeName = (f.other.type_name && !f.other.type_name.startsWith('#')) ? f.other.type_name : '';
+      const displayName = escapeHtml(f.other.nickname || typeName || '不明');
+      const typeLabel = f.other.diagnosis_completed_at
+        ? (typeName ? escapeHtml(typeName) : '<span style="opacity:.6">診断済み</span>')
+        : '<span style="opacity:.6">未診断</span>';
+      const showCompat = myProfile && myProfile.type_number && f.other.type_number && window.Compat;
+      return `
       <div class="friend-card">
-        ${renderUserAvatar(f.other, 40)}
-        <div class="friend-info">
-          <div class="friend-name">${escapeHtml(f.other.nickname || f.other.type_name || '不明')}</div>
-          <div class="friend-type">${f.other.diagnosis_completed_at ? escapeHtml(f.other.type_name || '') : '<span style="opacity:.6">未診断</span>'} · ${escapeHtml(f.other.display_id || '')}</div>
-          <div class="friend-source">${sourceLabel(f.source)}</div>
+        <div class="friend-card-top">
+          ${renderUserAvatar(f.other, 40)}
+          <div class="friend-info">
+            <div class="friend-name">${displayName}</div>
+            <div class="friend-type">${typeLabel} · ${escapeHtml(f.other.display_id || '')}</div>
+            <div class="friend-source">${sourceLabel(f.source)}</div>
+          </div>
         </div>
         <div class="friend-actions">
           <a href="chat.html?user=${f.other.id}" class="btn btn-primary btn-sm">💬 DM</a>
           <a href="user-profile.html?id=${f.other.id}" class="btn btn-secondary btn-sm">プロフィール</a>
-          ${(myProfile && myProfile.type_number && f.other.type_number && window.Compat)
-            ? `<button class="btn btn-secondary btn-sm" onclick="openFriendCompatModal(${myProfile.type_number},${f.other.type_number})">🔮 相性</button>`
-            : ''}
+          ${showCompat ? `<button class="btn btn-secondary btn-sm" onclick="openFriendCompatModal(${myProfile.type_number},${f.other.type_number})">🔮 相性</button>` : ''}
         </div>
-      </div>
-    `).join('');
+      </div>`;
+    }).join('');
   }
 
   function renderRequestsList(requests) {

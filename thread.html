@@ -93,6 +93,8 @@
   }
   .delete-yes{background:var(--danger);color:#fff}
   .delete-no{background:var(--surface3);color:var(--text2)}
+  /* スレッドページではテーマトグルボタンを非表示（送信ボタンと重なるため） */
+  #sb-theme-btn-mobile { display: none !important; }
 </style>
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-12BFEWVRN3"></script>
@@ -207,12 +209,13 @@
   // --- スレッド読み込み ---
   async function loadThread(threadId) {
     currentThread = await Board.getThread(threadId);
-    const board = currentThread.board;
+    // board がRLSでnullの場合も安全に扱う
+    const board = currentThread.board || { name: '掲示板', id: currentThread.board_id };
 
     // ヘッダー
     document.getElementById('board-name').textContent = board.name;
     document.getElementById('back-btn').addEventListener('click', () => {
-      window.location.href = `board.html?id=${board.id}`;
+      window.location.href = board.id ? `board.html?board=${board.id}` : 'board.html';
     });
 
     const user = currentThread.user || {};

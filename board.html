@@ -231,7 +231,7 @@
 
       <!-- αテスト無料バナー -->
       <div style="background:linear-gradient(135deg,rgba(108,92,231,.1),rgba(162,155,254,.1));border:1px solid rgba(108,92,231,.25);border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:.75rem;color:var(--accent2);text-align:center;font-weight:700">
-        🎉 αテスト期間中につき、掲示板・診断は期間限定で完全無料です
+        🎉 αテスト期間中につき、板作成・スレッドを立てる際のポイント消費はありません
       </div>
 
       <!-- 自分のタイプバナー -->
@@ -240,7 +240,7 @@
       <!-- クイックリンク：タイプ一覧・相性表 -->
       <div style="display:flex;gap:8px;margin-bottom:16px">
         <a href="types.html" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 8px;background:var(--surface2);border:1px solid var(--surface3);border-radius:12px;font-size:.8rem;font-weight:600;color:var(--text);text-decoration:none">📖 全32タイプ</a>
-        <a href="compat-matrix.html" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 8px;background:var(--surface2);border:1px solid var(--surface3);border-radius:12px;font-size:.8rem;font-weight:600;color:var(--text);text-decoration:none">💫 相性マトリクス</a>
+        <a href="compat-matrix.html" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 8px;background:var(--surface2);border:1px solid var(--surface3);border-radius:12px;font-size:.8rem;font-weight:600;color:var(--text);text-decoration:none">💫 相性カードを作る</a>
       </div>
 
       <!-- おすすめの板（趣味に応じたパーソナライズ） -->
@@ -265,6 +265,14 @@
           <div class="area-card-name" id="type-area-name">タイプの部屋</div>
           <div class="area-card-desc" data-i18n="board.type_room_desc">完全に同じタイプの人だけの密な空間</div>
         </div>
+      </div>
+
+      <!-- 自分の活動 -->
+      <div id="my-activity-section" style="display:none;margin-bottom:20px">
+        <div class="section-title" style="margin-bottom:8px">📌 自分が作った板・スレッド</div>
+        <div id="my-created-list"></div>
+        <div class="section-title" style="margin-top:16px;margin-bottom:8px">✏️ 自分が書き込んだ板</div>
+        <div id="my-written-list"></div>
       </div>
 
       <!-- 趣味未設定のお知らせ -->
@@ -485,7 +493,16 @@
       }
 
       renderTopView();
-      showView('view-top');
+
+      // スレッドページからの「戻る」で直接板のスレッド一覧へ
+      const _initParams = new URLSearchParams(window.location.search);
+      const _directBoard = _initParams.get('board');
+      if (_directBoard) {
+        await enterThreadsView(_directBoard);
+      } else {
+        showView('view-top');
+      }
+      loadMyActivity(user.id); // 非同期・非ブロッキング
 
       // バナー広告初期化
       if (typeof Ads !== 'undefined') {
@@ -566,6 +583,88 @@
       document.getElementById('recommend-section').style.display = 'block';
     } else {
       document.getElementById('hobby-setup-hint').style.display = 'block';
+    }
+  }
+
+  // ================================================================
+  // 自分の活動セクション（作成した板・スレッド / 書き込んだ板）
+  // ================================================================
+  async function loadMyActivity(userId) {
+    try {
+      const [{ data: myThreads }, { data: myBoards }, { data: myPosts }] = await Promise.all([
+        supabase.from('threads')
+          .select('id, title, created_at, board:boards!threads_board_id_fkey(id, name)')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false })
+          .limit(4),
+        supabase.from('boards')
+          .select('id, name, created_at, thread_count')
+          .eq('created_by', userId)
+          .order('created_at', { ascending: false })
+          .limit(4),
+        supabase.from('posts')
+          .select('created_at, thread:threads!posts_thread_id_fkey(id, title, board:boards!threads_board_id_fkey(id, name))')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false })
+          .limit(40),
+      ]);
+
+      // 作成したスレッド + 板をまとめて最新4件
+      const createdItems = [];
+      (myThreads || []).forEach(t => createdItems.push({
+        type: 'thread', id: t.id, title: t.title,
+        sub: `📋 ${t.board?.name || '板'} · ${timeAgo(t.created_at)}`,
+      }));
+      (myBoards || []).forEach(b => createdItems.push({
+        type: 'board', id: b.id, title: b.name,
+        sub: `🗂️ ${b.thread_count || 0}スレッド · ${timeAgo(b.created_at)}`,
+      }));
+
+      // 書き込んだ板（投稿から板を逆引き・重複除去・最新4件）
+      const writtenBoardsMap = new Map();
+      (myPosts || []).forEach(p => {
+        const b = p.thread?.board;
+        if (b && !writtenBoardsMap.has(b.id)) {
+          writtenBoardsMap.set(b.id, { id: b.id, name: b.name, postAt: p.created_at });
+        }
+      });
+      const writtenBoards = [...writtenBoardsMap.values()].slice(0, 4);
+
+      const hasCreated = createdItems.length > 0;
+      const hasWritten = writtenBoards.length > 0;
+      if (!hasCreated && !hasWritten) return;
+
+      document.getElementById('my-activity-section').style.display = 'block';
+
+      const createdEl = document.getElementById('my-created-list');
+      if (!hasCreated) {
+        createdEl.innerHTML = `<div style="font-size:.78rem;color:var(--text2);padding:6px 0">まだありません</div>`;
+      } else {
+        createdEl.innerHTML = createdItems.slice(0, 4).map(item => {
+          if (item.type === 'thread') {
+            return `<a href="thread.html?id=${item.id}" style="display:block;background:var(--surface2);border:1px solid var(--surface3);border-radius:10px;padding:10px 12px;margin-bottom:6px;text-decoration:none;color:var(--text)"><div style="font-size:.82rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(item.title)}</div><div style="font-size:.7rem;color:var(--text2);margin-top:2px">${item.sub}</div></a>`;
+          } else {
+            return `<div data-goto-board="${item.id}" style="background:var(--surface2);border:1px solid var(--surface3);border-radius:10px;padding:10px 12px;margin-bottom:6px;cursor:pointer"><div style="font-size:.82rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(item.title)}</div><div style="font-size:.7rem;color:var(--text2);margin-top:2px">${item.sub}</div></div>`;
+          }
+        }).join('');
+        createdEl.querySelectorAll('[data-goto-board]').forEach(el => {
+          el.addEventListener('click', () => enterThreadsView(el.dataset.gotoBoard));
+        });
+      }
+
+      const writtenEl = document.getElementById('my-written-list');
+      if (!hasWritten) {
+        writtenEl.innerHTML = `<div style="font-size:.78rem;color:var(--text2);padding:6px 0">まだありません</div>`;
+      } else {
+        writtenEl.innerHTML = writtenBoards.map(b =>
+          `<div data-goto-board="${b.id}" style="background:var(--surface2);border:1px solid var(--surface3);border-radius:10px;padding:10px 12px;margin-bottom:6px;cursor:pointer"><div style="font-size:.82rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(b.name)}</div><div style="font-size:.7rem;color:var(--text2);margin-top:2px">📝 最終投稿: ${timeAgo(b.postAt)}</div></div>`
+        ).join('');
+        writtenEl.querySelectorAll('[data-goto-board]').forEach(el => {
+          el.addEventListener('click', () => enterThreadsView(el.dataset.gotoBoard));
+        });
+      }
+    } catch (e) {
+      // サイレント失敗（メイン機能に影響しない）
     }
   }
 
