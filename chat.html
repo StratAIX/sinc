@@ -650,7 +650,8 @@
     }).select().single();
 
     if (error) {
-      showToast('送信に失敗しました: ' + error.message, 'error');
+      const msg = (error.message || '').replace('rate_limit_exceeded: ', '');
+      showToast(msg || '送信に失敗しました', 'error');
     } else {
       input.value = '';
       input.style.height = 'auto';

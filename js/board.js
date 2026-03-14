@@ -4,6 +4,15 @@
 // ============================================================
 
 const Board = {
+  // レート制限エラーを人に分かりやすいメッセージに変換してthrow
+  _throwBoardError(err) {
+    const msg = err?.message || '';
+    if (msg.includes('rate_limit_exceeded')) {
+      throw new Error(msg.replace('rate_limit_exceeded: ', ''));
+    }
+    throw err;
+  },
+
   // ============================================================
   // ★ リリース記念: 板作成 全て無料キャンペーン ★
   // true  → 何枚作っても無料（オープン記念期間中）
@@ -113,7 +122,7 @@ const Board = {
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) this._throwBoardError(error);
 
     // ポイントを消費（cost > 0 の場合）
     if (cost > 0) {
@@ -266,7 +275,7 @@ const Board = {
       .select()
       .single();
 
-    if (threadError) throw threadError;
+    if (threadError) this._throwBoardError(threadError);
 
     // 最初の投稿を作成
     const { error: postError } = await supabase
@@ -277,7 +286,7 @@ const Board = {
         content: firstPostContent.trim(),
       });
 
-    if (postError) throw postError;
+    if (postError) this._throwBoardError(postError);
 
     return thread;
   },
@@ -308,7 +317,7 @@ const Board = {
       `)
       .single();
 
-    if (error) throw error;
+    if (error) this._throwBoardError(error);
 
     // メンション・レス通知の送信（非同期、失敗しても続行）
     this._sendReplyNotifications(data, content, user.id).catch(() => {});

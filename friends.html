@@ -438,7 +438,8 @@
 
     if (error) {
       if (error.code === '23505') return showToast('すでに申請済みです', 'error');
-      return showToast('申請に失敗しました: ' + error.message, 'error');
+      const msg = (error.message || '').replace('rate_limit_exceeded: ', '');
+      return showToast(msg || '申請に失敗しました', 'error');
     }
 
     // 通知送信
