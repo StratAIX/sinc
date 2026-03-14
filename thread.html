@@ -258,12 +258,22 @@
     const container = document.getElementById('posts-container');
     container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
 
-    const { posts } = await Board.getPosts(threadId, { limit: 200 });
+    const [{ posts }, blockedIds] = await Promise.all([
+      Board.getPosts(threadId, { limit: 200 }),
+      getBlockedUserIds(),
+    ]);
     const postIds = posts.map(p => p.id);
     const myLikes = await Board.getMyLikes(postIds);
 
     container.innerHTML = '';
     posts.forEach(post => {
+      if (blockedIds.includes(post.user_id)) {
+        const el = document.createElement('div');
+        el.style.cssText = 'padding:10px 16px;color:var(--text2);font-size:.75rem;opacity:.5;border-bottom:1px solid var(--border)';
+        el.textContent = '🚫 ブロック中のユーザーの投稿です';
+        container.appendChild(el);
+        return;
+      }
       const isLiked = myLikes.has(post.id);
       const isOwn = post.user_id === currentUserId;
       appendPost(post, isLiked, isOwn);

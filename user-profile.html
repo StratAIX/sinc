@@ -430,6 +430,7 @@ function getTypeEmoji(n) {
       if (error) return showToast('ブロックに失敗しました', 'error');
     }
     showToast('ブロックしました', 'success');
+    if (typeof clearBlockedCache === 'function') clearBlockedCache();
     await loadProfile();
   };
 
@@ -440,6 +441,7 @@ function getTypeEmoji(n) {
       .eq('id', friendshipId);
     if (error) return showToast('解除に失敗しました', 'error');
     showToast('ブロックを解除しました', 'success');
+    if (typeof clearBlockedCache === 'function') clearBlockedCache();
     await loadProfile();
   };
 

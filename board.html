@@ -821,11 +821,14 @@
     list.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
 
     try {
-      const { threads, total } = await Board.getThreads(currentBoardId, {
-        page: currentPage, limit: THREADS_PER_PAGE,
-      });
+      const [{ threads, total }, blockedIds] = await Promise.all([
+        Board.getThreads(currentBoardId, { page: currentPage, limit: THREADS_PER_PAGE }),
+        getBlockedUserIds(),
+      ]);
 
-      if (threads.length === 0) {
+      const visible = threads.filter(t => !blockedIds.includes(t.user_id));
+
+      if (visible.length === 0) {
         list.innerHTML = `
           <div class="empty-state">
             <div class="empty-icon">💭</div>
@@ -833,7 +836,7 @@
           </div>
         `;
       } else {
-        list.innerHTML = threads.map(t => Board.renderThreadItem(t)).join('');
+        list.innerHTML = visible.map(t => Board.renderThreadItem(t)).join('');
       }
       renderPagination(total);
     } catch (err) {

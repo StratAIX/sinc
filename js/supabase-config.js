@@ -130,6 +130,23 @@ supabase.auth.onAuthStateChange(async (event, session) => {
   }
 });
 
+// ブロック済みユーザーIDリストを取得（セッション内キャッシュあり）
+let _blockedIdsCache = null;
+async function getBlockedUserIds() {
+  if (_blockedIdsCache !== null) return _blockedIdsCache;
+  const user = await getCurrentUser();
+  if (!user) return (_blockedIdsCache = []);
+  const { data } = await supabase
+    .from('friends')
+    .select('receiver_id')
+    .eq('requester_id', user.id)
+    .eq('status', 'blocked');
+  _blockedIdsCache = (data || []).map(r => r.receiver_id);
+  return _blockedIdsCache;
+}
+// ブロックキャッシュをリセット（ブロック/解除操作後に呼ぶ）
+function clearBlockedCache() { _blockedIdsCache = null; }
+
 async function requireAuth(redirectTo = 'index.html') {
   const user = await getCurrentUser();
   if (!user) {
