@@ -457,7 +457,8 @@ const Board = {
     const locked = thread.is_locked ? '<span class="thread-locked">🔒</span>' : '';
     const user = thread.user || {};
     const badge = user.family ? `badge-${user.family.toLowerCase()}` : '';
-    const displayName = user.nickname || user.type_name || '不明';
+    const cleanType = (user.type_name && !user.type_name.startsWith('#')) ? user.type_name : '';
+    const displayName = user.nickname || cleanType || '不明';
 
     return `
       <a href="thread.html?id=${thread.id}" class="thread-item">
@@ -466,7 +467,7 @@ const Board = {
           <div class="thread-title">${pinned}${locked} ${escapeHtml(thread.title)}</div>
           <div class="thread-meta">
             <span style="font-weight:600;color:var(--text)">${escapeHtml(displayName)}</span>
-            <span class="badge ${badge}">${escapeHtml(user.type_name || '')}</span>
+            ${cleanType ? `<span class="badge ${badge}">${escapeHtml(cleanType)}</span>` : ''}
             <span>💬 ${thread.reply_count}</span>
             <span>${timeAgo(thread.updated_at)}</span>
           </div>
@@ -480,7 +481,9 @@ const Board = {
     const user = post.user || {};
     const family = user.family || 'Architects';
     const badgeClass = `badge-${family.toLowerCase()}`;
-    const displayName = user.nickname || user.type_name || '不明';
+    const cleanType = (user.type_name && !user.type_name.startsWith('#')) ? user.type_name : '';
+    const cleanDisplayId = (user.display_id && !user.display_id.startsWith('#')) ? user.display_id : '';
+    const displayName = user.nickname || cleanType || '不明';
     const avatarHtml = typeof renderUserAvatar === 'function'
       ? renderUserAvatar(user, 36)
       : `<div class="user-type-icon" style="background:rgba(${familyColor(family)},.12);border:1px solid rgba(${familyColor(family)},.3)">${getTypeEmoji(user.type_number)}</div>`;
@@ -509,7 +512,7 @@ const Board = {
                 <span class="user-type-name">${escapeHtml(displayName)}</span>
                 ${numHtml}
               </div>
-              <span class="user-display-id">${escapeHtml(user.type_name || '')} ${escapeHtml(user.display_id || '')}</span>
+              <span class="user-display-id">${escapeHtml(cleanType)}${cleanType && cleanDisplayId ? ' ' : ''}${escapeHtml(cleanDisplayId)}</span>
             </div>
           </div>
           <span class="badge ${badgeClass}">${family}</span>

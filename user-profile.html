@@ -287,9 +287,11 @@ function getTypeEmoji(n) {
       avatarEl.textContent = getTypeEmoji(target.type_number);
     }
 
-    document.getElementById('hero-name').textContent = target.nickname || target.type_name || '不明';
+    const _cleanType = (target.type_name && !target.type_name.startsWith('#')) ? target.type_name : '';
+    const _cleanId   = (target.display_id && !target.display_id.startsWith('#')) ? target.display_id : '';
+    document.getElementById('hero-name').textContent = target.nickname || _cleanType || '不明';
     document.getElementById('hero-type').textContent =
-      (target.type_name || '') + (target.display_id ? ` · ${target.display_id}` : '');
+      _cleanType + (_cleanId ? ` · ${_cleanId}` : '');
 
     // 自己紹介
     if (target.bio) {

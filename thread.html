@@ -221,6 +221,8 @@
     const user = currentThread.user || {};
     const fam = user.family || 'Architects';
     const badgeClass = `badge-${fam.toLowerCase()}`;
+    const cleanUserType = (user.type_name && !user.type_name.startsWith('#')) ? user.type_name : '不明';
+    const cleanUserId   = (user.display_id && !user.display_id.startsWith('#')) ? user.display_id : '';
 
     let statusHtml = '';
     const _t = (typeof I18n !== 'undefined') ? I18n.t.bind(I18n) : (k) => k;
@@ -230,8 +232,8 @@
     document.getElementById('thread-header').innerHTML = `
       <div class="thread-header-title">${escapeHtml(currentThread.title)}</div>
       <div class="thread-header-meta">
-        <span class="badge ${badgeClass}">${escapeHtml(user.type_name || '不明')}</span>
-        <span>${escapeHtml(user.display_id || '')}</span>
+        <span class="badge ${badgeClass}">${escapeHtml(cleanUserType)}</span>
+        ${cleanUserId ? `<span>${escapeHtml(cleanUserId)}</span>` : ''}
         <span>💬 ${currentThread.reply_count}件</span>
         <span>${timeAgo(currentThread.created_at)}</span>
         ${statusHtml}

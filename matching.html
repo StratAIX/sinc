@@ -669,7 +669,7 @@
     if (!user) return;
     document.getElementById('payment-target').innerHTML = `
       <div style="text-align:center;margin-top:12px">
-        <span class="badge badge-${user.family.toLowerCase()}">${user.type_name} (${user.display_id})</span>
+        <span class="badge badge-${user.family.toLowerCase()}">${(user.type_name && !user.type_name.startsWith('#')) ? escapeHtml(user.type_name) : ''}${(user.display_id && !user.display_id.startsWith('#')) ? ' · ' + escapeHtml(user.display_id) : ''}</span>
       </div>
     `;
     document.getElementById('payment-target').style.display = 'block';

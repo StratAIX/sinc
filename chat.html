@@ -720,7 +720,8 @@
           scrollToBottom(true);
         }
       } catch (err) {
-        showToast('画像の送信に失敗しました', 'error');
+        console.error('DM画像送信エラー:', err);
+        showToast('画像の送信に失敗しました: ' + (err.message || 'エラー'), 'error');
       }
       imgInput.value = '';
     });
