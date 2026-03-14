@@ -83,6 +83,7 @@
         <a href="matching.html" class="sb-item ${isActive(['matching.html'])}${typeof ALPHA_MODE !== 'undefined' && ALPHA_MODE ? ' sb-item-locked' : ''}" id="sb-matching-link">
           <span class="sb-icon" aria-hidden="true">💕</span>
           <span class="sb-label" data-i18n="nav.matching">マッチング</span>
+          <span class="sb-badge" id="sb-badge-match" title="未読"></span>
           ${typeof ALPHA_MODE !== 'undefined' && ALPHA_MODE ? '<span class="sb-soon">SOON</span>' : ''}
         </a>
         <a href="profile.html" class="sb-item ${isActive(['profile.html'])}">
@@ -315,13 +316,35 @@
     });
   };
 
-  // 通知バッジ更新
+  // 通知バッジ更新（サイドバー + モバイル下部ナビ共用）
+  // type: 'friends' | 'matching'
   window.updateNavBadge = function (type, count) {
-    const map = { friends: 'sb-badge-fr' };
-    const el = document.getElementById(map[type]);
-    if (!el) return;
-    if (count > 0) { el.textContent = count > 99 ? '99+' : count; el.classList.add('show'); }
-    else el.classList.remove('show');
+    // ── サイドバーバッジ ──
+    const sbMap = { friends: 'sb-badge-fr', matching: 'sb-badge-match' };
+    const sbEl = document.getElementById(sbMap[type]);
+    if (sbEl) {
+      if (count > 0) { sbEl.textContent = count > 99 ? '99+' : count; sbEl.classList.add('show'); }
+      else sbEl.classList.remove('show');
+    }
+
+    // ── モバイル下部ナビ ● ドット ──
+    const hrefMap = { friends: 'friends.html', matching: 'matching.html' };
+    const href = hrefMap[type];
+    if (!href) return;
+    document.querySelectorAll('.nav-bar a[href="' + href + '"]').forEach(function (link) {
+      let dot = link.querySelector('.nav-notify-dot');
+      if (count > 0) {
+        if (!dot) {
+          dot = document.createElement('span');
+          dot.className = 'nav-notify-dot';
+          link.style.position = 'relative';
+          link.appendChild(dot);
+        }
+        dot.style.display = '';
+      } else {
+        if (dot) dot.style.display = 'none';
+      }
+    });
   };
 
 })();

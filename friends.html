@@ -42,6 +42,34 @@
 .req-type { font-size: .72rem; color: var(--text2); margin-top: 2px; }
 .req-actions { display: flex; gap: 8px; flex-shrink: 0; }
 
+/* ID検索入力ラッパー */
+.id-search-wrap {
+  display: flex; align-items: center;
+  background: var(--surface2); border: 1px solid var(--surface3);
+  border-radius: 10px; padding: 0 12px; flex: 1;
+  transition: border-color .2s;
+}
+.id-search-wrap:focus-within { border-color: rgba(108,92,231,.6); }
+.id-search-at {
+  color: var(--text2); font-weight: 700; font-size: .9rem;
+  user-select: none; flex-shrink: 0;
+}
+.id-search-input {
+  flex: 1; border: none; background: transparent;
+  padding: 9px 6px; color: var(--text); font-size: .88rem;
+  outline: none; font-family: inherit;
+}
+.id-search-input::placeholder { color: var(--text2); opacity: .7; }
+
+/* タブバッジ */
+.tab-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--accent); color: #fff;
+  font-size: .6rem; font-weight: 800;
+  min-width: 17px; height: 17px; border-radius: 9px;
+  padding: 0 4px; margin-left: 5px; vertical-align: middle;
+}
+
 /* フレンド申請フォーム */
 .add-friend-area {
   background: var(--surface); border: 1px solid var(--surface3);
@@ -81,13 +109,16 @@
       <div class="add-friend-title" data-i18n="friends.add_title">フレンドを追加</div>
 
       <div class="form-group" style="margin-bottom:8px">
-        <label class="form-label" data-i18n="friends.search_label">IDで検索</label>
+        <label class="form-label">IDで検索</label>
+        <div style="font-size:.72rem;color:var(--text2);margin-bottom:6px">@以降のユーザー名、または招待コードを入力</div>
         <div style="display:flex;gap:8px">
-          <input type="text" class="form-input" id="search-id-input"
-            placeholder="@ユーザー名 または 招待コード"
-            data-i18n-ph="friends.search_ph"
-            style="flex:1">
-          <button class="btn btn-primary btn-sm" id="search-friend-btn" data-i18n="common.search">検索</button>
+          <div class="id-search-wrap">
+            <span class="id-search-at">@</span>
+            <input type="text" class="id-search-input" id="search-id-input"
+              placeholder="ユーザー名または招待コード"
+              autocomplete="off" autocapitalize="none" spellcheck="false">
+          </div>
+          <button class="btn btn-primary btn-sm" id="search-friend-btn">検索</button>
         </div>
       </div>
 
@@ -104,9 +135,9 @@
 
     <!-- タブ -->
     <div class="tabs friend-tabs">
-      <button class="tab active" data-tab="friends" data-i18n="friends.tab_friends">フレンド</button>
-      <button class="tab" data-tab="requests" data-i18n="friends.tab_sent">申請中</button>
-      <button class="tab" data-tab="pending" data-i18n="friends.tab_received">受信</button>
+      <button class="tab active" data-tab="friends">フレンド</button>
+      <button class="tab" data-tab="requests">申請中<span class="tab-badge" id="tab-badge-requests" style="display:none"></span></button>
+      <button class="tab" data-tab="pending">受信<span class="tab-badge" id="tab-badge-pending" style="display:none"></span></button>
     </div>
 
     <!-- フレンド一覧 -->
@@ -236,9 +267,24 @@
     renderRequestsList(requests);
     renderPendingList(pending);
 
-    // 申請タブのバッジ更新
+    // タブ件数バッジ更新
+    updateTabBadge('requests', requests.length);
+    updateTabBadge('pending', pending.length);
+
+    // ナビゲーションバッジ更新（サイドバー + モバイルナビ）
     if (typeof updateNavBadge === 'function') {
       updateNavBadge('friends', pending.length);
+    }
+  }
+
+  function updateTabBadge(tabName, count) {
+    const el = document.getElementById('tab-badge-' + tabName);
+    if (!el) return;
+    if (count > 0) {
+      el.textContent = count > 99 ? '99+' : count;
+      el.style.display = 'inline-flex';
+    } else {
+      el.style.display = 'none';
     }
   }
 
@@ -334,7 +380,9 @@
   });
 
   async function searchFriend() {
-    const val = document.getElementById('search-id-input').value.trim().toLowerCase();
+    const raw = document.getElementById('search-id-input').value.trim().toLowerCase();
+    // 先頭の @ を自動除去（@つきで入力しても検索できるよう）
+    const val = raw.startsWith('@') ? raw.slice(1) : raw;
     if (!val) return;
 
     const resultEl = document.getElementById('search-result');

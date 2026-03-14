@@ -89,6 +89,13 @@ a:hover{color:var(--accent)}
 }
 .nav-item:hover,.nav-item.active{color:var(--accent2)}
 .nav-icon{font-size:1.3rem;line-height:1}
+/* モバイルナビ通知ドット */
+.nav-notify-dot{
+  position:absolute;top:2px;right:50%;transform:translateX(calc(50% + 8px));
+  width:8px;height:8px;border-radius:50%;
+  background:var(--pink);border:1.5px solid var(--bg);
+  pointer-events:none;
+}
 
 /* ナビバー分のpadding */
 .page{padding-bottom:calc(80px + env(safe-area-inset-bottom,0px))}
