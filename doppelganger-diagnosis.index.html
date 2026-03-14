@@ -2228,10 +2228,17 @@ function startFresh(){
 }
 
 // 初期化: viewResult=1 なら保存済み結果を表示、そうでなければセーブ再開バナー
+// ※ Supabase CDN はこの inline script より後に読み込まれるため、
+//    viewResult=1 の場合は load イベント後に実行する
 (async function checkResume(){
   const params=new URLSearchParams(window.location.search);
   if(params.get('viewResult')==='1'){
-    viewStoredResult();
+    // 外部スクリプト（Supabase）のロード完了を待ってから実行
+    if(typeof supabase==='undefined'){
+      window.addEventListener('load', viewStoredResult, {once:true});
+    } else {
+      viewStoredResult();
+    }
     return;
   }
   const save=await loadSave();

@@ -412,7 +412,7 @@
       modal.style.display = 'none';
       chatInput.disabled = false;
       imgBtn.disabled    = false;
-      chatInput.dispatchEvent(new Event('input')); // send ボタン状態更新
+      sendBtn.disabled   = chatInput.value.trim().length === 0; // 直接更新
       chatInput.focus();
     });
   }
@@ -601,11 +601,17 @@
     const input = document.getElementById('chat-input');
     const sendBtn = document.getElementById('chat-send');
 
+    function updateSendBtn() {
+      sendBtn.disabled = input.value.trim().length === 0;
+    }
+    // input: 通常入力 / keyup: フォールバック / compositionend: 日本語IME確定後
     input.addEventListener('input', () => {
       input.style.height = 'auto';
       input.style.height = Math.min(input.scrollHeight, 120) + 'px';
-      sendBtn.disabled = input.value.trim().length === 0;
+      updateSendBtn();
     });
+    input.addEventListener('keyup', updateSendBtn);
+    input.addEventListener('compositionend', updateSendBtn);
 
     sendBtn.addEventListener('click', sendMessage);
     input.addEventListener('keydown', (e) => {

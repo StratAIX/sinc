@@ -192,26 +192,37 @@
 
     // --- 友人相性 ---
     // ■ CEMS軸（C=内向/外向 E=論理/感情 M=開放/秘匿 S=自由/秩序）
-    //   → 「一緒にいて楽」な次元：似ているほど良い（各+23）
+    //   → 「一緒にいて楽」な次元：似ているほど良い（各+14）
     // ■ D軸（Flow/Drive = 決断スタイル）
     //   → 補完が良い：決める人×任せる人 = 摩擦なし（+50ボーナス）
-    //   → 同じだと衝突可能性（ボーナスなし、-30ベースで引かれる）
-    // axisChemFriend 範囲:
-    //   0CEMS + D同じ → -30（正反対の引力）     ← 全く合わない + 両者が仕切りたがる
-    //   0CEMS + D補完 → +20（刺激ある関係）     ← 正反対だけど決断スタイルは補完
-    //   4CEMS + D同じ → +62（親友クラス）       ← 同タイプ = ここ（~74%）
-    //   4CEMS + D補完 → +112（運命的・理論値）  ← 同じ世界観 + 決断スタイル補完 = 最高
-    // dComplement=50 にすることで、全問一致+P4補完の場合に99%到達可能
-    const cemsMatch    = ['c','e','m','s'].filter(a => ax1[a] === ax2[a]).length;
-    const dComplement  = ax1.d !== ax2.d ? 1 : 0;
-    const axisChemFriend = cemsMatch * 23 + dComplement * 50 - 30;
+    //   → 両者Flow（のんびり屋）= 衝突なし・穏やかな友情（+15ボーナス）
+    //   → 両者Drive（仕切りたがり）= 主導権で摩擦の可能性（-15）
+    // axisChemFriend 範囲（概算）:
+    //   0CEMS + D同Drive → -35（正反対の引力）  ← 全く合わない + 主導権衝突
+    //   0CEMS + D同Flow  → -5（成長できる関係） ← 正反対だけど穏やか
+    //   0CEMS + D補完    → +30（刺激ある関係）  ← 正反対だけど決断スタイルは補完
+    //   4CEMS + D同Flow  → +51（親友クラス）    ← 同タイプFlow = ここ（~75%）
+    //   4CEMS + D補完    → +86（最高の相棒）    ← 同じ世界観 + 決断スタイル補完 = 最高
+    const cemsMatch = ['c','e','m','s'].filter(a => ax1[a] === ax2[a]).length;
+    const dComplement = ax1.d !== ax2.d;
+    const dBothFlow   = ax1.d === 0 && ax2.d === 0;
+    const dBonus = dComplement ? 50 : dBothFlow ? 15 : -15;
+    const axisChemFriend = cemsMatch * 14 + dBonus - 20;
 
     const friendRaw   = 0.30 * sim + 0.10 * p13c + 0.10 * p4c + 0.50 * axisChemFriend;
     const friendScore = Math.min(99, Math.max(5, Math.round(friendRaw)));
 
     // --- 恋愛相性 ---
-    // D軸補完（+40）は恋愛でさらに重要：「引っ張る人×ついていく人」が恋愛の理想
-    const loveAxisChem = cemsMatch * 15 + dComplement * 40; // max: 60+40=100
+    // ■ C軸（内向/外向）の「違い」= 恋愛では補完◎：活発な人×落ち着いた人が理想の組み合わせ
+    // ■ E軸（感情/論理）の「違い」= 恋愛では補完◎：感情型×論理型が相互補完
+    // ■ M軸（開放/秘匿）の「同じ」= 信頼関係の土台（共通価値観）
+    // ■ S軸（自由/秩序）の「同じ」= 生活スタイルの一致
+    // ■ D軸: 補完（+40）が理想、両者Flow（+20）は穏やかで衝突なし、両者Drive（+5）は緊張感
+    const loveAxisChem = (ax1.c !== ax2.c ? 15 : 0) +   // C軸補完ボーナス
+                         (ax1.e !== ax2.e ? 15 : 0) +   // E軸補完ボーナス
+                         (ax1.m === ax2.m ? 12 : 0) +   // M軸一致ボーナス
+                         (ax1.s === ax2.s ? 12 : 0) +   // S軸一致ボーナス
+                         (dComplement ? 40 : dBothFlow ? 20 : 5); // D軸
     const p14c  = 100 - Math.abs((s1.P14||50) - (s2.P14||50));
     const p15c  = 100 - Math.abs((s1.P15||50) - (s2.P15||50)) * 0.8;
     const loveRaw   = 0.30 * sim + 0.15 * p4c + 0.20 * p14c + 0.15 * p15c + 0.20 * loveAxisChem;
