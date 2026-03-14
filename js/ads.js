@@ -62,7 +62,7 @@ const AdMob = {
     try {
       await plugin.showBanner({
         adId,
-        isTesting: true, // 本番では false に変更
+        isTesting: false,
         position: position || 'bottom',
       });
     } catch(e) { console.warn('[Ads] banner error:', e); }
@@ -82,7 +82,7 @@ const AdMob = {
     const adId = getAdId('interstitial');
     if (!adId) return false;
     try {
-      await plugin.prepareInterstitial({ adId, isTesting: true });
+      await plugin.prepareInterstitial({ adId, isTesting: false });
       await plugin.showInterstitial();
       _lastInterstitialTime = Date.now();
       return true;
@@ -100,7 +100,7 @@ const AdMob = {
     if (!adId) return false;
     return new Promise(resolve => {
       try {
-        plugin.prepareRewardVideoAd({ adId, isTesting: true });
+        plugin.prepareRewardVideoAd({ adId, isTesting: false });
         plugin.showRewardVideoAd();
         document.addEventListener('admob.rewardvideo.events.reward', () => resolve(true), { once: true });
         document.addEventListener('admob.rewardvideo.events.close',  () => resolve(false), { once: true });

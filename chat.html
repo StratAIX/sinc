@@ -313,32 +313,20 @@
 
     const params = new URLSearchParams(location.search);
     targetUserId = params.get('user');
-    const isTestMode = params.get('test') === '1';
     if (!targetUserId) { location.href = 'friends.html'; return; }
 
-    // フレンド関係の確認（テストモード時はスキップ）
-    if (!isTestMode) {
-      const { data: friendship } = await supabase
-        .from('friends')
-        .select('id, status')
-        .or(`and(requester_id.eq.${myUserId},receiver_id.eq.${targetUserId}),and(requester_id.eq.${targetUserId},receiver_id.eq.${myUserId})`)
-        .eq('status', 'accepted')
-        .maybeSingle();
+    // フレンド関係の確認
+    const { data: friendship } = await supabase
+      .from('friends')
+      .select('id, status')
+      .or(`and(requester_id.eq.${myUserId},receiver_id.eq.${targetUserId}),and(requester_id.eq.${targetUserId},receiver_id.eq.${myUserId})`)
+      .eq('status', 'accepted')
+      .maybeSingle();
 
-      if (!friendship) {
-        showToast('フレンドではないのでDMは送れません', 'error');
-        setTimeout(() => location.href = 'friends.html', 2000);
-        return;
-      }
-    } else {
-      // テストモード表示
-      const banner = document.createElement('div');
-      banner.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#f39c12;color:#000;text-align:center;font-size:.75rem;padding:4px;z-index:999;font-weight:700';
-      banner.textContent = '🧪 テストモード（フレンドチェック無効）';
-      document.body.appendChild(banner);
-      // チャットヘッダーを少し下げる
-      document.querySelector('.chat-header').style.top = '24px';
-      document.querySelector('.chat-messages').style.paddingTop = '96px';
+    if (!friendship) {
+      showToast('フレンドではないのでDMは送れません', 'error');
+      setTimeout(() => location.href = 'friends.html', 2000);
+      return;
     }
 
     conversationId = makeConversationId(myUserId, targetUserId);
