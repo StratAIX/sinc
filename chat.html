@@ -682,7 +682,7 @@
 
       try {
         showToast('画像を送信中...', 'info');
-        const blob = await Avatar.processImage(file);
+        const blob = await Avatar.processDMImage(file);
         const ext = blob.type === 'image/webp' ? 'webp' : 'jpg';
         const path = `${myUserId}/${Date.now()}.${ext}`;
 

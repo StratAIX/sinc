@@ -1267,13 +1267,32 @@
     try {
       const user = await getCurrentUser();
       if (!user) throw new Error('ログイン情報が取得できません');
-      // ban_status を 'deleted' にして論理削除（90日後に物理削除）
-      const { error } = await supabase.from('users')
-        .update({ ban_status: 'banned', nickname: null, bio: null, avatar_url: null })
-        .eq('id', user.id);
-      if (error) throw error;
+
+      // 1. Storage ファイル削除（アバター + DM画像）
+      status.textContent = 'ファイルを削除中...';
+      try {
+        await supabase.storage.from('avatars').remove([
+          `${user.id}/avatar.webp`,
+          `${user.id}/avatar.jpg`,
+        ]);
+        const { data: dmFiles } = await supabase.storage.from('dms').list(user.id);
+        if (dmFiles && dmFiles.length > 0) {
+          const paths = dmFiles.map(f => `${user.id}/${f.name}`);
+          await supabase.storage.from('dms').remove(paths);
+        }
+      } catch (storageErr) {
+        // Storage 削除失敗はノンブロッキング（DB 削除を優先）
+        console.warn('Storage cleanup error (non-critical):', storageErr);
+      }
+
+      // 2. DB 全データ削除（SECURITY DEFINER RPC で一括削除 + 監査ログ記録）
+      status.textContent = 'アカウントデータを削除中...';
+      const { error: rpcError } = await supabase.rpc('delete_my_account');
+      if (rpcError) throw rpcError;
+
+      // 3. サインアウト（auth.users のメールは残り、再登録すると新規ユーザーとして始められる）
       await supabase.auth.signOut();
-      alert('アカウントを削除しました。ご利用ありがとうございました。');
+      alert('アカウントを削除しました。ご利用ありがとうございました。\n\n同一のメールアドレスでも再入会可能です。またの機会をお待ちしています。');
       location.href = 'index.html';
     } catch (e) {
       status.textContent = 'エラーが発生しました: ' + e.message;

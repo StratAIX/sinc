@@ -49,7 +49,7 @@ async function getMyProfile(forceRefresh = false) {
   try {
     _cachedProfile = await getUserProfile(user.id);
   } catch (e) {
-    // users行が存在しない場合（Google OAuth新規ユーザー等）は自動作成
+    // users行が存在しない場合（Google OAuth新規ユーザー等 / 退会後の再ログイン）は自動作成
     if (e.code === 'PGRST116') {
       const agreedAt = localStorage.getItem('sincAlphaAgreedAt') || new Date().toISOString();
       await supabase.from('users').insert({ id: user.id, alpha_agreed_at: agreedAt }).select().single();
@@ -59,6 +59,16 @@ async function getMyProfile(forceRefresh = false) {
       throw e;
     }
   }
+
+  // BANされたアカウントは強制サインアウト
+  if (_cachedProfile?.ban_status === 'banned') {
+    _cachedProfile = null;
+    await supabase.auth.signOut();
+    alert('このアカウントは利用停止中です。\nご不明な点は support@strataix.net までお問い合わせください。');
+    location.href = 'index.html';
+    return null;
+  }
+
   return _cachedProfile;
 }
 

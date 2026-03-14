@@ -170,6 +170,46 @@ const Avatar = {
   },
 
   // ============================================================
+  // DM送信用: アスペクト比保持・最大1200px・最大500KB WebP に変換
+  // ============================================================
+  async processDMImage(file) {
+    const MAX_INPUT  = 20 * 1024 * 1024; // 入力上限 20MB
+    const MAX_LONG   = 1200;              // 長辺上限px
+    const MAX_OUTPUT = 500 * 1024;        // 出力上限 500KB
+    const MIN_Q      = 0.3;
+
+    if (file.size > MAX_INPUT) {
+      throw new Error('画像サイズが大きすぎます（20MB以下にしてください）');
+    }
+    if (!file.type.startsWith('image/')) {
+      throw new Error('画像ファイルを選択してください');
+    }
+
+    const img = await this._loadImage(file);
+
+    // アスペクト比を保ったまま長辺を MAX_LONG 以内に収める
+    let w = img.naturalWidth, h = img.naturalHeight;
+    if (w > MAX_LONG || h > MAX_LONG) {
+      if (w >= h) { h = Math.round(h * MAX_LONG / w); w = MAX_LONG; }
+      else        { w = Math.round(w * MAX_LONG / h); h = MAX_LONG; }
+    }
+
+    const canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+
+    // WebP で品質を下げながら MAX_OUTPUT 以内に圧縮
+    let quality = 0.85;
+    let blob = await this._canvasToBlob(canvas, 'image/webp', quality);
+    while (blob && blob.size > MAX_OUTPUT && quality > MIN_Q) {
+      quality -= 0.1;
+      blob = await this._canvasToBlob(canvas, 'image/webp', quality);
+    }
+    if (!blob) throw new Error('画像の変換に失敗しました');
+    return blob;
+  },
+
+  // ============================================================
   // プレビュー用: File → Data URL（プレビュー表示用、アップロードしない）
   // ============================================================
   async createPreview(file) {
