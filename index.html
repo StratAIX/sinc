@@ -288,6 +288,14 @@
   const _afterDiag = new URLSearchParams(window.location.search).get('afterDiag') === '1';
   const _forceLogin = new URLSearchParams(window.location.search).get('login') === '1';
 
+  // ds= パラメータがあれば sincGuestResult を復元（LINEブラウザ→外部ブラウザ切り替え対策）
+  try {
+    const _ds = new URLSearchParams(window.location.search).get('ds');
+    if (_ds && !localStorage.getItem('sincGuestResult')) {
+      localStorage.setItem('sincGuestResult', decodeURIComponent(escape(atob(decodeURIComponent(_ds)))));
+    }
+  } catch(e) {}
+
   // セッションチェック：ログイン済み→掲示板、未ログイン→診断ページ
   if (!_afterDiag && !_forceLogin && typeof supabase !== 'undefined') {
     supabase.auth.getSession().then(({ data: { session } }) => {

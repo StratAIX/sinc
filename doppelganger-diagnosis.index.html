@@ -1066,6 +1066,14 @@ const ans=new Array(Q.length).fill(null);
 // 友人招待URLのrefパラメータ（シェアリンク経由時に設定される）
 const _urlRef=new URLSearchParams(window.location.search).get('ref');
 
+// LINEブラウザ検出 → 外部ブラウザ誘導バナー表示
+if(/Line\//i.test(navigator.userAgent)){
+  const b=document.createElement('div');
+  b.style.cssText='position:fixed;top:0;left:0;right:0;z-index:9999;background:#f9c74f;color:#333;font-size:.78rem;font-weight:700;text-align:center;padding:10px 16px;line-height:1.5;box-shadow:0 2px 8px rgba(0,0,0,.15)';
+  b.innerHTML='⚠️ LINEブラウザでは登録が正常に動作しない場合があります。<br>右上メニュー →「他のブラウザで開く」をお試しください。';
+  document.body.appendChild(b);
+}
+
 // ============================================================
 // PARTICLES BACKGROUND
 // ============================================================
@@ -1630,8 +1638,16 @@ async function viewStoredResult(){
       .select('diagnosis_scores,type_code,type_number,type_name,family')
       .eq('id',user.id).single();
     if(!profile?.diagnosis_scores){
-      // 診断未完了 → 診断開始画面へ
-      show('startScreen');return;
+      // 診断スコア未保存 → 再診断を促す
+      show('startScreen');
+      setTimeout(()=>{
+        const msg=document.createElement('div');
+        msg.style.cssText='position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#e84393;color:#fff;padding:12px 20px;border-radius:12px;font-size:.85rem;font-weight:700;z-index:9999;text-align:center;white-space:nowrap';
+        msg.textContent='診断データが見つかりません。もう一度診断をお試しください。';
+        document.body.appendChild(msg);
+        setTimeout(()=>msg.remove(),4000);
+      },300);
+      return;
     }
     _storedScoresOverride=profile.diagnosis_scores;
     window._currentUserId=user.id;
@@ -2081,6 +2097,11 @@ function showRegPrompt(){
 function goToRegister(){
   let dest='index.html?afterDiag=1';
   if(_urlRef)dest+='&ref='+encodeURIComponent(_urlRef);
+  // 診断結果をURLパラメータに含める（ブラウザ切り替え時の結果消失対策）
+  try{
+    const g=localStorage.getItem('sincGuestResult');
+    if(g)dest+='&ds='+encodeURIComponent(btoa(unescape(encodeURIComponent(g))));
+  }catch(e){}
   window.location.href=dest;
 }
 

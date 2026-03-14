@@ -25,12 +25,17 @@
 .page-header h1 { font-size:1.2rem; font-weight:700; margin-bottom:4px; }
 .page-header p  { font-size:.78rem; color:var(--text2); }
 
-/* ===== あなたのタイプ選択バー ===== */
-.my-type-bar {
-  display:flex; align-items:center; gap:10px;
-  max-width:560px; margin:0 auto 14px; padding:0 16px;
+/* ===== タイプ選択エリア ===== */
+.type-selector-area {
+  max-width:560px; margin:0 auto 12px; padding:0 16px;
+  display:flex; flex-direction:column; gap:8px;
 }
-.my-type-label { font-size:.78rem; color:var(--text2); white-space:nowrap; }
+.type-row {
+  display:flex; align-items:center; gap:10px;
+}
+.type-row-label {
+  font-size:.78rem; color:var(--text2); white-space:nowrap; width:48px; flex-shrink:0;
+}
 .type-select {
   flex:1; padding:8px 12px;
   background:var(--surface2); border:1px solid var(--surface3);
@@ -38,10 +43,26 @@
   -webkit-appearance:none; cursor:pointer;
 }
 .type-select:focus { outline:none; border-color:rgba(108,92,231,.6); }
-.my-type-tag {
-  font-size:.75rem; font-weight:700; padding:5px 10px;
-  border-radius:8px; white-space:nowrap; display:none;
+.my-type-badge {
+  flex:1; padding:8px 14px;
+  background:rgba(108,92,231,.12); border:1px solid rgba(108,92,231,.35);
+  border-radius:10px; color:var(--text); font-size:.82rem; font-weight:700;
+  display:none; align-items:center; gap:8px;
 }
+.my-type-badge .badge-lock { font-size:.7rem; color:var(--text2); }
+
+.show-compat-btn {
+  width:100%; padding:12px;
+  background:var(--accent); color:#fff;
+  border:none; border-radius:12px;
+  font-size:.9rem; font-weight:700; cursor:pointer;
+  transition:background .2s, opacity .2s, transform .1s;
+  margin-top:2px;
+}
+.show-compat-btn:disabled {
+  background:var(--surface3); color:var(--text2); cursor:not-allowed;
+}
+.show-compat-btn:not(:disabled):hover { background:var(--accent2); transform:translateY(-1px); }
 
 /* ===== 凡例 ===== */
 .legend-wrap { max-width:560px; margin:0 auto 12px; padding:0 16px; }
@@ -68,44 +89,64 @@
   overflow-x:auto; padding:0 8px 20px;
   -webkit-overflow-scrolling:touch;
 }
-.matrix-table { border-collapse:collapse; margin:0 auto; }
+.matrix-table {
+  border-collapse:collapse;
+  table-layout:fixed;
+  margin:0 auto;
+}
 
 /* 列ヘッダー */
 .m-col-hdr {
   width:16px; height:22px; font-size:.5rem;
   text-align:center; vertical-align:bottom;
-  padding-bottom:2px; cursor:default; font-weight:700;
-  line-height:1;
+  padding:0 0 2px; cursor:default; font-weight:700;
+  line-height:1; overflow:hidden;
 }
 /* ファミリーラベル行 */
 .m-fam-col-hdr {
   font-size:.58rem; font-weight:700; text-align:center;
   vertical-align:bottom; padding-bottom:4px; cursor:default;
-  letter-spacing:-.5px;
+  letter-spacing:-.5px; overflow:hidden;
 }
 /* 行ラベル */
 .m-row-lbl {
   width:22px; min-width:22px; font-size:.55rem;
   text-align:right; padding-right:3px; cursor:default;
   white-space:nowrap; font-weight:700; line-height:1;
-  vertical-align:middle;
+  vertical-align:middle; overflow:hidden;
 }
-/* データセル */
+/* データセル：正方形固定 */
 .m-cell {
   width:16px; height:16px;
+  min-width:16px; min-height:16px;
+  max-width:16px; max-height:16px;
   cursor:pointer; transition:transform .12s; position:relative;
+  overflow:hidden;
 }
 .m-cell:hover { transform:scale(1.35); z-index:10; }
-.m-cell.my-row  { box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.65); }
-.m-cell.my-col  { box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.65); }
-.m-cell.my-row.my-col { box-shadow:inset 0 0 0 2px #fff; }
+
+/* 自分の行：薄い紫背景 */
+.m-cell.my-row { filter:brightness(1.15); }
+/* 相手の列：薄い明度アップ */
+.m-cell.other-col { filter:brightness(1.1); }
+
+/* 交点：目立つ白リング */
+.m-cell.my-row.other-col {
+  box-shadow:inset 0 0 0 2.5px #fff, 0 0 6px 2px rgba(255,255,255,.5) !important;
+  transform:scale(1.4) !important;
+  z-index:20 !important;
+  filter:brightness(1.25) !important;
+}
+
+/* 選択済みセル */
 .m-cell.selected {
   box-shadow:inset 0 0 0 2px #fff !important;
   transform:scale(1.2) !important;
   z-index:11 !important;
 }
+
 /* ファミリー間ギャップ */
-.m-fam-gap-col { width:5px; background:transparent; cursor:default; }
+.m-fam-gap-col { width:5px; min-width:5px; background:transparent; cursor:default; }
 .m-fam-gap-row { height:5px; }
 
 /* ===== ボトムシートオーバーレイ ===== */
@@ -189,15 +230,37 @@
 
 <div class="page-header">
   <h1>🔮 32タイプ相性マトリクス</h1>
-  <p>セルをタップして2タイプ間の相性を確認</p>
+  <p>タイプを選んで相性を確認しよう</p>
 </div>
 
-<!-- あなたのタイプ -->
-<div class="my-type-bar">
-  <span class="my-type-label">あなた:</span>
-  <select class="type-select" id="myTypeSelect" onchange="onMyTypeChange()">
-    <option value="">─ タイプを選択（省略可）─</option>
-  </select>
+<!-- タイプ選択エリア -->
+<div class="type-selector-area">
+  <!-- 自分のタイプ -->
+  <div class="type-row">
+    <span class="type-row-label">あなた:</span>
+    <!-- ログイン済み：固定バッジ -->
+    <div class="my-type-badge" id="myTypeBadge">
+      <span id="myTypeBadgeText">─</span>
+      <span class="badge-lock">🔒 固定</span>
+    </div>
+    <!-- 未ログイン：ドロップダウン -->
+    <select class="type-select" id="myTypeSelect" onchange="onMyTypeChange()" style="display:none">
+      <option value="">─ あなたのタイプを選択 ─</option>
+    </select>
+  </div>
+
+  <!-- 相手のタイプ -->
+  <div class="type-row">
+    <span class="type-row-label">相手:</span>
+    <select class="type-select" id="otherTypeSelect" onchange="onOtherTypeChange()">
+      <option value="">─ 相手のタイプを選択 ─</option>
+    </select>
+  </div>
+
+  <!-- 相性を見るボタン -->
+  <button class="show-compat-btn" id="showCompatBtn" onclick="showSelectedCompat()" disabled>
+    相性を見る
+  </button>
 </div>
 
 <!-- 凡例 -->
@@ -210,7 +273,7 @@
   </div>
 </div>
 
-<p class="matrix-hint">← 横にスクロールできます</p>
+<p class="matrix-hint">← 横にスクロールできます　セルを直接タップしても確認できます</p>
 
 <!-- マトリクス -->
 <div class="matrix-outer">
@@ -279,12 +342,16 @@ function scoreToColor(s) {
 }
 
 // ============================================================
-// あなたのタイプ選択
+// 状態
 // ============================================================
 let myType = 0;
+let otherType = 0;
 
-function initSelect() {
-  const sel = document.getElementById('myTypeSelect');
+// ============================================================
+// ドロップダウン初期化（共通ヘルパー）
+// ============================================================
+function populateTypeSelect(sel, placeholder) {
+  sel.innerHTML = `<option value="">${placeholder}</option>`;
   const groups = {Architects:[],Mystics:[],Commanders:[],Catalysts:[]};
   for (let n=1; n<=32; n++) {
     const t = TYPE_META[n];
@@ -301,30 +368,86 @@ function initSelect() {
     });
     sel.appendChild(og);
   });
+}
 
-  // ログイン中ユーザーのタイプを自動セット
+function initSelects() {
+  // 相手セレクト（常に表示）
+  populateTypeSelect(
+    document.getElementById('otherTypeSelect'),
+    '─ 相手のタイプを選択 ─'
+  );
+
+  // ログイン済みかどうかで自分タイプUIを切り替え
   if (typeof getMyProfile === 'function') {
     getMyProfile().then(p => {
-      if (p && p.type_number) {
-        sel.value = p.type_number;
-        onMyTypeChange();
+      if (p && p.type_number && p.type_name) {
+        // ログイン済み：固定バッジ表示
+        myType = p.type_number;
+        const badge = document.getElementById('myTypeBadge');
+        const text  = document.getElementById('myTypeBadgeText');
+        text.textContent = `Type ${String(p.type_number).padStart(2,'0')} ${p.type_name}`;
+        badge.style.display = 'flex';
+        document.getElementById('myTypeSelect').style.display = 'none';
+        refreshHighlights();
+        updateCompatBtn();
+      } else {
+        showMyTypeSelect();
       }
-    }).catch(() => {});
+    }).catch(() => showMyTypeSelect());
+  } else {
+    showMyTypeSelect();
   }
 }
 
+function showMyTypeSelect() {
+  const sel = document.getElementById('myTypeSelect');
+  populateTypeSelect(sel, '─ あなたのタイプを選択 ─');
+  sel.style.display = 'block';
+  document.getElementById('myTypeBadge').style.display = 'none';
+}
+
+// ============================================================
+// タイプ変更ハンドラ
+// ============================================================
 function onMyTypeChange() {
   myType = parseInt(document.getElementById('myTypeSelect').value) || 0;
   refreshHighlights();
+  updateCompatBtn();
 }
 
+function onOtherTypeChange() {
+  otherType = parseInt(document.getElementById('otherTypeSelect').value) || 0;
+  refreshHighlights();
+  updateCompatBtn();
+}
+
+function updateCompatBtn() {
+  const btn = document.getElementById('showCompatBtn');
+  btn.disabled = !(myType > 0 && otherType > 0);
+}
+
+// ============================================================
+// ハイライト更新
+// ============================================================
 function refreshHighlights() {
   document.querySelectorAll('.m-cell').forEach(td => {
     const r = parseInt(td.dataset.row);
     const c = parseInt(td.dataset.col);
-    td.classList.toggle('my-row', myType > 0 && r === myType);
-    td.classList.toggle('my-col', myType > 0 && c === myType);
+    td.classList.toggle('my-row',    myType    > 0 && r === myType);
+    td.classList.toggle('other-col', otherType > 0 && c === otherType);
   });
+}
+
+// ============================================================
+// 「相性を見る」ボタン → パネルオープン
+// ============================================================
+function showSelectedCompat() {
+  if (myType > 0 && otherType > 0) {
+    openPanel(myType, otherType);
+    // マトリクスの交点セルまでスムーズスクロール
+    const cell = document.querySelector(`.m-cell[data-row="${myType}"][data-col="${otherType}"]`);
+    if (cell) cell.scrollIntoView({ behavior:'smooth', block:'center', inline:'center' });
+  }
 }
 
 // ============================================================
@@ -335,14 +458,7 @@ function buildMatrix() {
   tbl.innerHTML = '';
 
   const famColors = FAM_COLOR_HEX;
-  // ファミリーラベル略称
   const famShort = { Architects:'Arc', Mystics:'Mys', Commanders:'Cmd', Catalysts:'Cat' };
-
-  // ─── ファミリーラベル行（最上段）───
-  const famRow = tbl.insertRow();
-  const famCorner = document.createElement('th');
-  famCorner.className = 'm-row-lbl';
-  famRow.appendChild(famCorner);
 
   const famDefs = [
     {fam:'Architects', cols:[1,8]},
@@ -350,6 +466,30 @@ function buildMatrix() {
     {fam:'Commanders', cols:[17,24]},
     {fam:'Catalysts',  cols:[25,32]},
   ];
+
+  // ─── colgroup で列幅を固定 ───
+  const cg = document.createElement('colgroup');
+  // 行ラベル列
+  const cgLbl = document.createElement('col');
+  cgLbl.style.width = '22px';
+  cg.appendChild(cgLbl);
+  for (let col=1; col<=32; col++) {
+    const c = document.createElement('col');
+    c.style.width = '16px';
+    cg.appendChild(c);
+    if (col===8||col===16||col===24) {
+      const cgap = document.createElement('col');
+      cgap.style.width = '5px';
+      cg.appendChild(cgap);
+    }
+  }
+  tbl.appendChild(cg);
+
+  // ─── ファミリーラベル行 ───
+  const famRow = tbl.insertRow();
+  const famCorner = document.createElement('th');
+  famCorner.className = 'm-row-lbl';
+  famRow.appendChild(famCorner);
   famDefs.forEach((fd, fi) => {
     const th = document.createElement('th');
     th.colSpan = 8;
@@ -357,7 +497,6 @@ function buildMatrix() {
     th.style.color = famColors[fd.fam];
     th.textContent = famShort[fd.fam];
     famRow.appendChild(th);
-    // ファミリー間ギャップ列ヘッダー（最後以外）
     if (fi < 3) {
       const gap = document.createElement('th');
       gap.className = 'm-fam-gap-col';
@@ -370,7 +509,6 @@ function buildMatrix() {
   const emptyTh = document.createElement('th');
   emptyTh.className = 'm-row-lbl';
   hRow.appendChild(emptyTh);
-
   for (let col=1; col<=32; col++) {
     const th = document.createElement('th');
     th.className = 'm-col-hdr';
@@ -426,9 +564,8 @@ function buildMatrix() {
     if (row===8||row===16||row===24) {
       const gapTr = tbl.insertRow();
       gapTr.className = 'm-fam-gap-row';
-      // 列数に合わせてセルを埋める（見た目は空）
       const gapTd = document.createElement('td');
-      gapTd.colSpan = 37; // 32列 + 3ギャップ列 + 1ラベル列 + 余裕
+      gapTd.colSpan = 37;
       gapTr.appendChild(gapTd);
     }
   }
@@ -515,7 +652,6 @@ function closePanel() {
   document.getElementById('compatPanel').classList.remove('open');
   document.getElementById('panelOverlay').classList.remove('open');
   document.body.style.overflow = '';
-  // 選択ハイライトは残す（どこを見ていたか把握できるよう）
 }
 
 // ============================================================
@@ -523,7 +659,7 @@ function closePanel() {
 // ============================================================
 window.addEventListener('DOMContentLoaded', () => {
   buildMatrix();
-  initSelect();
+  initSelects();
   if (typeof initNavUser === 'function') initNavUser();
 });
 </script>
