@@ -90,15 +90,6 @@ const Board = {
 
     // ——— ポイント消費計算 ———
     const cost = await this._calcBoardCost(user.id);
-    if (cost > 0) {
-      // ポイント残高確認（DBから最新を取得）
-      const { data: me } = await supabase
-        .from('users').select('point_balance').eq('id', user.id).single();
-      const balance = me?.point_balance ?? 0;
-      if (balance < cost) {
-        throw new Error(`ポイントが不足しています（必要: ${cost}pt / 残高: ${balance}pt）`);
-      }
-    }
 
     const insertData = {
       subcategory_id: subcategoryId,
@@ -124,23 +115,15 @@ const Board = {
 
     if (error) this._throwBoardError(error);
 
-    // ポイントを消費（cost > 0 の場合）
+    // ポイントを消費（cost > 0 の場合）- アトミックRPCで残高確認・消費・台帳記録を一括処理
     if (cost > 0) {
-      await supabase.from('users')
-        .update({ point_balance: supabase.rpc ? undefined : undefined }) // RPCが使えない場合は手動更新
-        .eq('id', user.id);
-      // 簡易方式: point_balance を SELECT して UPDATE
-      const { data: me } = await supabase
-        .from('users').select('point_balance').eq('id', user.id).single();
-      await supabase.from('users')
-        .update({ point_balance: (me?.point_balance ?? 0) - cost })
-        .eq('id', user.id);
-      await supabase.from('point_ledger').insert({
-        user_id: user.id,
-        amount: -cost,
-        reason: 'board_create',
-        ref_id: data.id,
-      }).catch(() => {}); // 履歴保存は失敗してもOK
+      const { error: spendError } = await supabase.rpc('spend_points', {
+        p_user_id: user.id,
+        p_amount:  cost,
+        p_reason:  'board_create',
+        p_ref_id:  data.id,
+      });
+      if (spendError) this._throwBoardError(spendError);
     }
 
     return data;
