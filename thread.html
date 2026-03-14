@@ -61,6 +61,42 @@
   .reply-send-btn:hover{transform:scale(1.1)}
   .reply-send-btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
 
+  .reply-img-btn{
+    width:36px;height:36px;
+    background:var(--surface2);border:1px solid var(--surface3);
+    border-radius:50%;color:var(--text2);font-size:1rem;
+    cursor:pointer;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;
+    transition:background .2s;
+  }
+  .reply-img-btn:hover{background:var(--surface3)}
+
+  /* 画像プレビュー（返信エリア上） */
+  .reply-img-preview{
+    padding:6px 16px 0;
+    display:flex;align-items:center;gap:8px;
+  }
+  .reply-img-preview img{
+    height:56px;width:auto;max-width:120px;
+    border-radius:8px;object-fit:cover;
+    border:1px solid var(--surface3);
+  }
+  .reply-img-remove{
+    background:rgba(0,0,0,.5);color:#fff;
+    border:none;border-radius:50%;
+    width:20px;height:20px;font-size:.7rem;
+    cursor:pointer;display:flex;align-items:center;justify-content:center;
+  }
+
+  /* 投稿内の画像 */
+  .post-img-wrap{margin:8px 0 4px}
+  .post-img{
+    max-width:100%;max-height:300px;
+    border-radius:10px;cursor:pointer;
+    object-fit:contain;display:block;
+  }
+  .post-img.post-img-expanded{max-height:none}
+
   .reply-warning{
     font-size:.7rem;color:var(--danger);
     padding:0 16px;margin-bottom:4px;
@@ -134,8 +170,14 @@
 <!-- 返信エリア -->
 <div id="reply-area-wrapper">
   <div class="reply-warning" id="reply-warning"></div>
+  <div class="reply-img-preview" id="reply-img-preview" style="display:none">
+    <img id="reply-img-thumb" src="" alt="preview">
+    <button class="reply-img-remove" id="reply-img-remove" title="削除">✕</button>
+  </div>
   <p style="font-size:.68rem;color:var(--text2);text-align:center;margin:2px 0 4px">返信は1分間に3件まで</p>
   <div class="reply-area" id="reply-area">
+    <button class="reply-img-btn" id="reply-img-btn" title="画像を添付">🖼️</button>
+    <input type="file" id="reply-img-input" accept="image/*" style="display:none">
     <textarea id="reply-input" placeholder="返信を書く..." rows="1" data-i18n-ph="thread.reply_placeholder"></textarea>
     <button class="reply-send-btn" id="reply-send" disabled>▶</button>
   </div>
@@ -401,34 +443,72 @@
   const sendBtn = document.getElementById('reply-send');
   const warningEl = document.getElementById('reply-warning');
 
+  // --- 画像添付 ---
+  let pendingImageFile = null; // 圧縮後のBlob
+
+  const imgBtn = document.getElementById('reply-img-btn');
+  const imgFileInput = document.getElementById('reply-img-input');
+  const imgPreviewWrap = document.getElementById('reply-img-preview');
+  const imgThumb = document.getElementById('reply-img-thumb');
+  const imgRemoveBtn = document.getElementById('reply-img-remove');
+
+  imgBtn.addEventListener('click', () => imgFileInput.click());
+
+  imgFileInput.addEventListener('change', async () => {
+    const file = imgFileInput.files[0];
+    if (!file) return;
+    imgFileInput.value = '';
+
+    try {
+      pendingImageFile = await compressPostImage(file);
+      imgThumb.src = URL.createObjectURL(pendingImageFile);
+      imgPreviewWrap.style.display = 'flex';
+      updateSendBtn();
+    } catch (err) {
+      showToast(err.message || '画像の読み込みに失敗しました', 'error');
+    }
+  });
+
+  imgRemoveBtn.addEventListener('click', () => {
+    pendingImageFile = null;
+    imgThumb.src = '';
+    imgPreviewWrap.style.display = 'none';
+    updateSendBtn();
+  });
+
+  function updateSendBtn() {
+    const text = replyInput.value.trim();
+    const hasContent = text.length > 0 || pendingImageFile !== null;
+    if (!hasContent) { sendBtn.disabled = true; return; }
+    if (text.length > 0) {
+      const check = Moderation.checkContent(text);
+      if (!check.ok) { sendBtn.disabled = true; return; }
+    }
+    sendBtn.disabled = false;
+  }
+
   replyInput.addEventListener('input', () => {
-    // テキストエリア高さ自動調整
     replyInput.style.height = 'auto';
     replyInput.style.height = Math.min(replyInput.scrollHeight, 120) + 'px';
 
-    // 送信ボタンの有効/無効
     const text = replyInput.value.trim();
-    sendBtn.disabled = text.length === 0;
-
-    // リアルタイム禁止ワードチェック
     if (text.length > 0) {
       const check = Moderation.checkContent(text);
       if (!check.ok) {
         warningEl.textContent = check.reason;
         warningEl.classList.add('show');
-        sendBtn.disabled = true;
       } else {
         warningEl.classList.remove('show');
       }
     } else {
       warningEl.classList.remove('show');
     }
+    updateSendBtn();
   });
 
   // 送信
   sendBtn.addEventListener('click', submitReply);
   replyInput.addEventListener('keydown', (e) => {
-    // Ctrl+Enter or Cmd+Enter で送信
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
       e.preventDefault();
       submitReply();
@@ -437,23 +517,77 @@
 
   async function submitReply() {
     const content = replyInput.value.trim();
-    if (!content) return;
+    if (!content && !pendingImageFile) return;
 
     sendBtn.disabled = true;
 
     try {
-      const post = await Board.createPost(currentThread.id, content, pendingReplyNumber);
+      let mediaUrl = null;
+      if (pendingImageFile) {
+        const user = await getCurrentUser();
+        const ext = 'webp';
+        const path = `${user.id}/${Date.now()}.${ext}`;
+        const { error: upErr } = await supabase.storage
+          .from('posts')
+          .upload(path, pendingImageFile, { contentType: 'image/webp', upsert: false });
+        if (upErr) throw new Error('画像のアップロードに失敗しました');
+        const { data: urlData } = supabase.storage.from('posts').getPublicUrl(path);
+        mediaUrl = urlData.publicUrl;
+      }
+
+      const postContent = content || '📷';
+      const post = await Board.createPost(currentThread.id, postContent, pendingReplyNumber, mediaUrl);
       appendPost(post, false, true);
+
+      // リセット
       replyInput.value = '';
       replyInput.style.height = 'auto';
       warningEl.classList.remove('show');
       pendingReplyNumber = null;
+      pendingImageFile = null;
+      imgThumb.src = '';
+      imgPreviewWrap.style.display = 'none';
       scrollToBottom();
     } catch (err) {
       showToast(err.message || '投稿に失敗しました', 'error');
     } finally {
-      sendBtn.disabled = replyInput.value.trim().length === 0;
+      updateSendBtn();
     }
+  }
+
+  // --- 画像圧縮（posts用） ---
+  async function compressPostImage(file) {
+    const MAX_INPUT = 20 * 1024 * 1024;
+    const MAX_LONG = 1200;
+    const MAX_OUTPUT = 500 * 1024;
+    const MIN_Q = 0.3;
+    if (file.size > MAX_INPUT) throw new Error('画像サイズが大きすぎます（20MB以下）');
+    if (!file.type.startsWith('image/')) throw new Error('画像ファイルを選択してください');
+
+    const img = await new Promise((res, rej) => {
+      const i = new Image();
+      i.onload = () => res(i);
+      i.onerror = rej;
+      i.src = URL.createObjectURL(file);
+    });
+
+    let w = img.naturalWidth, h = img.naturalHeight;
+    if (w > MAX_LONG || h > MAX_LONG) {
+      if (w >= h) { h = Math.round(h * MAX_LONG / w); w = MAX_LONG; }
+      else        { w = Math.round(w * MAX_LONG / h); h = MAX_LONG; }
+    }
+    const canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+
+    let quality = 0.85;
+    let blob = await new Promise(r => canvas.toBlob(r, 'image/webp', quality));
+    while (blob && blob.size > MAX_OUTPUT && quality > MIN_Q) {
+      quality -= 0.1;
+      blob = await new Promise(r => canvas.toBlob(r, 'image/webp', quality));
+    }
+    if (!blob) throw new Error('画像の変換に失敗しました');
+    return blob;
   }
 
   // --- スクロール ---

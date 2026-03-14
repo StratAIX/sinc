@@ -520,6 +520,21 @@
     }
 
     container.innerHTML = data.length > 0 ? '' : `<div class="empty-state"><div class="empty-icon">💬</div><div class="empty-text">まだメッセージがありません<br>最初のメッセージを送ってみましょう</div></div>`;
+
+    // 画像メッセージのsigned URLを一括再生成
+    const mediaMsgs = data.filter(m => m.media_url);
+    if (mediaMsgs.length > 0) {
+      const { data: signedList } = await supabase.storage
+        .from('dms')
+        .createSignedUrls(mediaMsgs.map(m => m.media_url), 3600);
+      if (signedList) {
+        signedList.forEach(s => {
+          const m = mediaMsgs.find(m => m.media_url === s.path);
+          if (m) m.media_signed_url = s.signedUrl;
+        });
+      }
+    }
+
     data.forEach(msg => appendMessage(msg));
 
     // 未読を既読にする
@@ -586,8 +601,13 @@
         table: 'dms',
         filter: `conversation_id=eq.${conversationId}`,
       }, async (payload) => {
-        const msg = payload.new;
+        let msg = payload.new;
         if (msg.sender_id !== myUserId) {
+          // 画像メッセージならsigned URLを生成してから表示
+          if (msg.media_url) {
+            const { data: sd } = await supabase.storage.from('dms').createSignedUrl(msg.media_url, 3600);
+            if (sd) msg = { ...msg, media_signed_url: sd.signedUrl };
+          }
           appendMessage(msg);
           scrollToBottom(true);
           // 既読にする
@@ -699,26 +719,25 @@
 
         if (uploadErr) throw uploadErr;
 
-        // signed URL（1時間有効）を生成してDBに保存
+        // signed URL（表示用・DBには保存しない）
         const { data: signedData, error: signErr } = await supabase.storage
           .from('dms')
           .createSignedUrl(path, 3600);
 
         if (signErr) throw signErr;
 
-        // DBには path（ストレージパス）を保存し、表示時に都度signed URLを生成
+        // DBには media_url（ストレージパス）のみ保存
         const { data, error } = await supabase.from('dms').insert({
           conversation_id: conversationId,
           sender_id: myUserId,
           receiver_id: targetUserId,
-          media_url: path,           // パスのみ保存（公開URLではない）
-          media_signed_url: signedData.signedUrl, // 表示用（一時的）
+          media_url: path,
         }).select().single();
 
-        if (!error) {
-          appendMessage(data);
-          scrollToBottom(true);
-        }
+        if (error) throw error;
+        // signed URLはJSオブジェクトに付与して表示（DB保存不要）
+        appendMessage({ ...data, media_signed_url: signedData.signedUrl });
+        scrollToBottom(true);
       } catch (err) {
         console.error('DM画像送信エラー:', err);
         showToast('画像の送信に失敗しました: ' + (err.message || 'エラー'), 'error');

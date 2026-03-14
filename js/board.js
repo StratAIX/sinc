@@ -277,7 +277,7 @@ const Board = {
   // ============================================================
   // 投稿（返信）を作成
   // ============================================================
-  async createPost(threadId, content, replyToNumber = null) {
+  async createPost(threadId, content, replyToNumber = null, mediaUrl = null) {
     const contentCheck = Moderation.checkContent(content);
     if (!contentCheck.ok) throw new Error(contentCheck.reason);
 
@@ -290,6 +290,7 @@ const Board = {
       content: content.trim(),
     };
     if (replyToNumber) insertData.reply_to_number = replyToNumber;
+    if (mediaUrl) insertData.media_url = mediaUrl;
 
     const { data, error } = await supabase
       .from('posts')
@@ -519,6 +520,7 @@ const Board = {
         </div>
         ${replyToHtml}
         <div class="post-content">${parsedContent}</div>
+        ${post.media_url ? `<div class="post-img-wrap"><img class="post-img" src="${escapeHtml(post.media_url)}" loading="lazy" onclick="this.classList.toggle('post-img-expanded')"></div>` : ''}
         <div class="post-actions">
           <button class="post-action ${isLiked ? 'liked' : ''}" data-action="like" data-post-id="${post.id}">
             ${isLiked ? '❤️' : '🤍'} <span class="like-count">${post.likes_count || 0}</span>
