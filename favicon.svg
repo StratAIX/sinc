@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#6c5ce7"/>
+      <stop offset="50%"  stop-color="#a29bfe"/>
+      <stop offset="100%" stop-color="#e84393"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg)" rx="220"/>
+  <text
+    x="512" y="512"
+    font-family="'Helvetica Neue', Arial, sans-serif"
+    font-size="320"
+    font-weight="900"
+    fill="white"
+    text-anchor="middle"
+    dominant-baseline="central"
+    letter-spacing="-8"
+  >Sinc</text>
+</svg>

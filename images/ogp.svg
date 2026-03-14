@@ -1,0 +1,105 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#1a0a3e"/>
+      <stop offset="40%"  stop-color="#2d0f5f"/>
+      <stop offset="75%"  stop-color="#3d0d35"/>
+      <stop offset="100%" stop-color="#1a0a2e"/>
+    </linearGradient>
+    <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#7c3aed"/>
+      <stop offset="100%" stop-color="#ec4899"/>
+    </linearGradient>
+    <clipPath id="logoClip">
+      <text x="80" y="260"
+        font-family="Arial Black, Arial, sans-serif"
+        font-size="210" font-weight="900" letter-spacing="-8">Sinc</text>
+    </clipPath>
+    <linearGradient id="divGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%"   stop-color="rgba(167,139,250,0)"/>
+      <stop offset="45%"  stop-color="rgba(167,139,250,0.3)"/>
+      <stop offset="100%" stop-color="rgba(167,139,250,0)"/>
+    </linearGradient>
+    <filter id="orb1"><feGaussianBlur stdDeviation="80"/></filter>
+    <filter id="orb2"><feGaussianBlur stdDeviation="70"/></filter>
+    <filter id="orb3"><feGaussianBlur stdDeviation="60"/></filter>
+  </defs>
+
+  <!-- 背景 -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- Orbs -->
+  <circle cx="-30"  cy="-20"  r="400" fill="#a78bfa" opacity="0.18" filter="url(#orb1)"/>
+  <circle cx="1240" cy="660"  r="360" fill="#f9a8d4" opacity="0.16" filter="url(#orb2)"/>
+  <circle cx="860"  cy="60"   r="220" fill="#bae6fd" opacity="0.09" filter="url(#orb3)"/>
+
+  <!-- 縦仕切り線 -->
+  <rect x="620" y="40" width="1" height="550" fill="url(#divGrad)"/>
+
+  <!-- ===== 左エリア ===== -->
+
+  <!-- Sinc ロゴ -->
+  <rect x="80" y="40" width="530" height="250" fill="url(#logoGrad)" clip-path="url(#logoClip)"/>
+
+  <!-- キャッチコピー -->
+  <text x="86" y="330"
+    font-family="'Yu Gothic', 'Meiryo', 'Noto Sans JP', Arial, sans-serif"
+    font-size="30" font-weight="700" fill="rgba(255,255,255,0.88)" letter-spacing="1">
+    なんとなく合うには、理由がある。
+  </text>
+
+  <!-- αバッジ -->
+  <rect x="83" y="358" width="230" height="36" rx="18"
+    fill="rgba(255,255,255,0.10)" stroke="rgba(124,58,237,0.45)" stroke-width="1"/>
+  <circle cx="106" cy="376" r="6" fill="#10b981"/>
+  <text x="122" y="381"
+    font-family="Arial, sans-serif"
+    font-size="13" font-weight="700" fill="#a78bfa" letter-spacing="2">
+    α テスト受付中
+  </text>
+
+  <!-- URL -->
+  <text x="86" y="560"
+    font-family="Arial, sans-serif"
+    font-size="20" fill="rgba(167,139,250,0.55)" letter-spacing="1">
+    sinc.strataix.net
+  </text>
+
+  <!-- ===== 右エリア ===== -->
+
+  <!-- 特徴1 -->
+  <circle cx="662" cy="190" r="8" fill="#7c3aed"/>
+  <text x="690" y="200"
+    font-family="'Yu Gothic', 'Meiryo', 'Noto Sans JP', Arial, sans-serif"
+    font-size="28" font-weight="700" fill="rgba(255,255,255,0.92)">
+    AIが解析する136の質問
+  </text>
+  <rect x="650" y="222" width="510" height="1" fill="rgba(255,255,255,0.07)"/>
+
+  <!-- 特徴2 -->
+  <circle cx="662" cy="280" r="8" fill="#ec4899"/>
+  <text x="690" y="290"
+    font-family="'Yu Gothic', 'Meiryo', 'Noto Sans JP', Arial, sans-serif"
+    font-size="28" font-weight="700" fill="rgba(255,255,255,0.92)">
+    32タイプ × 相性スコア診断
+  </text>
+  <rect x="650" y="312" width="510" height="1" fill="rgba(255,255,255,0.07)"/>
+
+  <!-- 特徴3 -->
+  <circle cx="662" cy="370" r="8" fill="#a78bfa"/>
+  <text x="690" y="380"
+    font-family="'Yu Gothic', 'Meiryo', 'Noto Sans JP', Arial, sans-serif"
+    font-size="28" font-weight="700" fill="rgba(255,255,255,0.92)">
+    真の友人と語れる場所
+  </text>
+  <rect x="650" y="402" width="510" height="1" fill="rgba(255,255,255,0.07)"/>
+
+  <!-- 特徴4 -->
+  <circle cx="662" cy="460" r="8" fill="#f9a8d4"/>
+  <text x="690" y="470"
+    font-family="'Yu Gothic', 'Meiryo', 'Noto Sans JP', Arial, sans-serif"
+    font-size="28" font-weight="700" fill="rgba(255,255,255,0.92)">
+    相性98%の人が、ここにいる
+  </text>
+
+</svg>

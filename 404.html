@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>404 — ページが見つかりません | Sinc</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<script>!function(){var t=localStorage.getItem('theme');if(t)document.documentElement.setAttribute('data-theme',t)}();</script>
+<link rel="stylesheet" href="css/common.css">
+<style>
+  .error-page {
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+    text-align: center;
+  }
+  .error-icon {
+    font-size: 5rem;
+    margin-bottom: 16px;
+    animation: float 3s ease-in-out infinite;
+  }
+  .error-code {
+    font-size: 5rem;
+    font-weight: 900;
+    letter-spacing: -.04em;
+    background: linear-gradient(135deg, var(--accent), var(--pink));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1;
+    margin-bottom: 12px;
+  }
+  .error-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+  .error-desc {
+    font-size: .9rem;
+    color: var(--text2);
+    line-height: 1.6;
+    margin-bottom: 32px;
+    max-width: 300px;
+  }
+  .btn-group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    max-width: 280px;
+  }
+  .btn-primary {
+    display: block;
+    padding: 14px 24px;
+    background: var(--accent);
+    color: #fff;
+    border-radius: var(--radius);
+    font-size: .95rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: background .2s, transform .1s;
+  }
+  .btn-primary:hover {
+    background: var(--accent2);
+    color: #fff;
+    transform: translateY(-1px);
+  }
+  .btn-secondary {
+    display: block;
+    padding: 14px 24px;
+    background: var(--surface2);
+    color: var(--text2);
+    border-radius: var(--radius);
+    font-size: .95rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background .2s;
+  }
+  .btn-secondary:hover {
+    background: var(--surface3);
+    color: var(--text);
+  }
+  .brand {
+    margin-top: 48px;
+    font-size: .8rem;
+    color: var(--text2);
+    font-weight: 600;
+    letter-spacing: .05em;
+  }
+</style>
+</head>
+<body>
+<div class="error-page">
+  <div class="error-icon">🔍</div>
+  <div class="error-code">404</div>
+  <div class="error-title">ページが見つかりません</div>
+  <p class="error-desc">お探しのページは削除されたか、URLが変更された可能性があります。</p>
+  <div class="btn-group">
+    <a href="/" class="btn-primary">トップへ戻る</a>
+    <a href="board.html" class="btn-secondary">掲示板を見る</a>
+  </div>
+  <div class="brand">Sinc by StratAIX</div>
+</div>
+</body>
+</html>
