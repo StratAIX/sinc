@@ -640,7 +640,20 @@
     // マッチング解放状態をメニューに反映
     const unlockItem   = document.getElementById('unlock-matching-item');
     const unlockedItem = document.getElementById('matching-unlocked-item');
-    if (currentProfile.matching_unlocked) {
+    if (typeof ALPHA_MODE !== 'undefined' && ALPHA_MODE) {
+      // αテスト中: グレーアウト＆SOON表示
+      if (unlockItem) {
+        unlockItem.style.display       = 'flex';
+        unlockItem.style.opacity       = '.4';
+        unlockItem.style.pointerEvents = 'none';
+        unlockItem.style.cursor        = 'not-allowed';
+        const lbl = unlockItem.querySelector('.menu-label');
+        if (lbl) lbl.textContent = 'マッチング機能（近日公開）';
+        const arr = unlockItem.querySelector('.menu-arrow');
+        if (arr) { arr.textContent = ''; arr.innerHTML = '<span style="font-size:.65rem;background:var(--pink);color:#fff;padding:2px 7px;border-radius:20px;font-weight:700">SOON</span>'; }
+      }
+      if (unlockedItem) unlockedItem.style.display = 'none';
+    } else if (currentProfile.matching_unlocked) {
       if (unlockItem)   unlockItem.style.display   = 'none';
       if (unlockedItem) unlockedItem.style.display = 'flex';
     } else {
