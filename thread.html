@@ -197,6 +197,8 @@
       await loadThread(threadId);
     } catch (err) {
       showToast('読み込みに失敗しました: ' + err.message, 'error');
+      document.getElementById('posts-container').innerHTML =
+        '<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-text">読み込みに失敗しました</div><button class="btn btn-secondary btn-sm" style="margin-top:12px" onclick="location.reload()">再読み込み</button></div>';
     } finally {
       showLoading(false);
     }

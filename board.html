@@ -841,7 +841,7 @@
       }
       renderPagination(total);
     } catch (err) {
-      list.innerHTML = '<div class="empty-state"><div class="empty-text">読み込みに失敗しました</div></div>';
+      list.innerHTML = '<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-text">読み込みに失敗しました</div><button class="btn btn-secondary btn-sm" style="margin-top:12px" onclick="loadThreads()">再読み込み</button></div>';
     }
   }
 
