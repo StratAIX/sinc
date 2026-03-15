@@ -132,6 +132,7 @@ body{display:flex;min-height:100vh;background:var(--bg)}
     <a onclick="showSection('announce')" id="nav-announce"><span>📢</span><span>お知らせ</span></a>
     <a onclick="showSection('matching')" id="nav-matching"><span>💘</span><span>マッチング</span></a>
     <a onclick="showSection('dm_reports')" id="nav-dm_reports"><span>💬</span><span>DM通報</span><span class="badge" id="badge-dm-reports" style="display:none">0</span></a>
+    <a onclick="showSection('maintenance')" id="nav-maintenance"><span>🔧</span><span>メンテナンス</span></a>
     <a onclick="showSection('action_logs')" id="nav-action_logs"><span>📋</span><span>アクションログ</span></a>
   </nav>
   <div class="adm-signout"><button onclick="signOut()"><span>🚪</span> <span>ログアウト</span></button></div>
@@ -377,6 +378,51 @@ body{display:flex;min-height:100vh;background:var(--bg)}
   </section>
 
   <!-- アクションログ -->
+  <!-- メンテナンス -->
+  <section class="adm-section" id="section-maintenance">
+    <div class="adm-header"><h1>🔧 強制メンテナンス</h1><p>有効にすると管理者以外の全ユーザーをトップ画面にリダイレクトします</p></div>
+
+    <!-- 現在の状態 -->
+    <div id="maint-status-banner" style="display:none;padding:14px 18px;border-radius:10px;margin-bottom:20px;font-weight:700;font-size:.9rem"></div>
+
+    <div class="adm-table-wrap" style="padding:20px">
+      <div style="display:grid;gap:14px;max-width:480px">
+
+        <!-- 開始日時 -->
+        <div>
+          <label style="display:block;font-size:.8rem;color:var(--text2);margin-bottom:4px">開始日時</label>
+          <input type="datetime-local" id="maint-start" style="width:100%;padding:10px;background:var(--surface2);border:1px solid var(--surface3);border-radius:8px;color:var(--text);font-size:.9rem">
+        </div>
+
+        <!-- 終了日時 -->
+        <div>
+          <label style="display:block;font-size:.8rem;color:var(--text2);margin-bottom:4px">終了日時（完了予定）</label>
+          <input type="datetime-local" id="maint-end" style="width:100%;padding:10px;background:var(--surface2);border:1px solid var(--surface3);border-radius:8px;color:var(--text);font-size:.9rem">
+        </div>
+
+        <!-- メッセージ -->
+        <div>
+          <label style="display:block;font-size:.8rem;color:var(--text2);margin-bottom:4px">メッセージ（任意・トップページに表示）</label>
+          <textarea id="maint-message" rows="3" placeholder="例: サービス改善のためメンテナンスを実施します。ご不便をおかけして申し訳ありません。" maxlength="300"
+            style="width:100%;padding:10px;background:var(--surface2);border:1px solid var(--surface3);border-radius:8px;color:var(--text);font-size:.85rem;resize:vertical;line-height:1.6"></textarea>
+        </div>
+
+        <!-- ボタン -->
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-danger" id="maint-enable-btn" onclick="setMaintenance(true)">🔴 メンテナンス開始</button>
+          <button class="btn btn-primary" id="maint-disable-btn" onclick="setMaintenance(false)">🟢 メンテナンス解除</button>
+        </div>
+        <div id="maint-saved-msg" style="font-size:.8rem;color:var(--success);display:none">✅ 保存しました</div>
+      </div>
+
+      <!-- プレビュー -->
+      <div style="margin-top:24px;padding:14px;background:var(--surface2);border-radius:10px;border:1px solid var(--surface3)">
+        <div style="font-size:.75rem;color:var(--text2);margin-bottom:8px">📱 トップページ表示プレビュー</div>
+        <div id="maint-preview" style="font-size:.83rem;color:var(--text);line-height:1.7">設定を入力するとプレビューが表示されます</div>
+      </div>
+    </div>
+  </section>
+
   <section class="adm-section" id="section-action_logs">
     <div class="adm-header"><h1>アクションログ</h1><p>管理者操作の全記録。法令に基づく捜査機関への提供時に参照してください。</p></div>
     <div class="adm-toolbar">
@@ -468,7 +514,8 @@ body{display:flex;min-height:100vh;background:var(--bg)}
     const loaders = {
       overview: loadOverview, reports: loadReports, users: loadUsers,
       posts: loadPosts, boards: loadBoards, announce: loadAnnouncements,
-      matching: loadKyc, dm_reports: loadChatReports, action_logs: loadActionLogs
+      matching: loadKyc, dm_reports: loadChatReports,
+      maintenance: loadMaintenance, action_logs: loadActionLogs
     };
     if (loaders[name]) loaders[name]();
   };
@@ -1334,6 +1381,98 @@ body{display:flex;min-height:100vh;background:var(--bg)}
     }
     showToast(`${uids.length}ユーザーをBANしました`);
     loadChatReports();
+  };
+
+  // ============================================================
+  // メンテナンスモード管理
+  // ============================================================
+  function toLocalDatetimeValue(isoStr) {
+    if (!isoStr) return '';
+    const d = new Date(isoStr);
+    // datetime-local 用 "YYYY-MM-DDTHH:MM"
+    const pad = n => String(n).padStart(2,'0');
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+
+  function fmtMaintTime(isoStr) {
+    if (!isoStr) return '未設定';
+    const d = new Date(isoStr);
+    const pad = n => String(n).padStart(2,'0');
+    return `${d.getMonth()+1}月${d.getDate()}日 ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+
+  function updateMaintPreview() {
+    const startVal = document.getElementById('maint-start').value;
+    const endVal = document.getElementById('maint-end').value;
+    const msg = document.getElementById('maint-message').value.trim();
+    const preview = document.getElementById('maint-preview');
+    if (!startVal && !endVal && !msg) {
+      preview.textContent = '設定を入力するとプレビューが表示されます';
+      return;
+    }
+    let text = '🔧 メンテナンス中';
+    if (startVal && endVal) {
+      const s = new Date(startVal), e = new Date(endVal);
+      const pad = n => String(n).padStart(2,'0');
+      text += `\n${s.getMonth()+1}月${s.getDate()}日 ${pad(s.getHours())}:${pad(s.getMinutes())} ～ ${e.getMonth()+1}月${e.getDate()}日 ${pad(e.getHours())}:${pad(e.getMinutes())} 完了予定`;
+    } else if (endVal) {
+      const e = new Date(endVal);
+      const pad = n => String(n).padStart(2,'0');
+      text += `\n～ ${e.getMonth()+1}月${e.getDate()}日 ${pad(e.getHours())}:${pad(e.getMinutes())} 完了予定`;
+    }
+    if (msg) text += '\n' + msg;
+    preview.textContent = text;
+  }
+
+  document.getElementById('maint-start').addEventListener('input', updateMaintPreview);
+  document.getElementById('maint-end').addEventListener('input', updateMaintPreview);
+  document.getElementById('maint-message').addEventListener('input', updateMaintPreview);
+
+  window.loadMaintenance = async function() {
+    const { data } = await supabase.from('maintenance_mode').select('*').order('id').limit(1).single();
+    if (!data) return;
+
+    document.getElementById('maint-start').value = toLocalDatetimeValue(data.start_at);
+    document.getElementById('maint-end').value = toLocalDatetimeValue(data.end_at);
+    document.getElementById('maint-message').value = data.message || '';
+    updateMaintPreview();
+
+    const banner = document.getElementById('maint-status-banner');
+    banner.style.display = 'block';
+    if (data.is_active) {
+      banner.style.background = 'rgba(255,71,87,.15)';
+      banner.style.color = 'var(--danger)';
+      banner.style.border = '1px solid var(--danger)';
+      banner.textContent = '🔴 メンテナンスモード 有効中';
+    } else {
+      banner.style.background = 'rgba(0,210,211,.1)';
+      banner.style.color = 'var(--success)';
+      banner.style.border = '1px solid var(--success)';
+      banner.textContent = '🟢 通常運用中';
+    }
+  };
+
+  window.setMaintenance = async function(isActive) {
+    const startVal = document.getElementById('maint-start').value;
+    const endVal = document.getElementById('maint-end').value;
+    const msg = document.getElementById('maint-message').value.trim();
+
+    const payload = {
+      is_active: isActive,
+      start_at: startVal ? new Date(startVal).toISOString() : null,
+      end_at: endVal ? new Date(endVal).toISOString() : null,
+      message: msg || null,
+      updated_at: new Date().toISOString(),
+    };
+
+    const { error } = await supabase.from('maintenance_mode').update(payload).eq('id', 1);
+    if (error) { showToast('保存エラー: ' + error.message, 'error'); return; }
+
+    const savedMsg = document.getElementById('maint-saved-msg');
+    savedMsg.style.display = 'block';
+    setTimeout(() => savedMsg.style.display = 'none', 3000);
+    showToast(isActive ? '🔴 メンテナンスモードを開始しました' : '🟢 メンテナンスを解除しました');
+    loadMaintenance();
   };
 
   // ============================================================

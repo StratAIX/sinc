@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://www.googletagmanager.com https://www.google-analytics.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://ddabcnvxdheuyeqelffx.supabase.co wss://ddabcnvxdheuyeqelffx.supabase.co https://www.google-analytics.com https://region1.google-analytics.com; object-src 'none'; base-uri 'self'">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script>!function(){var t=localStorage.getItem('theme');if(t)document.documentElement.setAttribute('data-theme',t)}();</script>
+<title>お知らせ — Sinc</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="css/common.css">
+<!-- Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-12BFEWVRN3"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-12BFEWVRN3');</script>
+<style>
+.ann-page {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 0 0 80px;
+}
+.ann-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 16px 0;
+  margin-bottom: 8px;
+}
+.ann-back {
+  background: none; border: none;
+  font-size: 1.2rem; cursor: pointer;
+  color: var(--text2); padding: 4px 8px 4px 0;
+}
+.ann-title {
+  font-size: 1.1rem; font-weight: 800;
+  flex: 1;
+}
+.ann-list {
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.ann-card {
+  background: var(--surface);
+  border: 1px solid var(--surface3);
+  border-radius: var(--radius);
+  padding: 16px;
+  animation: fadeIn .3s ease;
+}
+.ann-card.pinned {
+  border-color: var(--accent);
+  background: linear-gradient(135deg, rgba(108,92,231,.05), rgba(162,155,254,.05));
+}
+.ann-card-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.ann-pin-badge {
+  font-size: .65rem;
+  background: var(--accent);
+  color: #fff;
+  padding: 2px 7px;
+  border-radius: 50px;
+  font-weight: 700;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.ann-card-title {
+  font-size: .95rem;
+  font-weight: 800;
+  flex: 1;
+  line-height: 1.4;
+}
+.ann-card-date {
+  font-size: .7rem;
+  color: var(--text2);
+  margin-bottom: 10px;
+}
+.ann-card-body {
+  font-size: .83rem;
+  color: var(--text);
+  line-height: 1.75;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.ann-empty {
+  text-align: center;
+  padding: 48px 16px;
+  color: var(--text2);
+  font-size: .85rem;
+}
+.ann-loading {
+  text-align: center;
+  padding: 40px 16px;
+  color: var(--text2);
+  font-size: .85rem;
+}
+</style>
+</head>
+<body>
+
+<div class="ann-page">
+  <div class="ann-header">
+    <button class="ann-back" onclick="history.back()">‹</button>
+    <div class="ann-title">📢 お知らせ</div>
+  </div>
+
+  <div class="ann-list" id="ann-list">
+    <div class="ann-loading">読み込み中...</div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="js/supabase-config.js"></script>
+<script src="js/nav.js"></script>
+<script>
+(async () => {
+  function fmtDate(iso) {
+    if (!iso) return '';
+    const d = new Date(iso);
+    return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
+  }
+
+  function esc(s) {
+    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  const list = document.getElementById('ann-list');
+
+  const { data, error } = await supabase
+    .from('announcements')
+    .select('id, title, content, is_pinned, created_at')
+    .order('is_pinned', { ascending: false })
+    .order('created_at', { ascending: false });
+
+  if (error || !data || !data.length) {
+    list.innerHTML = '<div class="ann-empty">現在お知らせはありません</div>';
+    return;
+  }
+
+  list.innerHTML = data.map(a => `
+    <div class="ann-card ${a.is_pinned ? 'pinned' : ''}">
+      <div class="ann-card-top">
+        ${a.is_pinned ? '<span class="ann-pin-badge">📌 固定</span>' : ''}
+        <div class="ann-card-title">${esc(a.title)}</div>
+      </div>
+      <div class="ann-card-date">${fmtDate(a.created_at)}</div>
+      <div class="ann-card-body">${esc(a.content)}</div>
+    </div>
+  `).join('');
+})();
+</script>
+</body>
+</html>

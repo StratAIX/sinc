@@ -279,3 +279,44 @@ async function initNavUser() {
     // 未ログイン等は無視
   }
 }
+
+// ============================================================
+// メンテナンスモードチェック（全ページ共通）
+// ============================================================
+async function checkMaintenanceMode() {
+  try {
+    const { data } = await supabase
+      .from('maintenance_mode')
+      .select('*')
+      .order('id')
+      .limit(1)
+      .single();
+    if (!data || !data.is_active) return null;
+    const now = new Date();
+    if (data.start_at && now < new Date(data.start_at)) return null;
+    if (data.end_at && now > new Date(data.end_at)) return null;
+    return data;
+  } catch(e) {
+    return null;
+  }
+}
+
+// ページロード時に自動チェック（index.html / admin.html はスキップ）
+(async function() {
+  const path = location.pathname;
+  const isIndex = path.endsWith('index.html') || path === '/' || path.endsWith('/');
+  const isAdmin = path.endsWith('admin.html');
+  if (isIndex || isAdmin) return;
+
+  const m = await checkMaintenanceMode();
+  if (!m) return;
+
+  // 管理者はバイパス
+  try {
+    const me = await getMyProfile();
+    if (me?.is_admin) return;
+  } catch(e) {}
+
+  // メンテ中 → index.html?maintenance=1 へ
+  location.href = 'index.html?maintenance=1';
+})();
