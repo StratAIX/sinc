@@ -148,6 +148,9 @@ body{display:flex;min-height:100vh;background:var(--bg)}
     <div class="stats-grid">
       <div class="stat-card"><div class="val" id="st-users">-</div><div class="lbl">総ユーザー数</div></div>
       <div class="stat-card"><div class="val" id="st-users-today">-</div><div class="lbl">今日の新規登録</div></div>
+      <div class="stat-card"><div class="val" id="st-dau">-</div><div class="lbl">DAU（今日のアクティブ）</div></div>
+      <div class="stat-card"><div class="val" id="st-mau">-</div><div class="lbl">MAU（30日アクティブ）</div></div>
+      <div class="stat-card"><div class="val" id="st-retention">-</div><div class="lbl">翌日継続率</div></div>
       <div class="stat-card"><div class="val" id="st-posts">-</div><div class="lbl">総投稿数</div></div>
       <div class="stat-card"><div class="val" id="st-posts-today">-</div><div class="lbl">今日の投稿数</div></div>
       <div class="stat-card warn"><div class="val" id="st-reports">-</div><div class="lbl">未処理通報（掲示板）</div></div>
@@ -155,6 +158,27 @@ body{display:flex;min-height:100vh;background:var(--bg)}
       <div class="stat-card warn"><div class="val" id="st-banned">-</div><div class="lbl">BANユーザー数</div></div>
       <div class="stat-card"><div class="val" id="st-matching">-</div><div class="lbl">マッチング解放数</div></div>
       <div class="stat-card"><div class="val" id="st-threads">-</div><div class="lbl">総スレッド数</div></div>
+    </div>
+    <!-- 詳細統計グリッド（性別・タイプ・掲示板アクティブ） -->
+    <div class="charts-row" style="margin-bottom:16px">
+      <div class="chart-card">
+        <h4>👥 性別割合</h4>
+        <div id="chart-gender" style="display:flex;flex-direction:column;gap:6px;margin-top:4px"></div>
+      </div>
+      <div class="chart-card">
+        <h4>🏛️ ファミリー別ユーザー数</h4>
+        <div class="chart-bars" id="chart-family"></div>
+      </div>
+      <div class="chart-card">
+        <h4>💬 掲示板アクティブユーザー（30日）</h4>
+        <div id="st-board-active" style="font-size:2rem;font-weight:900;color:var(--accent);margin:8px 0 4px">-</div>
+        <div style="font-size:.75rem;color:var(--text2)" id="st-board-active-sub"></div>
+      </div>
+    </div>
+    <!-- タイプ別ユーザー数 -->
+    <div class="chart-card" style="margin-bottom:16px">
+      <h4>🧬 診断タイプ別ユーザー数（Top10）</h4>
+      <div class="chart-bars" id="chart-types" style="height:100px;align-items:flex-end"></div>
     </div>
     <!-- ADMIN-04: 7日間グラフ -->
     <div class="charts-row" id="charts-row">
@@ -477,10 +501,17 @@ body{display:flex;min-height:100vh;background:var(--bg)}
     document.getElementById('overview-updated').textContent = '最終更新: ' + new Date().toLocaleTimeString('ja-JP');
     const today = todayStart();
 
+    const ago30 = new Date(Date.now()-30*24*60*60*1000).toISOString();
+    const yesterday = new Date(Date.now()-24*60*60*1000).toISOString();
+    const dayBeforeYesterday = new Date(Date.now()-48*60*60*1000).toISOString();
+
     const [
       {count:users}, {count:usersToday}, {count:posts},
       {count:postsToday}, {count:reports}, {count:dmReports}, {count:banned},
-      {count:matching}, {count:threads}
+      {count:matching}, {count:threads},
+      {count:dau}, {count:mau},
+      {data:genderData}, {data:familyData}, {data:typeData},
+      {count:boardActive},
     ] = await Promise.all([
       supabase.from('users').select('*',{count:'exact',head:true}),
       supabase.from('users').select('*',{count:'exact',head:true}).gte('created_at',today),
@@ -491,10 +522,24 @@ body{display:flex;min-height:100vh;background:var(--bg)}
       supabase.from('users').select('*',{count:'exact',head:true}).eq('ban_status','banned'),
       supabase.from('users').select('*',{count:'exact',head:true}).eq('matching_unlocked',true),
       supabase.from('threads').select('*',{count:'exact',head:true}),
+      // DAU: 今日アクティブ（last_active_at or 投稿/スレッドで代替）
+      supabase.from('users').select('*',{count:'exact',head:true}).gte('last_active_at',today),
+      // MAU: 30日アクティブ
+      supabase.from('users').select('*',{count:'exact',head:true}).gte('last_active_at',ago30),
+      // 性別割合
+      supabase.from('users').select('gender').not('gender','is',null),
+      // ファミリー別
+      supabase.from('users').select('family').not('family','is',null),
+      // タイプ別
+      supabase.from('users').select('type_name,type_number').not('type_number','is',null),
+      // 掲示板アクティブ（30日以内に投稿したユーザー数）
+      supabase.from('posts').select('user_id',{count:'exact',head:true}).gte('created_at',ago30).eq('is_deleted',false),
     ]);
 
     document.getElementById('st-users').textContent = users??0;
     document.getElementById('st-users-today').textContent = '+' + (usersToday??0);
+    document.getElementById('st-dau').textContent = dau??0;
+    document.getElementById('st-mau').textContent = mau??0;
     document.getElementById('st-posts').textContent = posts??0;
     document.getElementById('st-posts-today').textContent = '+' + (postsToday??0);
     document.getElementById('st-reports').textContent = reports??0;
@@ -502,6 +547,70 @@ body{display:flex;min-height:100vh;background:var(--bg)}
     document.getElementById('st-banned').textContent = banned??0;
     document.getElementById('st-matching').textContent = matching??0;
     document.getElementById('st-threads').textContent = threads??0;
+
+    // 翌日継続率：昨日登録したユーザーのうち今日もアクティブな割合
+    const {count:regYesterday} = await supabase.from('users').select('*',{count:'exact',head:true})
+      .gte('created_at', dayBeforeYesterday).lt('created_at', yesterday);
+    const {count:retainedToday} = await supabase.from('users').select('*',{count:'exact',head:true})
+      .gte('created_at', dayBeforeYesterday).lt('created_at', yesterday)
+      .gte('last_active_at', today);
+    const retention = regYesterday > 0 ? Math.round((retainedToday/regYesterday)*100) : null;
+    document.getElementById('st-retention').textContent = retention !== null ? retention+'%' : 'N/A';
+
+    // 掲示板アクティブ
+    document.getElementById('st-board-active').textContent = boardActive??0;
+    document.getElementById('st-board-active-sub').textContent = '過去30日に投稿したユーザー';
+
+    // 性別割合
+    const genderMap = {male:'👨 男性',female:'👩 女性',other:'🧑 その他',secret:'🔒 非公開'};
+    const genderCount = {};
+    (genderData||[]).forEach(r => { genderCount[r.gender] = (genderCount[r.gender]||0)+1; });
+    const gTotal = Object.values(genderCount).reduce((a,b)=>a+b,0)||1;
+    const gColors = {male:'#6c5ce7',female:'#e84393',other:'#00b894',secret:'#636e72'};
+    document.getElementById('chart-gender').innerHTML = Object.entries(genderMap).map(([k,label]) => {
+      const cnt = genderCount[k]||0;
+      const pct = Math.round(cnt/gTotal*100);
+      return `<div style="display:flex;align-items:center;gap:8px;font-size:.8rem">
+        <span style="min-width:80px;color:var(--text2)">${label}</span>
+        <div style="flex:1;background:var(--surface3);border-radius:4px;height:10px;overflow:hidden">
+          <div style="width:${pct}%;height:100%;background:${gColors[k]};border-radius:4px;transition:width .4s"></div>
+        </div>
+        <span style="min-width:40px;text-align:right;font-weight:700">${cnt}<span style="color:var(--text2);font-weight:400;font-size:.7rem"> (${pct}%)</span></span>
+      </div>`;
+    }).join('');
+
+    // ファミリー別
+    const famCount = {};
+    (familyData||[]).forEach(r => { famCount[r.family] = (famCount[r.family]||0)+1; });
+    const famColors = {Architects:'#6c5ce7',Mystics:'#e84393',Commanders:'#00b894',Catalysts:'#fdcb6e'};
+    const famEmoji = {Architects:'🏛️',Mystics:'🌙',Commanders:'⚔️',Catalysts:'🔥'};
+    const famEntries = Object.entries(famCount).sort((a,b)=>b[1]-a[1]);
+    const famMax = Math.max(...famEntries.map(e=>e[1]),1);
+    document.getElementById('chart-family').innerHTML = famEntries.map(([fam,cnt]) => {
+      const h = Math.round((cnt/famMax)*72);
+      return `<div class="chart-bar-col" title="${fam}: ${cnt}人">
+        <div class="chart-bar-val">${cnt}</div>
+        <div class="chart-bar" style="height:${h}px;background:${famColors[fam]||'#999'}"></div>
+        <div class="chart-bar-label">${famEmoji[fam]||''}${fam.slice(0,4)}</div>
+      </div>`;
+    }).join('');
+
+    // タイプ別Top10
+    const typeCount = {};
+    (typeData||[]).forEach(r => {
+      const key = r.type_name || ('Type '+r.type_number);
+      typeCount[key] = (typeCount[key]||0)+1;
+    });
+    const typeEntries = Object.entries(typeCount).sort((a,b)=>b[1]-a[1]).slice(0,10);
+    const typeMax = Math.max(...typeEntries.map(e=>e[1]),1);
+    document.getElementById('chart-types').innerHTML = typeEntries.map(([nm,cnt]) => {
+      const h = Math.round((cnt/typeMax)*90);
+      return `<div class="chart-bar-col" title="${nm}: ${cnt}人">
+        <div class="chart-bar-val">${cnt}</div>
+        <div class="chart-bar" style="height:${h}px;background:var(--accent)"></div>
+        <div class="chart-bar-label" style="max-width:40px;overflow:hidden;text-overflow:ellipsis">${nm.slice(0,4)}</div>
+      </div>`;
+    }).join('');
 
     // バッジ更新
     const badge = document.getElementById('badge-reports');
