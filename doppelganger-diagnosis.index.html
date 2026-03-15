@@ -1833,13 +1833,11 @@ ${buildSpectrumHTML(scores)}
 <button class="pscores-toggle" onclick="document.getElementById('psd').classList.toggle('show')">P変数 数値詳細</button>
 <div id="psd" class="pscores-detail">${bars}</div>
 
-<div id="diag-reward-section" style="margin:20px 0;padding:16px;background:rgba(108,92,231,.08);border:1px solid rgba(108,92,231,.25);border-radius:12px;text-align:center">
-  <div style="font-size:.8rem;font-weight:700;margin-bottom:4px">📺 動画広告を視聴してポイントGET</div>
-  <div style="font-size:.72rem;color:rgba(255,255,255,.5);margin-bottom:12px">視聴完了で +5pt — スレ立て・マッチングに使えます</div>
-  <div id="diag-pt-balance" style="font-size:.78rem;color:rgba(255,255,255,.4);margin-bottom:10px">残高: 読み込み中...</div>
-  <button id="diag-reward-btn" onclick="diagWatchRewardedVideo()"
-    style="padding:10px 24px;background:linear-gradient(135deg,#6c5ce7,#fd79a8);color:#fff;border:none;
-      border-radius:50px;font-size:.85rem;font-weight:700;cursor:pointer;font-family:inherit">
+<div id="diag-reward-section" style="margin:20px 0;padding:16px;background:var(--surface2);border:1px solid var(--surface3);border-radius:12px;text-align:center;opacity:.5;pointer-events:none;position:relative">
+  <div style="position:absolute;top:8px;right:10px;font-size:.6rem;background:var(--surface3);color:var(--text2);padding:2px 7px;border-radius:50px;font-weight:700">αテスト中</div>
+  <div style="font-size:.8rem;font-weight:700;margin-bottom:4px;color:var(--text2)">📺 動画広告を視聴してポイントGET</div>
+  <div style="font-size:.72rem;color:var(--text2);margin-bottom:12px">視聴完了で +5pt — スレ立て・マッチングに使えます</div>
+  <button disabled style="padding:10px 24px;background:var(--surface3);color:var(--text2);border:none;border-radius:50px;font-size:.85rem;font-weight:700;cursor:not-allowed;font-family:inherit">
     ▶ 動画を見て +5pt
   </button>
 </div>
