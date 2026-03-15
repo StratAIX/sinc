@@ -1912,6 +1912,8 @@ window._diagnosisSavePromise=_storedScoresOverride?Promise.resolve():(async()=>{
     // ゲスト結果をlocalStorageに一時保存（ログイン後に自動同期される）
     const guestR={code,typeNumber:t.n,typeName:t.nm,family:t.fam,scores,timestamp:Date.now()};
     try{localStorage.setItem('sincGuestResult',JSON.stringify(guestR));}catch(e){}
+    // チュートリアル用に診断結果をsessionStorageに保存
+    try{sessionStorage.setItem('sincDiagResult',JSON.stringify({typeNum:t.n,typeName:t.nm,family:t.fam,typeCode:code}));}catch(e){}
 
     if(typeof supabase==='undefined'){
       isGuest=true;
@@ -1972,7 +1974,7 @@ window._diagnosisSavePromise=_storedScoresOverride?Promise.resolve():(async()=>{
   }finally{
     if(!isGuest){
       const btn=document.getElementById('go-board-btn');
-      if(btn){btn.textContent='✨ コミュニティ掲示板へ進む →';btn.style.opacity='1';btn.disabled=false;btn.style.pointerEvents='';btn.style.cursor='pointer';}
+      if(btn){btn.textContent='✨ 次のステップへ →';btn.style.opacity='1';btn.disabled=false;btn.style.pointerEvents='';btn.style.cursor='pointer';}
     }
   }
 })();
@@ -1984,17 +1986,19 @@ function goToBoard(){
       // 保存処理が完了するまで待つ
       if(window._diagnosisSavePromise) await window._diagnosisSavePromise;
 
-      if(typeof supabase==='undefined'){window.location.href='board.html';return;}
+      if(typeof supabase==='undefined'){window.location.href='next-steps.html';return;}
       const{data:{user}}=await supabase.auth.getUser();
       if(!user){window.location.href='index.html';return;}
       const{data:profile}=await supabase.from('users')
         .select('nickname').eq('id',user.id).single();
       if(profile&&profile.nickname){
-        window.location.href='board.html';
+        window.location.href='next-steps.html';
       }else{
+        // プロフィール未設定の場合はプロフィール設定後にチュートリアルへ
+        try{localStorage.setItem('sincTutorialPending','1');}catch(e){}
         window.location.href='profile.html?setup=1';
       }
-    }catch(e){window.location.href='board.html';}
+    }catch(e){window.location.href='next-steps.html';}
   })();
 }
 
@@ -2152,6 +2156,7 @@ function showRegPrompt(){
 }
 
 function goToRegister(){
+  try{localStorage.setItem('sincTutorialPending','1');}catch(e){}
   let dest='index.html?afterDiag=1';
   if(_urlRef)dest+='&ref='+encodeURIComponent(_urlRef);
   // 診断結果をURLパラメータに含める（ブラウザ切り替え時の結果消失対策）

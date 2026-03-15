@@ -137,6 +137,16 @@ supabase.auth.onAuthStateChange(async (event, session) => {
         localStorage.removeItem('sincPendingRef');
       }
     } catch(e) { /* サイレント */ }
+
+    // ── チュートリアルへのリダイレクト ───────────────────────
+    try {
+      if (localStorage.getItem('sincTutorialPending')) {
+        localStorage.removeItem('sincTutorialPending');
+        if (!location.pathname.includes('next-steps.html')) {
+          window.location.href = 'next-steps.html';
+        }
+      }
+    } catch(e) { /* サイレント */ }
   }
 });
 

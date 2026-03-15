@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>次のステップへ - Sinc</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/common.css">
+  <style>
+    .ns-wrap {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 24px 16px 100px;
+    }
+    .ns-logo {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    .ns-logo-text {
+      font-size: 1.3rem;
+      font-weight: 800;
+      letter-spacing: .08em;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    /* タイプバッジ */
+    .type-badge {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--surface);
+      border: 1px solid var(--surface3);
+      border-radius: 14px;
+      padding: 12px 16px;
+      margin-bottom: 24px;
+    }
+    .type-badge-icon {
+      font-size: 1.5rem;
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .type-badge-name { font-size: .9rem; font-weight: 700; }
+    .type-badge-family { font-size: .72rem; color: var(--text2); margin-top: 2px; }
+
+    /* ステップ共通 */
+    .step-section { display: none; }
+    .step-section.active { display: block; }
+    .step-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 18px;
+      text-align: center;
+    }
+    .step-sub {
+      font-size: .82rem;
+      color: var(--text2);
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    /* 選択肢ボタン（Step1） */
+    .choice-list { display: flex; flex-direction: column; gap: 12px; }
+    .choice-btn {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 16px 18px;
+      background: var(--surface);
+      border: 1.5px solid var(--surface3);
+      border-radius: 14px;
+      cursor: pointer;
+      transition: border-color .2s, background .2s;
+      width: 100%;
+      text-align: left;
+      color: var(--text);
+    }
+    .choice-btn:hover { border-color: var(--accent); background: var(--surface2); }
+    .choice-icon { font-size: 1.4rem; width: 32px; text-align: center; flex-shrink: 0; }
+    .choice-label { font-size: .95rem; font-weight: 600; }
+    .choice-desc { font-size: .75rem; color: var(--text2); margin-top: 2px; }
+    .skip-link {
+      display: block;
+      text-align: center;
+      margin-top: 20px;
+      font-size: .82rem;
+      color: var(--text2);
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
+    /* Step2a: タイプルーム */
+    .room-card {
+      background: var(--surface);
+      border: 1px solid var(--surface3);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    .room-card-title {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+    .room-card-desc {
+      font-size: .8rem;
+      color: var(--text2);
+      margin-bottom: 14px;
+      line-height: 1.5;
+    }
+    .pinned-thread {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface2);
+      border-radius: 10px;
+      padding: 10px 14px;
+      margin-bottom: 16px;
+      font-size: .85rem;
+    }
+    .pinned-badge {
+      font-size: .68rem;
+      background: var(--accent);
+      color: #fff;
+      border-radius: 4px;
+      padding: 1px 5px;
+      flex-shrink: 0;
+    }
+    .action-btn {
+      display: block;
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff;
+      border: none;
+      border-radius: 14px;
+      font-size: .95rem;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+      letter-spacing: .04em;
+      transition: opacity .2s;
+    }
+    .action-btn:hover { opacity: .88; }
+    .back-link {
+      display: block;
+      text-align: center;
+      margin-top: 14px;
+      font-size: .82rem;
+      color: var(--text2);
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
+    /* Step2b: 友達招待 */
+    .compat-mock {
+      background: var(--surface);
+      border: 1px solid var(--surface3);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+    .compat-mock::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #a29bfe, #6c5ce7, #fd79a8);
+    }
+    .compat-vs-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .compat-pt {
+      text-align: center;
+      flex: 1;
+    }
+    .compat-pt-name { font-size: .8rem; font-weight: 700; }
+    .compat-pt-type { font-size: .7rem; color: var(--text2); margin-top: 2px; }
+    .compat-vs { font-size: .9rem; color: var(--text2); flex-shrink: 0; }
+    .compat-score-row {
+      background: var(--surface2);
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 14px;
+    }
+    .compat-score-label { font-size: .72rem; color: var(--text2); margin-bottom: 6px; }
+    .compat-score-bar-bg {
+      height: 7px;
+      background: var(--surface3);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 6px;
+    }
+    .compat-score-bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      background: linear-gradient(90deg, #6c5ce7, #a29bfe);
+      width: 65%;
+    }
+    .compat-score-val {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .compat-score-num { font-size: .88rem; font-weight: 700; color: var(--accent2); }
+    .compat-tier {
+      display: inline-block;
+      font-size: .78rem;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+      background: rgba(162,155,254,.15);
+      color: var(--accent2);
+      border: 1px solid rgba(162,155,254,.3);
+    }
+    .compat-locked {
+      text-align: center;
+      padding: 10px;
+      font-size: .8rem;
+      color: var(--text2);
+    }
+    .compat-locked strong { color: var(--text); display: block; margin-bottom: 4px; }
+
+    /* 招待シェアボタン */
+    .invite-section { margin-bottom: 16px; }
+    .invite-label {
+      font-size: .8rem;
+      color: var(--text2);
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
+    .invite-share-btns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .invite-copy-btn {
+      grid-column: 1 / -1;
+      padding: 12px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-size: .88rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity .2s;
+    }
+    .invite-copy-btn:hover { opacity: .88; }
+    .invite-share-btn {
+      padding: 11px;
+      border: 1.5px solid var(--surface3);
+      border-radius: 12px;
+      font-size: .85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: border-color .2s, background .2s;
+      background: var(--surface);
+      color: var(--text);
+    }
+    .invite-share-btn.x-btn { background: #000; color: #fff; border-color: #000; }
+    .invite-share-btn.line-btn { background: #06c755; color: #fff; border-color: #06c755; }
+    .invite-share-btn:hover { opacity: .88; }
+
+    /* ID検索リンク */
+    .find-friend-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      background: var(--surface);
+      border: 1px solid var(--surface3);
+      border-radius: 12px;
+      margin-bottom: 16px;
+      cursor: pointer;
+      transition: border-color .2s;
+    }
+    .find-friend-row:hover { border-color: var(--accent); }
+    .find-friend-label { font-size: .85rem; font-weight: 600; flex: 1; }
+    .find-friend-sub { font-size: .72rem; color: var(--text2); }
+
+    /* ゲスト用ロック表示 */
+    .guest-invite-block {
+      background: var(--surface);
+      border: 1.5px dashed var(--surface3);
+      border-radius: 14px;
+      padding: 20px;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+    .guest-invite-block p {
+      font-size: .85rem;
+      color: var(--text2);
+      margin-bottom: 14px;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <div class="ns-wrap">
+    <div class="ns-logo">
+      <span class="ns-logo-text">Sinc</span>
+    </div>
+
+    <!-- タイプバッジ -->
+    <div class="type-badge" id="typeBadge" style="display:none">
+      <div class="type-badge-icon" id="typeBadgeIcon">🔮</div>
+      <div>
+        <div class="type-badge-name" id="typeBadgeName">あなたのタイプ</div>
+        <div class="type-badge-family" id="typeBadgeFamily"></div>
+      </div>
+    </div>
+
+    <!-- ===== Step 1: 何をしたいですか？ ===== -->
+    <div class="step-section active" id="step1">
+      <div class="step-title">まず、何をしたいですか？</div>
+      <div class="choice-list">
+        <button class="choice-btn" onclick="chooseOption(1)">
+          <div class="choice-icon">🔮</div>
+          <div>
+            <div class="choice-label">自分に似た人と話したい</div>
+            <div class="choice-desc">同じタイプの部屋で自己紹介してみよう</div>
+          </div>
+        </button>
+        <button class="choice-btn" onclick="chooseOption(2)">
+          <div class="choice-icon">🎮</div>
+          <div>
+            <div class="choice-label">趣味が合う人を見つけたい</div>
+            <div class="choice-desc">好きな話題の板を探したり作ったりしよう</div>
+          </div>
+        </button>
+        <button class="choice-btn" onclick="chooseOption(3)">
+          <div class="choice-icon">💞</div>
+          <div>
+            <div class="choice-label">友達との相性を見てみたい</div>
+            <div class="choice-desc">友達を招待すると相性スコアが見られる</div>
+          </div>
+        </button>
+        <button class="choice-btn" onclick="chooseOption(4)">
+          <div class="choice-icon">📖</div>
+          <div>
+            <div class="choice-label">自分のことをもっと深く知りたい</div>
+            <div class="choice-desc">全32タイプの詳細や相性マトリクスを見よう</div>
+          </div>
+        </button>
+      </div>
+      <span class="skip-link" onclick="skipToBoard()">スキップして掲示板へ →</span>
+    </div>
+
+    <!-- ===== Step 2a: タイプルームへ ===== -->
+    <div class="step-section" id="step2a">
+      <div class="step-title">あなたの部屋に行こう</div>
+      <div class="room-card">
+        <div class="room-card-title" id="roomName">タイプルーム</div>
+        <div class="room-card-desc">同じタイプの仲間だけが集まる、あなた専用の部屋です。<br>まず自己紹介してみましょう！</div>
+        <div class="pinned-thread">
+          <span class="pinned-badge">📌 ピン留め</span>
+          <span>📝 同じタイプで自己紹介</span>
+        </div>
+        <button class="action-btn" onclick="goToBoard()">部屋に入る →</button>
+      </div>
+      <span class="back-link" onclick="showStep(1)">← 選択に戻る</span>
+    </div>
+
+    <!-- ===== Step 2b: 友達招待フロー ===== -->
+    <div class="step-section" id="step2b">
+      <div class="step-title">友達との相性を確かめよう</div>
+      <div class="step-sub">友達がSincで診断を完了すると<br>お互いの相性スコアが自動計算されます</div>
+
+      <!-- 相性カードモック -->
+      <div class="compat-mock">
+        <div class="compat-vs-row">
+          <div class="compat-pt">
+            <div class="compat-pt-name" id="myTypeMock">あなた</div>
+            <div class="compat-pt-type" id="myTypeNameMock">Type ??</div>
+          </div>
+          <div class="compat-vs">×</div>
+          <div class="compat-pt">
+            <div class="compat-pt-name">友達</div>
+            <div class="compat-pt-type">診断後に確定</div>
+          </div>
+        </div>
+        <div class="compat-score-row">
+          <div class="compat-score-label">👫 友人相性</div>
+          <div class="compat-score-bar-bg">
+            <div class="compat-score-bar-fill" style="width:65%"></div>
+          </div>
+          <div class="compat-score-val">
+            <span class="compat-tier">🌟 親友クラス（例）</span>
+            <span class="compat-score-num">??%</span>
+          </div>
+        </div>
+        <div class="compat-locked">
+          <strong>友達が診断を完了すると表示されます</strong>
+          実際の数値はあなたのタイプと友達のタイプで決まります
+        </div>
+      </div>
+
+      <!-- ログイン済み: 招待セクション -->
+      <div id="inviteLoggedIn" style="display:none">
+        <div class="invite-section">
+          <div class="invite-label">招待リンクをシェアしよう</div>
+          <div class="invite-share-btns">
+            <button class="invite-copy-btn" id="copyInviteBtn" onclick="copyInviteUrl()">
+              📋 招待URLをコピー
+            </button>
+            <button class="invite-share-btn x-btn" onclick="shareToX()">𝕏 Xでシェア</button>
+            <button class="invite-share-btn line-btn" onclick="shareToLine()">💬 LINEでシェア</button>
+          </div>
+        </div>
+        <div class="find-friend-row" onclick="window.location.href='friends.html'">
+          <div>
+            <div class="find-friend-label">🔍 すでにSincにいる友達を探す</div>
+            <div class="find-friend-sub">IDで検索してフレンド申請</div>
+          </div>
+          <span style="color:var(--text2)">›</span>
+        </div>
+        <button class="action-btn" onclick="window.location.href='friends.html'">
+          フレンド管理ページへ →
+        </button>
+      </div>
+
+      <!-- ゲスト: 登録促進 -->
+      <div id="inviteGuest" style="display:none">
+        <div class="guest-invite-block">
+          <p>招待機能を使うには<br>アカウント登録が必要です。<br>登録は無料・30秒で完了します！</p>
+          <button class="action-btn" onclick="goRegisterForTutorial()">
+            📱 登録して招待機能を使う
+          </button>
+        </div>
+      </div>
+
+      <span class="back-link" onclick="showStep(1)">← 選択に戻る</span>
+    </div>
+  </div>
+
+  <!-- Bottom nav -->
+  <nav class="bottom-nav" id="bottomNav"></nav>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/supabase-config.js"></script>
+  <script src="js/platform.js"></script>
+  <script src="js/nav.js"></script>
+  <script>
+  (async () => {
+    // ── 診断結果をsessionStorageから取得 ──────────────────────────
+    let diagResult = null;
+    try {
+      const raw = sessionStorage.getItem('sincDiagResult');
+      if (raw) diagResult = JSON.parse(raw);
+    } catch(e) {}
+
+    // タイプバッジを表示
+    if (diagResult) {
+      const badge = document.getElementById('typeBadge');
+      badge.style.display = 'flex';
+      document.getElementById('typeBadgeName').textContent = diagResult.typeName || 'あなたのタイプ';
+      document.getElementById('typeBadgeFamily').textContent = diagResult.family ? `${diagResult.family} Family` : '';
+      document.getElementById('myTypeMock').textContent = 'あなた';
+      document.getElementById('myTypeNameMock').textContent = diagResult.typeName || 'Type ??';
+
+      // タイプルーム部屋名
+      document.getElementById('roomName').textContent =
+        diagResult.typeName ? `${diagResult.typeName}の部屋` : 'タイプルーム';
+    }
+
+    // ── ログイン状態チェック ──────────────────────────────────────
+    let currentUser = null;
+    try {
+      if (typeof supabase !== 'undefined') {
+        currentUser = await getCurrentUser();
+      }
+    } catch(e) {}
+
+    // 招待URL（ログイン時のみ）
+    if (currentUser) {
+      try {
+        const { data: profile } = await supabase
+          .from('users')
+          .select('invite_code, id')
+          .eq('id', currentUser.id)
+          .single();
+        const code = profile?.invite_code || profile?.id?.slice(0, 8) || '';
+        const base = location.origin + location.pathname.replace('next-steps.html', 'index.html');
+        window._inviteUrl = `${base}?invite=${code}`;
+      } catch(e) {}
+    }
+  })();
+
+  // ── Step 表示切り替え ─────────────────────────────────────────
+  function showStep(n) {
+    document.querySelectorAll('.step-section').forEach(el => el.classList.remove('active'));
+    const s = document.getElementById('step' + n);
+    if (s) s.classList.add('active');
+  }
+
+  // ── Step 1 選択肢 ─────────────────────────────────────────────
+  async function chooseOption(n) {
+    // ゲスト判定
+    let isGuest = true;
+    try {
+      if (typeof supabase !== 'undefined') {
+        const u = await getCurrentUser();
+        isGuest = !u;
+      }
+    } catch(e) {}
+
+    if (n === 1) {
+      // タイプルームへ（ログイン必須）
+      if (isGuest) { goRegisterForTutorial(); return; }
+      showStep('2a');
+    } else if (n === 2) {
+      // 趣味板へ（ログイン必須）
+      if (isGuest) { goRegisterForTutorial(); return; }
+      window.location.href = 'board.html?fromTutorial=1';
+    } else if (n === 3) {
+      // 友達招待フロー
+      showStep('2b');
+      if (isGuest) {
+        document.getElementById('inviteLoggedIn').style.display = 'none';
+        document.getElementById('inviteGuest').style.display = 'block';
+      } else {
+        document.getElementById('inviteLoggedIn').style.display = 'block';
+        document.getElementById('inviteGuest').style.display = 'none';
+      }
+    } else if (n === 4) {
+      // 32タイプ一覧へ（ログイン不要）
+      window.location.href = 'types.html';
+    }
+  }
+
+  function skipToBoard() {
+    window.location.href = 'board.html';
+  }
+
+  function goToBoard() {
+    window.location.href = 'board.html';
+  }
+
+  // ── ゲスト: 登録へリダイレクト（チュートリアル再開フラグ付き） ─
+  function goRegisterForTutorial() {
+    try { localStorage.setItem('sincTutorialPending', '1'); } catch(e) {}
+    let dest = 'index.html?afterDiag=1';
+    // 診断結果を引き継ぐ（URLパラメータ経由）
+    try {
+      const raw = sessionStorage.getItem('sincDiagResult');
+      if (raw) {
+        const d = JSON.parse(raw);
+        if (d.typeCode) dest += '&ds=' + encodeURIComponent(d.typeCode);
+      }
+    } catch(e) {}
+    window.location.href = dest;
+  }
+
+  // ── 招待URL シェア ─────────────────────────────────────────────
+  async function copyInviteUrl() {
+    const url = window._inviteUrl;
+    if (!url) return;
+    try {
+      await navigator.clipboard.writeText(url);
+      const btn = document.getElementById('copyInviteBtn');
+      btn.textContent = '✅ コピーしました！';
+      setTimeout(() => { btn.textContent = '📋 招待URLをコピー'; }, 2000);
+    } catch(e) {}
+  }
+
+  function shareToX() {
+    const url = window._inviteUrl || location.origin;
+    const diagResult = (() => {
+      try { return JSON.parse(sessionStorage.getItem('sincDiagResult')); } catch(e) { return null; }
+    })();
+    const typeName = diagResult?.typeName || '';
+    const text = `Sincで性格診断をやってみたよ！${typeName ? `（${typeName}）` : ''}\n友達との相性も見られるよ📊\n`;
+    window.open(`https://x.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank');
+  }
+
+  function shareToLine() {
+    const url = window._inviteUrl || location.origin;
+    const diagResult = (() => {
+      try { return JSON.parse(sessionStorage.getItem('sincDiagResult')); } catch(e) { return null; }
+    })();
+    const typeName = diagResult?.typeName || '';
+    const text = `Sincで性格診断やってみて！${typeName ? `私は${typeName}だったよ。` : ''}友達との相性も見られるよ📊`;
+    window.open(`https://line.me/R/msg/text/?${encodeURIComponent(text + '\n' + url)}`, '_blank');
+  }
+  </script>
+</body>
+</html>
