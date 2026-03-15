@@ -301,12 +301,11 @@ async function checkMaintenanceMode() {
   }
 }
 
-// ページロード時に自動チェック（index.html / admin.html はスキップ）
+// ページロード時に自動チェック（admin / profile / index はスキップ）
 (async function() {
-  const path = location.pathname;
-  const isIndex = path.endsWith('index.html') || path === '/' || path.endsWith('/');
-  const isAdmin = path.endsWith('admin.html');
-  if (isIndex || isAdmin) return;
+  const filename = location.pathname.split('/').pop() || 'index.html';
+  // admin: 管理者作業用、profile: メンテ中もマイページは見られる、index: 独自バナーあり
+  if (['admin.html','profile.html','index.html'].includes(filename)) return;
 
   const m = await checkMaintenanceMode();
   if (!m) return;
@@ -317,6 +316,23 @@ async function checkMaintenanceMode() {
     if (me?.is_admin) return;
   } catch(e) {}
 
-  // メンテ中 → index.html?maintenance=1 へ
-  location.href = 'index.html?maintenance=1';
+  // メンテ中 → リダイレクトせず、その場でオーバーレイを表示
+  function fmtJa(iso) {
+    if (!iso) return '';
+    const d = new Date(iso);
+    return `${d.getMonth()+1}月${d.getDate()}日 ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+  }
+  const endText = m.end_at ? `<div style="font-size:.78rem;color:rgba(255,255,255,.45);margin-top:12px">終了予定: ${fmtJa(m.end_at)}</div>` : '';
+  const overlay = document.createElement('div');
+  overlay.id = 'maint-overlay';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:99999;background:rgba(14,10,28,.96);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;text-align:center';
+  overlay.innerHTML = `
+    <div style="font-size:2.8rem;margin-bottom:18px">🔧</div>
+    <div style="font-size:1.15rem;font-weight:800;color:#fff;margin-bottom:14px">メンテナンス中</div>
+    <div style="font-size:.88rem;color:rgba(255,255,255,.68);line-height:1.8;max-width:300px">
+      ${m.message ? m.message.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>') : 'サービスを一時停止しています。<br>しばらくお待ちください。'}
+    </div>
+    ${endText}
+  `;
+  document.body.appendChild(overlay);
 })();

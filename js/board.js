@@ -65,10 +65,13 @@ const Board = {
       .eq('subcategory_id', subcategoryId)
       .eq('board_type', areaType);
 
-    if (areaType === 'family') {
-      query = query.eq('family_filter', profile.family);
-    } else {
-      query = query.eq('type_filter', profile.type_number);
+    // 管理者はフィルタなしで全板を閲覧可能
+    if (!profile.is_admin) {
+      if (areaType === 'family') {
+        query = query.eq('family_filter', profile.family);
+      } else {
+        query = query.eq('type_filter', profile.type_number);
+      }
     }
 
     const { data, error } = await query.order('created_at', { ascending: false });
@@ -222,7 +225,7 @@ const Board = {
       .from('posts')
       .select(`
         *,
-        user:users!posts_user_id_fkey(display_id, type_name, type_number, family, nickname, avatar_url)
+        user:users!posts_user_id_fkey(display_id, type_name, type_number, family, nickname, avatar_url, is_admin)
       `, { count: 'exact' })
       .eq('thread_id', threadId)
       .eq('is_deleted', false)
@@ -297,7 +300,7 @@ const Board = {
       .insert(insertData)
       .select(`
         *,
-        user:users!posts_user_id_fkey(display_id, type_name, type_number, family, nickname, avatar_url)
+        user:users!posts_user_id_fkey(display_id, type_name, type_number, family, nickname, avatar_url, is_admin)
       `)
       .single();
 
@@ -510,7 +513,8 @@ const Board = {
             ${avatarHtml}
             <div class="user-info">
               <div style="display:flex;align-items:center;gap:6px">
-                <span class="user-type-name">${escapeHtml(displayName)}</span>
+                <span class="user-type-name" ${user.is_admin ? 'style="color:#a78bfa;font-weight:800"' : ''}>${escapeHtml(displayName)}</span>
+                ${user.is_admin ? '<span style="font-size:.62rem;background:#6c5ce7;color:#fff;padding:1px 6px;border-radius:4px;font-weight:700;letter-spacing:.03em">👑 Admin</span>' : ''}
                 ${numHtml}
               </div>
               <span class="user-display-id">${escapeHtml(cleanType)}${cleanType && cleanDisplayId ? ' ' : ''}${escapeHtml(cleanDisplayId)}</span>
