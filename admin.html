@@ -1039,7 +1039,7 @@ body{display:flex;min-height:100vh;background:var(--bg)}
       <td style="text-align:center">${b.post_count||0}</td>
       <td style="font-size:.72rem;color:var(--text2)">${b.created_by?'ユーザー':'システム'}</td>
       <td>
-        ${b.created_by?`<button class="btn btn-danger btn-sm" onclick="deleteBoard('${b.id}')">削除</button>`:'-'}
+        <button class="btn btn-danger btn-sm" onclick="deleteBoard('${b.id}')">削除</button>
       </td>
     </tr>`).join('');
   };

@@ -204,6 +204,73 @@
 .char-count { text-align: right; font-size: .7rem; color: var(--text2); margin-top: 4px; }
 .form-error  { font-size: .8rem; color: var(--danger); margin-top: 8px; display: none; }
 .form-error.show { display: block; }
+
+/* お知らせポップアップ */
+#ann-popup {
+  position: fixed;
+  top: 56px; /* nav高さ分下げる */
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(calc(100% - 32px), 420px);
+  background: linear-gradient(135deg, rgba(108,92,231,.12), rgba(162,155,254,.08));
+  border: 1px solid var(--accent);
+  border-radius: 14px;
+  padding: 14px 16px 12px;
+  z-index: 900;
+  box-shadow: 0 8px 32px rgba(0,0,0,.25);
+  animation: annSlideIn .35s ease;
+}
+@keyframes annSlideIn {
+  from { opacity:0; transform: translateX(-50%) translateY(-12px); }
+  to   { opacity:1; transform: translateX(-50%) translateY(0); }
+}
+#ann-popup-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+#ann-popup-label {
+  font-size: .7rem;
+  font-weight: 700;
+  color: var(--accent);
+  background: rgba(108,92,231,.12);
+  padding: 2px 8px;
+  border-radius: 50px;
+}
+#ann-popup-title {
+  font-size: .88rem;
+  font-weight: 800;
+  flex: 1;
+  line-height: 1.4;
+}
+#ann-popup-close {
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+  cursor: pointer;
+  color: var(--text2);
+  padding: 0 2px;
+  line-height: 1;
+}
+#ann-popup-body {
+  font-size: .78rem;
+  color: var(--text2);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 80px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#ann-popup-link {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: .75rem;
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 700;
+}
 </style>
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-12BFEWVRN3"></script>
@@ -215,6 +282,17 @@
     </script>
   </head>
 <body>
+
+<!-- お知らせポップアップ（最新1件・更新時のみ） -->
+<div id="ann-popup" style="display:none">
+  <div id="ann-popup-header">
+    <span id="ann-popup-label">📢 お知らせ</span>
+    <div id="ann-popup-title"></div>
+    <button id="ann-popup-close" onclick="dismissAnnPopup()">✕</button>
+  </div>
+  <div id="ann-popup-body"></div>
+  <a href="announcements.html" id="ann-popup-link">続きを読む →</a>
+</div>
 
 <!-- バナー広告（上部） -->
 <div id="board-banner-ad" style="padding:8px 16px 0"></div>
@@ -1116,6 +1194,36 @@
   function showLoading(show) {
     document.getElementById('loading').classList.toggle('hidden', !show);
   }
+
+  // ================================================================
+  // お知らせポップアップ（最新1件・更新時のみ）
+  // ================================================================
+  (async () => {
+    try {
+      const { data } = await supabase
+        .from('announcements')
+        .select('id, title, content')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+      if (!data) return;
+      const lastSeen = localStorage.getItem('sincLastAnnId');
+      if (lastSeen === data.id) return; // 既読
+      const popup = document.getElementById('ann-popup');
+      document.getElementById('ann-popup-title').textContent = data.title;
+      document.getElementById('ann-popup-body').textContent = data.content;
+      popup.style.display = '';
+    } catch (_) {}
+  })();
+
+  window.dismissAnnPopup = function() {
+    const popup = document.getElementById('ann-popup');
+    if (!popup) return;
+    // 閉じた時点の最新IDを保存
+    supabase.from('announcements').select('id').order('created_at',{ascending:false}).limit(1).single()
+      .then(({data}) => { if (data) localStorage.setItem('sincLastAnnId', data.id); });
+    popup.style.display = 'none';
+  };
 
   // ================================================================
   // 起動

@@ -99,6 +99,36 @@
   color: var(--text2);
   font-size: .85rem;
 }
+.ann-num {
+  font-size: .78rem;
+  font-weight: 800;
+  color: var(--accent);
+  margin-bottom: 4px;
+}
+.ann-like-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+.ann-like-btn {
+  background: none;
+  border: 1px solid var(--surface3);
+  border-radius: 50px;
+  padding: 4px 14px;
+  font-size: .8rem;
+  cursor: pointer;
+  color: var(--text2);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: all .2s;
+}
+.ann-like-btn.liked {
+  border-color: var(--pink, #e84393);
+  color: var(--pink, #e84393);
+  background: rgba(232,67,147,.07);
+}
+.ann-like-btn:active { transform: scale(.95); }
 </style>
 </head>
 <body>
@@ -129,7 +159,35 @@
     return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
 
+  // ①②③…⑳、それ以降は (21) 形式
+  function circledNum(i) {
+    if (i >= 1 && i <= 20) return String.fromCharCode(0x245f + i);
+    return `(${i})`;
+  }
+
+  // いいね: localStorage に Set<id> で保存
+  const LIKE_KEY = 'sincAnnLikes';
+  function getLikes() {
+    try { return new Set(JSON.parse(localStorage.getItem(LIKE_KEY) || '[]')); }
+    catch { return new Set(); }
+  }
+  function saveLikes(set) {
+    localStorage.setItem(LIKE_KEY, JSON.stringify([...set]));
+  }
+  window.toggleLike = function(id, btn) {
+    const likes = getLikes();
+    const liked = likes.has(id);
+    if (liked) { likes.delete(id); } else { likes.add(id); }
+    saveLikes(likes);
+    btn.classList.toggle('liked', !liked);
+    btn.querySelector('.like-count').textContent = !liked
+      ? parseInt(btn.querySelector('.like-count').textContent || '0') + 1
+      : Math.max(0, parseInt(btn.querySelector('.like-count').textContent || '1') - 1);
+    btn.querySelector('.like-heart').textContent = !liked ? '❤️' : '🤍';
+  };
+
   const list = document.getElementById('ann-list');
+  const likes = getLikes();
 
   const { data, error } = await supabase
     .from('announcements')
@@ -142,16 +200,29 @@
     return;
   }
 
-  list.innerHTML = data.map(a => `
+  // ピン留めを先頭に、その後に番号を付与（ピン=①から始まる連番）
+  list.innerHTML = data.map((a, i) => {
+    const num = circledNum(i + 1);
+    const isLiked = likes.has(a.id);
+    // いいね数はlocalStorageで管理（ローカルのみ）
+    const likeCount = isLiked ? 1 : 0;
+    return `
     <div class="ann-card ${a.is_pinned ? 'pinned' : ''}">
+      <div class="ann-num">${num}</div>
       <div class="ann-card-top">
         ${a.is_pinned ? '<span class="ann-pin-badge">📌 固定</span>' : ''}
         <div class="ann-card-title">${esc(a.title)}</div>
       </div>
       <div class="ann-card-date">${fmtDate(a.created_at)}</div>
       <div class="ann-card-body">${esc(a.content)}</div>
+      <div class="ann-like-row">
+        <button class="ann-like-btn ${isLiked ? 'liked' : ''}" onclick="toggleLike('${a.id}', this)">
+          <span class="like-heart">${isLiked ? '❤️' : '🤍'}</span>
+          <span class="like-count">${likeCount}</span>
+        </button>
+      </div>
     </div>
-  `).join('');
+  `}).join('');
 })();
 </script>
 </body>

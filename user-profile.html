@@ -540,18 +540,7 @@ function getTypeEmoji(n) {
 
   window.openTypeModal = function() {
     if (!_typeModalData) return;
-    const { n, nm, en, fam, d, c, famColor } = _typeModalData;
-    document.getElementById('modal-emoji').textContent = getTypeEmoji(n);
-    document.getElementById('modal-num').textContent = 'TYPE ' + String(n).padStart(2, '0');
-    document.getElementById('modal-name').textContent = nm;
-    document.getElementById('modal-en').textContent = en || '';
-    document.getElementById('modal-family').innerHTML =
-      `<span style="color:${famColor};font-weight:700">${escapeHtml(fam)}</span>`;
-    document.getElementById('modal-desc').textContent = d || '';
-    document.getElementById('modal-quote').textContent = c || '';
-    document.getElementById('modal-link').href = `doppelganger-diagnosis.index.html?typeProfile=${n}`;
-    document.getElementById('type-modal-overlay').style.display = 'flex';
-    document.body.style.overflow = 'hidden';
+    location.href = `doppelganger-diagnosis.index.html?typeProfile=${_typeModalData.n}`;
   };
 
   window.closeTypeModal = function(e) {
