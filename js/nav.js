@@ -109,6 +109,7 @@
           <span id="sb-theme-label">${isDark ? 'ライトモード' : 'ダークモード'}</span>
         </button>
         <div class="sb-legal-links">
+          <a href="trust.html" class="sb-legal-link">安心設計について</a>
           <a href="legal/privacy.html" class="sb-legal-link" data-i18n="footer.privacy">プライバシーポリシー</a>
           <a href="legal/terms.html" class="sb-legal-link" data-i18n="footer.terms">利用規約</a>
         </div>
@@ -125,6 +126,8 @@
     footer.innerHTML = `
       <div class="page-footer-inner">
         <div class="page-footer-links">
+          <a href="trust.html">安心設計について</a>
+          <span class="pf-sep">·</span>
           <a href="legal/privacy.html" data-i18n="footer.privacy">プライバシーポリシー</a>
           <span class="pf-sep">·</span>
           <a href="legal/terms.html" data-i18n="footer.terms">利用規約</a>
