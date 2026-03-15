@@ -168,7 +168,13 @@ async function requireAuth(redirectTo = 'index.html') {
 
 async function requireDiagnosis(redirectTo = 'doppelganger-diagnosis.index.html') {
   const profile = await getMyProfile(true); // 常にDBから最新を取得（キャッシュ不使用）
-  if (!profile || !profile.diagnosis_completed_at) {
+  if (!profile) {
+    window.location.href = redirectTo;
+    return null;
+  }
+  // 管理者は診断未完了でもバイパス
+  if (profile.is_admin) return profile;
+  if (!profile.diagnosis_completed_at) {
     window.location.href = redirectTo;
     return null;
   }
