@@ -225,7 +225,7 @@
     </div>
     <p class="type-modal-desc" id="modal-desc"></p>
     <div class="type-modal-quote" id="modal-quote"></div>
-    <a class="type-modal-link" id="modal-link" href="types.html">全32タイプを見る →</a>
+    <a class="type-modal-link" id="modal-link" href="types.html">このタイプの詳細を見る →</a>
   </div>
 </div>
 
@@ -549,7 +549,7 @@ function getTypeEmoji(n) {
       `<span style="color:${famColor};font-weight:700">${escapeHtml(fam)}</span>`;
     document.getElementById('modal-desc').textContent = d || '';
     document.getElementById('modal-quote').textContent = c || '';
-    document.getElementById('modal-link').href = `types.html?type=${n}`;
+    document.getElementById('modal-link').href = `doppelganger-diagnosis.index.html?typeProfile=${n}`;
     document.getElementById('type-modal-overlay').style.display = 'flex';
     document.body.style.overflow = 'hidden';
   };

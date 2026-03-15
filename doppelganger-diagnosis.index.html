@@ -1458,8 +1458,12 @@ function drawRadar(canvasId,scores){
 const cv=document.getElementById(canvasId);if(!cv)return;
 const cx=cv.getContext('2d');
 const dpr=window.devicePixelRatio||1;
-const size=320;cv.width=size*dpr;cv.height=size*dpr;cv.style.width=size+'px';cv.style.height=size+'px';
+const size=320;cv.width=size*dpr;cv.height=size*dpr;cv.style.width=size+'px';cv.style.height=size+'px';cv.style.borderRadius='14px';
 cx.scale(dpr,dpr);
+// 背景（ライト/ダークどちらでもグリッドが見えるよう暗い背景を描画）
+cx.fillStyle='rgba(14,10,28,.96)';
+cx.beginPath();if(cx.roundRect){cx.roundRect(0,0,size,size,14);}else{cx.rect(0,0,size,size);}
+cx.fill();
 const ctr=size/2,R=size/2-40;
 const keys=['P1','P2','P3','P4','P5','P6','P7','P8','P9','P10','P11','P12'];
 const labels=['社会乖離','合理性','対人距離','主従','聖域','孤高度','覚醒動機','情緒変動','秩序性','探索欲','感情露出','依存構造'];
@@ -1469,13 +1473,13 @@ for(let ring=1;ring<=4;ring++){
   const r=R*ring/4;
   cx.beginPath();
   for(let i=0;i<=n;i++){const a=-Math.PI/2+step*i;cx.lineTo(ctr+r*Math.cos(a),ctr+r*Math.sin(a))}
-  cx.strokeStyle='rgba(255,255,255,.08)';cx.lineWidth=1;cx.stroke();
+  cx.strokeStyle='rgba(255,255,255,.18)';cx.lineWidth=1;cx.stroke();
 }
 // Axes
 for(let i=0;i<n;i++){
   const a=-Math.PI/2+step*i;
   cx.beginPath();cx.moveTo(ctr,ctr);cx.lineTo(ctr+R*Math.cos(a),ctr+R*Math.sin(a));
-  cx.strokeStyle='rgba(255,255,255,.06)';cx.stroke();
+  cx.strokeStyle='rgba(255,255,255,.12)';cx.stroke();
 }
 // Data polygon
 cx.beginPath();
@@ -1494,7 +1498,7 @@ keys.forEach((k,i)=>{
   const x=ctr+r*Math.cos(a),y=ctr+r*Math.sin(a);
   cx.beginPath();cx.arc(x,y,3,0,Math.PI*2);cx.fillStyle='#a29bfe';cx.fill();
   const lx=ctr+(R+22)*Math.cos(a),ly=ctr+(R+22)*Math.sin(a);
-  cx.fillStyle='rgba(255,255,255,.45)';cx.font='9px system-ui';cx.textAlign='center';cx.textBaseline='middle';
+  cx.fillStyle='rgba(255,255,255,.65)';cx.font='9px system-ui';cx.textAlign='center';cx.textBaseline='middle';
   cx.fillText(labels[i],lx,ly);
 });
 }
@@ -1662,6 +1666,52 @@ async function viewStoredResult(){
     window._currentUserId=user.id;
     showResult();
   }catch(e){show('startScreen');}
+}
+
+// ============================================================
+// TYPE PROFILE（他ユーザープロフからのタイプ詳細閲覧）
+// ============================================================
+function showTypeProfile(t){
+const fColors={Architects:'#6c5ce7',Mystics:'#e84393',Commanders:'#00b894',Catalysts:'#fdcb6e'};
+const fEmoji={Architects:'🏛️',Mystics:'🌙',Commanders:'⚔️',Catalysts:'🔥'};
+const fCol=fColors[t.fam]||'#6c5ce7';
+const fEm=fEmoji[t.fam]||'✨';
+const soulHTML=t.soul?`<div class="result-section"><h3>魂の設計図</h3><p>${t.soul}</p></div>`:'';
+const dailyHTML=t.daily?`<div class="result-section"><h3>日常のあるある</h3><p>${t.daily}</p></div>`:'';
+const relHTML=t.relations?`<div class="result-section"><h3>人間関係の傾向</h3><p>${t.relations}</p></div>`:'';
+let careersHTML='';
+if(t.careers&&t.careers.length){
+  careersHTML=`<div class="result-section jobs-section"><h3>適職パターン</h3>`;
+  t.careers.forEach(c=>{
+    careersHTML+=`<div style="margin-bottom:10px;padding:10px 14px;background:var(--surface);border-radius:10px;border:1px solid var(--surface3)">
+      <div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:3px">${c.job}</div>
+      <div style="font-size:.78rem;line-height:1.6;color:var(--text2)">${c.why}</div>
+    </div>`;
+  });
+  careersHTML+='</div>';
+}
+document.getElementById('resultScreen').innerHTML=`
+<div class="result-card">
+  <button onclick="history.back()" style="background:none;border:1px solid var(--surface3);color:var(--text2);border-radius:50px;padding:6px 16px;font-size:.78rem;cursor:pointer;margin-bottom:16px;font-family:inherit">← 戻る</button>
+  <div class="type-illust fam-${t.fam}"><div class="type-illust-ring" style="border-color:${fCol}"></div>${fEm}</div>
+  <div class="result-family" style="color:${fCol}">${t.fam}</div>
+  <div class="result-type-num">Type ${String(t.n).padStart(2,'0')}</div>
+  <div class="result-type-name">${t.nm}</div>
+  <div class="result-type-en">${t.en}</div>
+  <div class="result-catch">${t.c}</div>
+  ${soulHTML}
+  <div class="result-section"><h3>一言で言うと</h3><p>${t.d}</p></div>
+  <div class="result-section"><h3>強み</h3><p>${t.s}</p></div>
+  <div class="result-section"><h3>弱み</h3><p>${t.w}</p></div>
+  <div class="result-section"><h3>行動パターン</h3><p>${t.b}</p></div>
+  <div class="result-quote">${t.q}</div>
+  ${dailyHTML}
+  ${relHTML}
+  ${careersHTML}
+</div>
+<a href="types.html" class="types-link-btn">📖 全32タイプ一覧を見る</a>
+`;
+show('resultScreen');
 }
 
 // ============================================================
@@ -2232,7 +2282,18 @@ function startFresh(){
 //    viewResult=1 の場合は load イベント後に実行する
 (async function checkResume(){
   const params=new URLSearchParams(window.location.search);
+  // ?typeProfile=N → 他ユーザープロフからのタイプ詳細閲覧（認証不要）
+  const _tpNum=parseInt(params.get('typeProfile'));
+  if(_tpNum&&!isNaN(_tpNum)){
+    show('analyzeScreen');
+    const _tpEntry=Object.values(TYPES).find(x=>x.n===_tpNum);
+    if(_tpEntry){showTypeProfile(_tpEntry);}else{show('startScreen');}
+    return;
+  }
+
   if(params.get('viewResult')==='1'){
+    // スタート画面が一瞬見えないよう、すぐに読み込み中画面へ
+    show('analyzeScreen');
     // 外部スクリプト（Supabase）のロード完了を待ってから実行
     if(typeof supabase==='undefined'){
       window.addEventListener('load', viewStoredResult, {once:true});
